@@ -1,6 +1,6 @@
-// api/analyze-cv.js
+// api/analyze-cv.js - API serveur pour ASSIGNME
 export default async function handler(req, res) {
-  // CORS
+  // Configuration CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,338 +14,201 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Lecture du fichier uploadé
-    const chunks = [];
-    
-    await new Promise((resolve, reject) => {
-      req.on('data', chunk => chunks.push(chunk));
-      req.on('end', resolve);
-      req.on('error', reject);
+    const { cvText, fileName } = req.body;
+
+    if (!cvText || cvText.trim().length < 50) {
+      return res.status(400).json({ error: 'CV trop court ou vide' });
+    }
+
+    // Prompt système pour l'analyse
+    const systemPrompt = `Tu es un expert en recrutement et orientation professionnelle français. Tu vas analyser un CV et recommander 3 opportunités professionnelles pertinentes.
+
+IMPORTANT : RÉPONDS UNIQUEMENT EN FRANÇAIS. Toutes tes réponses doivent être dans un français parfait et professionnel.
+
+RÈGLES D'ANALYSE STRICTES :
+• Si le candidat dit clairement "rien", "naze", "j'ai raté", "aucune expérience" → NE PAS INVENTER de compétences ou qualités
+• Si formation = "j'ai raté le brevet" ou équivalent → education_level = "Aucune qualification"
+• Si expérience = "rien" ou "naze" → current_position = "Sans emploi" et total_experience_years = 0
+• Si aspirations = "argent facile" → career_aspirations = "Recherche d'emploi rémunérateur"
+• ÊTRE HONNÊTE sur le niveau réel du candidat, ne pas embellir
+• TOUJOURS proposer des formations adaptées au niveau réel, surtout pour les candidats sans qualification
+• Privilégier les formations courtes, pratiques et débouchant sur un emploi rapide
+
+RÉPONDS UNIQUEMENT EN JSON VALIDE AVEC TOUT LE CONTENU EN FRANÇAIS :
+
+{
+  "candidate_analysis": {
+    "name": "nom_complet",
+    "location": "ville_pays",
+    "mobility": "locale|nationale|internationale",
+    "education_level": "niveau_diplome_plus_haut_EN_FRANCAIS_OU_AUCUNE_QUALIFICATION",
+    "education_details": "formation_exacte_et_date_EN_FRANCAIS_OU_AUCUNE",
+    "total_experience_years": nombre_années_total_REEL,
+    "current_position": "poste_actuel_EN_FRANCAIS_OU_SANS_EMPLOI",
+    "key_sectors": ["secteur1_EN_FRANCAIS", "secteur2_EN_FRANCAIS"],
+    "technical_skills": ["compétence1_EN_FRANCAIS_REELLE", "compétence2_EN_FRANCAIS_REELLE"],
+    "soft_skills": ["qualité1_EN_FRANCAIS_REELLE", "qualité2_EN_FRANCAIS_REELLE"],
+    "career_aspirations": "objectifs_détectés_EN_FRANCAIS_REELS",
+    "constraints": "contraintes_mentionnées_EN_FRANCAIS"
+  },
+  "recommendations": [
+    {
+      "job_title": "Intitulé exact du poste EN FRANÇAIS ADAPTÉ AU NIVEAU",
+      "sector": "Secteur d'activité EN FRANÇAIS",
+      "salary_min": montant_euros_minimum_REALISTE,
+      "salary_max": montant_euros_maximum_REALISTE,
+      "match_justification": "Explication détaillée EN FRANÇAIS pourquoi ce poste convient parfaitement",
+      "required_skills": ["compétence1_EN_FRANCAIS", "compétence2_EN_FRANCAIS"],
+      "company_types": ["type_entreprise1_EN_FRANCAIS", "type_entreprise2_EN_FRANCAIS"],
+      "contract_type": "CDI|CDD|Freelance|Stage",
+      "evolution_potential": "perspectives_évolution_EN_FRANCAIS"
+    },
+    {
+      "job_title": "2ème recommandation EN FRANÇAIS",
+      "sector": "Secteur EN FRANÇAIS",
+      "salary_min": montant_min,
+      "salary_max": montant_max,
+      "match_justification": "Justification EN FRANÇAIS",
+      "required_skills": ["compétences_EN_FRANCAIS"],
+      "company_types": ["types_EN_FRANCAIS"],
+      "contract_type": "type",
+      "evolution_potential": "évolution_EN_FRANCAIS"
+    },
+    {
+      "job_title": "3ème recommandation EN FRANÇAIS",
+      "sector": "Secteur EN FRANÇAIS",
+      "salary_min": montant_min,
+      "salary_max": montant_max,
+      "match_justification": "Justification EN FRANÇAIS",
+      "required_skills": ["compétences_EN_FRANCAIS"],
+      "company_types": ["types_EN_FRANCAIS"],
+      "contract_type": "type",
+      "evolution_potential": "évolution_EN_FRANCAIS"
+    }
+  ],
+  "training_suggestions": [
+    {
+      "title": "Formation recommandée EN FRANÇAIS PRIORITAIRE",
+      "description": "Description et objectif EN FRANÇAIS",
+      "duration": "durée_estimée_EN_FRANCAIS",
+      "relevance": "pourquoi_utile_EN_FRANCAIS"
+    },
+    {
+      "title": "2ème formation recommandée EN FRANÇAIS",
+      "description": "Description et objectif EN FRANÇAIS", 
+      "duration": "durée_estimée_EN_FRANCAIS",
+      "relevance": "pourquoi_utile_EN_FRANCAIS"
+    },
+    {
+      "title": "3ème formation recommandée EN FRANÇAIS",
+      "description": "Description et objectif EN FRANÇAIS",
+      "duration": "durée_estimée_EN_FRANCAIS", 
+      "relevance": "pourquoi_utile_EN_FRANCAIS"
+    }
+  ],
+  "reconversion_paths": [
+    {
+      "target_field": "Domaine de reconversion EN FRANÇAIS",
+      "feasibility": "facile|modérée|difficile",
+      "required_steps": ["étape1_EN_FRANCAIS", "étape2_EN_FRANCAIS"],
+      "timeline": "durée_estimée_EN_FRANCAIS"
+    }
+  ]
+}`;
+
+    // Requête à OpenAI
+    const requestData = {
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { 
+          role: "user", 
+          content: `IMPORTANT: RÉPONDS UNIQUEMENT EN FRANÇAIS. Analyse ce CV et recommande 3 opportunités professionnelles pertinentes:\n\n${cvText}`
+        }
+      ],
+      max_tokens: 3000,
+      temperature: 0.3
+    };
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
     });
 
-    const buffer = Buffer.concat(chunks);
-    const boundary = req.headers['content-type']?.split('boundary=')[1];
-    
-    if (!boundary) {
-      return res.status(400).json({ error: 'Format de fichier non supporté' });
-    }
-
-    // Extraction simple du contenu
-    const bodyString = buffer.toString('utf8');
-    
-    // Chercher le contenu du fichier entre les boundaries
-    const parts = bodyString.split(`--${boundary}`);
-    let fileContent = '';
-    let fileName = 'fichier_inconnu';
-
-    for (const part of parts) {
-      if (part.includes('Content-Disposition: form-data') && part.includes('filename=')) {
-        // Extraire le nom du fichier
-        const fileNameMatch = part.match(/filename="([^"]+)"/);
-        if (fileNameMatch) {
-          fileName = fileNameMatch[1];
-        }
-        
-        // Extraire le contenu (après les headers)
-        const contentStart = part.indexOf('\r\n\r\n') + 4;
-        if (contentStart > 3) {
-          fileContent = part.substring(contentStart).trim();
-          break;
-        }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 401) {
+        throw new Error('Clé API OpenAI invalide ou expirée');
       }
-    }
-
-    if (!fileContent || fileContent.length < 10) {
-      return res.status(400).json({ error: 'Contenu du fichier non lisible ou trop court' });
-    }
-
-    // Nettoyer le contenu extrait
-    fileContent = fileContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
-    // Analyse avec OpenAI si disponible
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const analysis = await analyzeWithOpenAI(fileContent, fileName);
-        
-        return res.status(200).json({
-          success: true,
-          filename: fileName,
-          analysis: analysis,
-          debug: {
-            contentLength: fileContent.length,
-            firstChars: fileContent.substring(0, 100)
-          }
-        });
-      } catch (error) {
-        console.error('Erreur OpenAI:', error);
-        // Continue avec l'analyse de base si OpenAI échoue
+      if (response.status === 429) {
+        throw new Error('Trop de requêtes. Attendez quelques minutes.');
       }
+      if (response.status === 403) {
+        throw new Error('Accès refusé. Vérifiez vos crédits OpenAI.');
+      }
+      if (response.status >= 500) {
+        throw new Error('Erreur serveur OpenAI. Réessayez plus tard.');
+      }
+      
+      throw new Error(`Erreur OpenAI: ${response.status} - ${errorData.error?.message || 'Unknown'}`);
     }
 
-    // Analyse de base du contenu
-    const basicAnalysis = analyzeBasicContent(fileContent, fileName);
+    const data = await response.json();
+    let aiResponse = data.choices[0].message.content;
+    
+    // Nettoyer la réponse JSON
+    aiResponse = aiResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    const firstBrace = aiResponse.indexOf('{');
+    const lastBrace = aiResponse.lastIndexOf('}');
+    
+    if (firstBrace >= 0 && lastBrace > firstBrace) {
+      aiResponse = aiResponse.substring(firstBrace, lastBrace + 1);
+    }
+    
+    const result = JSON.parse(aiResponse);
+    
+    // Réponse finale avec métadonnées
+    const finalResult = {
+      ...result,
+      ai_metadata: {
+        provider: 'ASSIGNME IA',
+        model: 'gpt-4o-mini',
+        tokens_used: data.usage?.total_tokens,
+        cost: ((data.usage?.total_tokens || 1500) * 0.0000015).toFixed(4),
+        confidence: 'Élevée',
+        processing_time: new Date().toISOString()
+      }
+    };
     
     return res.status(200).json({
       success: true,
       filename: fileName,
-      analysis: basicAnalysis,
-      debug: {
-        contentLength: fileContent.length,
-        firstChars: fileContent.substring(0, 100)
-      }
+      analysis: finalResult
     });
 
   } catch (error) {
-    console.error('Erreur:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-// Analyse de base sans OpenAI
-function analyzeBasicContent(content, fileName) {
-  const lowerContent = content.toLowerCase();
-  
-  // Extraction du nom
-  let name = "Candidat";
-  const namePatterns = [
-    /nom\s*:\s*([a-zA-ZÀ-ÿ\s]+)/i,
-    /^([a-zA-ZÀ-ÿ]+\s+[a-zA-ZÀ-ÿ]+)/m,
-  ];
-  
-  for (const pattern of namePatterns) {
-    const match = content.match(pattern);
-    if (match && match[1] && match[1].trim().length > 3) {
-      name = match[1].trim();
-      break;
+    console.error('Erreur API:', error);
+    
+    // Gestion des erreurs spécifiques
+    if (error.message.includes('JSON')) {
+      return res.status(502).json({ 
+        error: 'Erreur de traitement IA. Réessayez avec un CV plus détaillé.' 
+      });
     }
-  }
-
-  // Extraction de la localisation
-  let location = "Non spécifiée";
-  if (lowerContent.includes('paris')) location = "Paris, France";
-  else if (lowerContent.includes('lyon')) location = "Lyon, France";
-  else if (lowerContent.includes('marseille')) location = "Marseille, France";
-  
-  // Analyse du niveau de formation
-  let educationLevel = "Non spécifié";
-  let educationDetails = "Non spécifiée";
-  let experienceYears = 0;
-  let currentPosition = "Non spécifié";
-  
-  if (lowerContent.includes('raté') || lowerContent.includes('échec') || lowerContent.includes('arrêté')) {
-    educationLevel = "Aucune qualification";
-    educationDetails = "Formation interrompue";
-  } else if (lowerContent.includes('master')) {
-    educationLevel = "Master";
-    experienceYears = 2;
-  } else if (lowerContent.includes('licence') || lowerContent.includes('bachelor')) {
-    educationLevel = "Licence";
-    experienceYears = 1;
-  } else if (lowerContent.includes('bts') || lowerContent.includes('dut')) {
-    educationLevel = "BTS/DUT";
-    experienceYears = 1;
-  }
-
-  // Analyse de l'expérience
-  if (lowerContent.includes('naze') || lowerContent.includes('rien')) {
-    experienceYears = 0;
-    currentPosition = "Sans emploi";
-  } else if (lowerContent.includes('développeur')) {
-    currentPosition = "Développeur";
-    experienceYears = Math.max(experienceYears, 2);
-  }
-
-  // Compétences techniques
-  const techSkills = [];
-  if (lowerContent.includes('javascript')) techSkills.push('JavaScript');
-  if (lowerContent.includes('python')) techSkills.push('Python');
-  if (lowerContent.includes('react')) techSkills.push('React');
-  if (lowerContent.includes('français')) techSkills.push('Français');
-
-  // Génération des recommandations basées sur le profil
-  const recommendations = generateRecommendations(educationLevel, experienceYears, currentPosition);
-
-  return {
-    candidate_analysis: {
-      name: name,
-      location: location,
-      mobility: "nationale",
-      education_level: educationLevel,
-      education_details: educationDetails,
-      total_experience_years: experienceYears,
-      current_position: currentPosition,
-      key_sectors: experienceYears > 0 ? ["Technologie", "Services"] : ["Services", "Commerce"],
-      technical_skills: techSkills,
-      soft_skills: ["Communication", "Adaptabilité"],
-      career_aspirations: experienceYears > 0 ? "Évolution professionnelle" : "Premier emploi stable",
-      constraints: experienceYears === 0 ? "Besoin de formation" : "Flexibilité horaire"
-    },
-    recommendations: recommendations,
-    training_suggestions: [
-      {
-        title: experienceYears === 0 ? "Formation de base professionnelle" : "Perfectionnement métier",
-        description: experienceYears === 0 ? "Acquisition des compétences de base" : "Développement des compétences avancées",
-        duration: experienceYears === 0 ? "3-6 mois" : "1-3 mois",
-        relevance: "Adapté au profil actuel"
-      }
-    ],
-    reconversion_paths: [
-      {
-        target_field: experienceYears === 0 ? "Services" : "Management",
-        feasibility: "modérée",
-        required_steps: ["Formation spécialisée", "Expérience pratique"],
-        timeline: "6-12 mois"
-      }
-    ],
-    ai_metadata: {
-      provider: 'ASSIGNME IA',
-      model: 'content-analyzer',
-      tokens_used: 800,
-      cost: '0.0012'
+    
+    if (error.message.includes('OpenAI')) {
+      return res.status(502).json({ 
+        error: error.message 
+      });
     }
-  };
-}
-
-function generateRecommendations(educationLevel, experienceYears, currentPosition) {
-  if (experienceYears === 0 || educationLevel === "Aucune qualification") {
-    return [
-      {
-        job_title: "Agent d'accueil",
-        sector: "Services",
-        salary_min: 20000,
-        salary_max: 25000,
-        match_justification: "Poste accessible sans qualification spécifique. Formation sur le tas possible.",
-        required_skills: ["Communication", "Ponctualité", "Présentation"],
-        company_types: ["Entreprises", "Administrations", "Commerces"],
-        contract_type: "CDD",
-        evolution_potential: "Responsable accueil avec expérience"
-      },
-      {
-        job_title: "Employé polyvalent commerce",
-        sector: "Commerce",
-        salary_min: 19000,
-        salary_max: 23000,
-        match_justification: "Secteur qui recrute, formation courte, possibilité d'évolution rapide.",
-        required_skills: ["Service client", "Caisse", "Rangement"],
-        company_types: ["Supermarchés", "Magasins", "Centres commerciaux"],
-        contract_type: "CDI",
-        evolution_potential: "Chef de rayon"
-      },
-      {
-        job_title: "Aide à domicile",
-        sector: "Services à la personne",
-        salary_min: 18000,
-        salary_max: 22000,
-        match_justification: "Secteur en demande, formation courte, horaires flexibles possibles.",
-        required_skills: ["Empathie", "Patience", "Autonomie"],
-        company_types: ["Associations", "Entreprises SAP", "Particuliers"],
-        contract_type: "CDD",
-        evolution_potential: "Auxiliaire de vie"
-      }
-    ];
-  } else {
-    return [
-      {
-        job_title: "Développeur Full Stack",
-        sector: "Technologies",
-        salary_min: 40000,
-        salary_max: 55000,
-        match_justification: "Vos compétences techniques correspondent aux besoins du marché.",
-        required_skills: ["JavaScript", "React", "Base de données"],
-        company_types: ["Startups", "ESN", "Entreprises tech"],
-        contract_type: "CDI",
-        evolution_potential: "Lead Developer"
-      },
-      {
-        job_title: "Consultant technique",
-        sector: "Conseil",
-        salary_min: 45000,
-        salary_max: 60000,
-        match_justification: "Votre expérience technique peut être valorisée en conseil.",
-        required_skills: ["Expertise technique", "Communication", "Analyse"],
-        company_types: ["Cabinets conseil", "Intégrateurs"],
-        contract_type: "CDI",
-        evolution_potential: "Manager technique"
-      },
-      {
-        job_title: "Chef de projet digital",
-        sector: "Digital",
-        salary_min: 38000,
-        salary_max: 50000,
-        match_justification: "Évolution naturelle avec votre background technique.",
-        required_skills: ["Gestion projet", "Technique", "Management"],
-        company_types: ["Agences", "Entreprises", "Startups"],
-        contract_type: "CDI",
-        evolution_potential: "Directeur technique"
-      }
-    ];
+    
+    return res.status(500).json({ 
+      error: 'Erreur serveur interne. Réessayez plus tard.' 
+    });
   }
-}
-
-// Fonction d'analyse OpenAI
-async function analyzeWithOpenAI(content, fileName) {
-  const systemPrompt = `Tu es un expert en recrutement français. Analyse ce CV et renvoie EXACTEMENT ce format JSON en français.
-
-IMPORTANT: Base ton analyse UNIQUEMENT sur le contenu fourni. Si quelqu'un dit "j'ai raté" ou "rien", respecte cette réalité.
-
-{
-  "candidate_analysis": {
-    "name": "nom exact trouvé dans le CV",
-    "location": "ville trouvée ou Non spécifiée",
-    "education_level": "niveau réel trouvé OU Aucune qualification",
-    "total_experience_years": nombre_années_réel,
-    "current_position": "poste actuel trouvé OU Sans emploi",
-    "technical_skills": ["compétences réelles trouvées"],
-    "soft_skills": ["qualités réelles"],
-    "career_aspirations": "objectifs mentionnés ou déduits"
-  },
-  "recommendations": [3 postes adaptés au niveau réel],
-  "training_suggestions": [formations adaptées],
-  "reconversion_paths": [1 reconversion possible]
-}`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Fichier: ${fileName}\n\nContenu du CV:\n${content}` }
-      ],
-      max_tokens: 2500,
-      temperature: 0.2
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI Error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  let aiResponse = data.choices[0].message.content;
-  
-  // Nettoyer la réponse
-  aiResponse = aiResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  const firstBrace = aiResponse.indexOf('{');
-  const lastBrace = aiResponse.lastIndexOf('}');
-  
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    aiResponse = aiResponse.substring(firstBrace, lastBrace + 1);
-  }
-  
-  const result = JSON.parse(aiResponse);
-  
-  return {
-    ...result,
-    ai_metadata: {
-      provider: 'ASSIGNME IA',
-      model: 'gpt-4o-mini',
-      tokens_used: data.usage?.total_tokens || 1500,
-      cost: ((data.usage?.total_tokens || 1500) * 0.0000015).toFixed(4)
-    }
-  };
 }
