@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="fr">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   AssignMe - Révolutionner le recrutement par l'Intelligence Artificielle
+  </title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat+Alternates:wght@400;500;600;700;800&amp;family=Poppins:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <style>
+   * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000000;
+            color: #e8f4ff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            border-bottom: 2px solid rgba(100, 149, 237, 0.3);
+            box-shadow: 0 4px 20px rgba(100, 149, 237, 0.1);
+        }
+
+        .logo-header {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .logo-header .check {
+            color: #6495ed;
+            margin-right: 8px;
+            font-size: 32px;
+            text-shadow: 0 0 10px #6495ed;
+        }
+
+        .contact-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #6495ed, #87ceeb);
+            color: #0f0f23;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
+            background: linear-gradient(45deg, #87ceeb, #b0e0e6);
+        }
+
+        /* Nouveau style pour le bouton de démo */
+        .demo-btn {
+            padding: 18px 36px;
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .demo-btn:hover::before {
+            left: 100%;
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6);
+            background: linear-gradient(45deg, #059669, #047857);
+        }
+
+        .demo-btn .icon {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+
+        .hero-section {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 20px 0px;
+            background: #000000;
+            position: relative;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(100, 149, 237, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-logo {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .hero-logo img {
+            height: 250px;
+            width: auto;
+            filter: drop-shadow(0 0 20px #6495ed) drop-shadow(0 0 40px rgba(100, 149, 237, 0.5));
+            animation: logoGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes logoGlow {
+            0% {
+                filter: drop-shadow(0 0 20px #6495ed) drop-shadow(0 0 40px rgba(100, 149, 237, 0.5));
+            }
+            100% {
+                filter: drop-shadow(0 0 30px #6495ed) drop-shadow(0 0 60px rgba(100, 149, 237, 0.8));
+                transform: scale(1.02);
+            }
+        }
+
+        .hero-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #b0e0e6;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            text-shadow: 0 0 20px rgba(176, 224, 230, 0.5);
+        }
+
+        .hero-subtitle {
+            font-size: 18px !important;
+            margin-bottom: 30px;
+            color: #87ceeb;
+            max-width: 800px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-style: italic;
+            white-space: nowrap;
+        }
+
+        .hero-subtitle .ia-neon {
+            color: #e8f4ff;
+            text-shadow: 0 0 10px rgba(232, 244, 255, 0.8);
+            font-weight: bold;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: #b8c8e8;
+            max-width: 700px;
+            margin-bottom: 0px;
+            line-height: 1.6;
+        }
+
+        .stats-section {
+            background: #000000;
+            padding: 60px 20px;
+            margin: 0;
+            border-top: 2px solid rgba(100, 149, 237, 0.2);
+            border-bottom: 2px solid rgba(100, 149, 237, 0.2);
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: 30px 20px;
+            border-radius: 15px;
+            background: #000000;
+            border: 1px solid rgba(100, 149, 237, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #6495ed;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #b8c8e8;
+        }
+
+        .features-section {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #e8f4ff;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #b8c8e8;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: #000000;
+            border: 1px solid rgba(100, 149, 237, 0.2);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(100, 149, 237, 0.2);
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #e8f4ff;
+        }
+
+        .feature-description {
+            color: #b8c8e8;
+            line-height: 1.6;
+        }
+
+        .investment-section {
+            background: #000000;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .investment-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-form {
+            background: #000000;
+            border: 1px solid rgba(100, 149, 237, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(100, 149, 237, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #6495ed, #87ceeb);
+            color: #0f0f23;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(100, 149, 237, 0.4);
+        }
+
+        .footer {
+            background: #000000;
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(100, 149, 237, 0.2);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            color: #87ceeb;
+        }
+
+        /* Nouveau style pour la section démo */
+        .demo-highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .demo-highlight h3 {
+            color: #10b981;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .demo-highlight p {
+            color: #d1fae5;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.4rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-btn {
+                padding: 15px 25px;
+                font-size: 1rem;
+            }
+        }
+    
+        .hero-subtitle em {
+            display: block;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+  </style>
+  <link href="favicon.png" rel="icon" type="image/png"/>
+ </head>
+ <body>
+  <header>
+   <div class="logo-header">
+    <img alt="Assignme Logo" src="logo.png" style="height:50px; width:auto; margin-right:10px;"/>
+    ASSIGNME
+   </div>
+   <a class="contact-btn" href="mailto:contact@assignme.fr">
+    Nous contacter
+   </a>
+  </header>
+  <section class="hero-section">
+   <div class="hero-logo">
+    <img alt="AssignMe Logo" src="assignme.png"/>
+   </div>
+   <h2 class="hero-subtitle">
+    Optimisé par
+    <span class="ia-neon">
+     Intelligence Artificielle
+    </span>
+    <br/>
+    Le FUTUR du recrutement
+   </h2>
+   <video autoplay="True" loop="True" muted="True" playsinline="True" src="video.mp4" style="max-width:100%; height:auto; margin-top:20px; border-radius:10px;">
+   </video>
+  </section>
+  <section class="features-section" id="features">
+   <h2 class="section-title">
+    ASSIGNME : L'IA au service du matching parfait
+   </h2>
+   <p class="section-subtitle">
+    ASSIGNME est une plateforme SaaS DeepTech conçue aussi bien pour les candidats que pour les entreprises. Connectée aux job boards privés, aux plateformes publiques et aux ATS d'entreprise, elle simplifie et accélère chaque étape du recrutement. En éliminant les démarches chronophages et en centralisant les opportunités, ASSIGNME rend le marché de l'emploi plus fluide, plus rapide et plus efficace pour tous les acteurs.
+   </p>
+   <div class="features-grid">
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Matching Intelligent
+     </h3>
+     <p class="feature-description">
+      Notre IA analyse en profondeur les profils et les offres pour créer des correspondances parfaites, dépassant les simples mots-clés pour comprendre les nuances et le potentiel.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Automatisation Complète
+     </h3>
+     <p class="feature-description">
+      Génération automatique de CV optimisés, remplissage de formulaires et soumission de candidatures. L'IA gère tout le processus en quelques secondes.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Intégration Universelle
+     </h3>
+     <p class="feature-description">
+      Compatible avec tous les job boards (LinkedIn, Indeed, Welcome to the Jungle) et les ATS d'entreprise. Architecture API-first pour une intégration sans friction.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Analyse Prédictive
+     </h3>
+     <p class="feature-description">
+      Évaluation des compétences explicites et implicites, détection des potentiels de reconversion et prédiction de l'adéquation culturelle.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Expérience Passive
+     </h3>
+     <p class="feature-description">
+      Les candidats n'ont plus besoin de chercher activement. Ils reçoivent directement les opportunités parfaitement adaptées à leur profil unique.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Personnalisation IA
+     </h3>
+     <p class="feature-description">
+      Chaque recommandation est unique, tenant compte des préférences personnelles, des contraintes de vie et des objectifs de carrière.
+     </p>
+    </div>
+   </div>
+  </section>
+  <section class="investment-section" id="contact">
+   <div class="investment-content">
+    <p class="section-subtitle">
+     <div style="display:flex; align-items:center; gap:60px; justify-content:center; flex-wrap:wrap; padding:20px 0;">
+      <img alt="Illustration" src="girl.jpg" style="width:320px; height:auto; border-radius:10px; margin-right:40px;"/>
+      <div style="flex:1; min-width:250px; max-width:600px; text-align:left; margin-left:40px; padding-top:20px;">
+       ASSIGNME crée des connexions parfaites entre talents et entreprises. Notre plateforme automatise l'intégralité du processus de recrutement, de l'analyse de profil à la recommandation de postes, offrant une expérience fluide et personnalisée pour tous les utilisateurs. Fini les semaines de recherche et de tri manuel, trouvez le candidat idéal en quelques minutes grâce à l'intelligence artificielle.
+      </div>
+     </div>
+    </p>
+    
+    <!-- Section démo mise en valeur -->
+    <div class="demo-highlight">
+     <h3>Testez AssignMe en Action</h3>
+     <p>
+      Découvrez la puissance de notre Intelligence Artificielle avec une démonstration interactive. Analysez votre CV avec nos modèles NLP avancés et obtenez des recommandations d'emploi personnalisées.
+     </p>
+     <a class="demo-btn" href="demo.html">
+      TESTER ASSIGNME
+     </a>
+    </div>
+    
+    <div class="contact-form">
+     <form action="mailto:contact@assignme.fr" enctype="text/plain" method="POST">
+      <div class="form-group">
+       <label for="name">
+        Nom / Entreprise
+       </label>
+       <input id="name" name="name" required="" type="text"/>
+      </div>
+      <div class="form-group">
+       <label for="email">
+        Email
+       </label>
+       <input id="email" name="email" required="" type="email"/>
+      </div>
+      <div class="form-group">
+       <label for="interest">
+        Votre Intérêt
+       </label>
+       <select id="interest" name="interest" required="">
+        <option value="investisseur">
+         Investisseur
+        </option>
+        <option value="partenaire">
+         Partenaire
+        </option>
+        <option value="client">
+         Client Entreprise
+        </option>
+        <option value="candidat">
+         Candidat
+        </option>
+       </select>
+      </div>
+      <div class="form-group">
+       <label for="message">
+        Message
+       </label>
+       <textarea id="message" name="message" placeholder="Parlez-nous de votre intérêt pour ASSIGNME..."></textarea>
+      </div>
+      <button class="submit-btn" type="submit">
+       Demander des informations
+      </button>
+     </form>
+    </div>
+   </div>
+  </section>
+  <footer class="footer">
+   <div class="footer-content">
+    <p>
+     &copy; 2025 ASSIGNME. Tous droits réservés. | Une innovation DeepTech française
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #e8f4ff;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #b8c8e8;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: #000000;
+            border: 1px solid rgba(100, 149, 237, 0.2);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(100, 149, 237, 0.2);
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #e8f4ff;
+        }
+
+        .feature-description {
+            color: #b8c8e8;
+            line-height: 1.6;
+        }
+
+        .investment-section {
+            background: #000000;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .investment-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-form {
+            background: #000000;
+            border: 1px solid rgba(100, 149, 237, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(100, 149, 237, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #6495ed, #87ceeb);
+            color: #0f0f23;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(100, 149, 237, 0.4);
+        }
+
+        .footer {
+            background: #000000;
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(100, 149, 237, 0.2);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            color: #87ceeb;
+        }
+
+        /* Nouveau style pour la section démo */
+        .demo-highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .demo-highlight h3 {
+            color: #10b981;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .demo-highlight p {
+            color: #d1fae5;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.4rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-btn {
+                padding: 15px 25px;
+                font-size: 1rem;
+            }
+        }
+    
+        .hero-subtitle em {
+            display: block;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+  </style>
+  <link href="favicon.png" rel="icon" type="image/png"/>
+ </head>
+ <body>
+  <header>
+   <div class="logo-header">
+    <img alt="Assignme Logo" src="logo.png" style="height:50px; width:auto; margin-right:10px;"/>
+    ASSIGNME
+   </div>
+   <a class="contact-btn" href="mailto:contact@assignme.fr">
+    Nous contacter
+   </a>
+  </header>
+  <section class="hero-section">
+   <div class="hero-logo">
+    <img alt="AssignMe Logo" src="assignme.png"/>
+   </div>
+   <h2 class="hero-subtitle">
+    Optimisé par
+    <span class="ia-neon">
+     Intelligence Artificielle
+    </span>
+    <br/>
+    Le FUTUR du recrutement
+   </h2>
+   <video autoplay="True" loop="True" muted="True" playsinline="True" src="video.mp4" style="max-width:100%; height:auto; margin-top:20px; border-radius:10px;">
+   </video>
+  </section>
+  <section class="features-section" id="features">
+   <h2 class="section-title">
+    ASSIGNME : L'IA au service du matching parfait
+   </h2>
+   <p class="section-subtitle">
+    ASSIGNME est une plateforme SaaS DeepTech conçue aussi bien pour les candidats que pour les entreprises. Connectée aux job boards privés, aux plateformes publiques et aux ATS d'entreprise, elle simplifie et accélère chaque étape du recrutement. En éliminant les démarches chronophages et en centralisant les opportunités, ASSIGNME rend le marché de l'emploi plus fluide, plus rapide et plus efficace pour tous les acteurs.
+   </p>
+   <div class="features-grid">
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Matching Intelligent
+     </h3>
+     <p class="feature-description">
+      Notre IA analyse en profondeur les profils et les offres pour créer des correspondances parfaites, dépassant les simples mots-clés pour comprendre les nuances et le potentiel.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Automatisation Complète
+     </h3>
+     <p class="feature-description">
+      Génération automatique de CV optimisés, remplissage de formulaires et soumission de candidatures. L'IA gère tout le processus en quelques secondes.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Intégration Universelle
+     </h3>
+     <p class="feature-description">
+      Compatible avec tous les job boards (LinkedIn, Indeed, Welcome to the Jungle) et les ATS d'entreprise. Architecture API-first pour une intégration sans friction.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Analyse Prédictive
+     </h3>
+     <p class="feature-description">
+      Évaluation des compétences explicites et implicites, détection des potentiels de reconversion et prédiction de l'adéquation culturelle.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Expérience Passive
+     </h3>
+     <p class="feature-description">
+      Les candidats n'ont plus besoin de chercher activement. Ils reçoivent directement les opportunités parfaitement adaptées à leur profil unique.
+     </p>
+    </div>
+    <div class="feature-card">
+     <h3 class="feature-title">
+      Personnalisation IA
+     </h3>
+     <p class="feature-description">
+      Chaque recommandation est unique, tenant compte des préférences personnelles, des contraintes de vie et des objectifs de carrière.
+     </p>
+    </div>
+   </div>
+  </section>
+  <section class="investment-section" id="contact">
+   <div class="investment-content">
+    <p class="section-subtitle">
+     <div style="display:flex; align-items:center; gap:60px; justify-content:center; flex-wrap:wrap; padding:20px 0;">
+      <img alt="Illustration" src="girl.jpg" style="width:320px; height:auto; border-radius:10px; margin-right:40px;"/>
+      <div style="flex:1; min-width:250px; max-width:600px; text-align:left; margin-left:40px; padding-top:20px;">
+       ASSIGNME est une plateforme SaaS DeepTech conçue aussi bien pour les candidats que pour les entreprises. Connectée aux job boards privés, aux plateformes publiques et aux ATS d'entreprise, elle simplifie et accélère chaque étape du recrutement. En éliminant les démarches chronophages et en centralisant les opportunités, ASSIGNME rend le marché de l'emploi plus fluide, plus rapide et plus efficace pour tous les acteurs.
+      </div>
+     </div>
+    </p>
+    
+    <!-- Section démo mise en valeur -->
+    <div class="demo-highlight">
+     <h3>🤖 Testez l'IA en Action</h3>
+     <p>
+      Découvrez la puissance de notre Intelligence Artificielle avec une démonstration interactive. 
+      Analysez votre CV avec nos modèles NLP avancés et obtenez des recommandations d'emploi personnalisées en temps réel.
+     </p>
+     <a class="demo-btn" href="/demo">
+      <span class="icon">🚀</span>TESTER L'IA GRATUITEMENT
+     </a>
+    </div>
+    
+    <div class="contact-form">
+     <form action="mailto:contact@assignme.fr" enctype="text/plain" method="POST">
+      <div class="form-group">
+       <label for="name">
+        Nom / Entreprise
+       </label>
+       <input id="name" name="name" required="" type="text"/>
+      </div>
+      <div class="form-group">
+       <label for="email">
+        Email
+       </label>
+       <input id="email" name="email" required="" type="email"/>
+      </div>
+      <div class="form-group">
+       <label for="interest">
+        Votre Intérêt
+       </label>
+       <select id="interest" name="interest" required="">
+        <option value="investisseur">
+         Investisseur
+        </option>
+        <option value="partenaire">
+         Partenaire
+        </option>
+        <option value="client">
+         Client Entreprise
+        </option>
+        <option value="candidat">
+         Candidat
+        </option>
+       </select>
+      </div>
+      <div class="form-group">
+       <label for="message">
+        Message
+       </label>
+       <textarea id="message" name="message" placeholder="Parlez-nous de votre intérêt pour ASSIGNME..."></textarea>
+      </div>
+      <button class="submit-btn" type="submit">
+       Demander des informations
+      </button>
+     </form>
+    </div>
+   </div>
+  </section>
+  <footer class="footer">
+   <div class="footer-content">
+    <p>
+     &copy; 2025 ASSIGNME. Tous droits réservés. | Une innovation DeepTech française
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>
