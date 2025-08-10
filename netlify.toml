@@ -1,0 +1,24 @@
+[build]
+  # Dossier à déployer (racine du projet)
+  publish = "."
+  
+  # Pas de commande de build nécessaire
+  command = ""
+
+[functions]
+  # Dossier contenant les fonctions serverless
+  directory = "netlify/functions"
+
+[[headers]]
+  # Configuration CORS pour les fonctions
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
+[[redirects]]
+  # Redirection pour les erreurs 404 vers l'index
+  from = "/*"
+  to = "/index.html"
+  status = 404
