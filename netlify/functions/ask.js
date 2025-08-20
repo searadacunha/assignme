@@ -1,9 +1,5 @@
 // netlify/functions/ask.js
-// Q&A basé sur le dossier assignme.pdf via GPT (RAG simple).
-// - Placez assignme.pdf à la racine du site (même niveau que index.html).
-// - FRONT: fetch('/.netlify/functions/ask', {method:'POST', body: JSON.stringify({question})})
-// - NETLIFY ENV: ajouter OPENAI_API_KEY
-
+// Q&A basé sur ton PDF assignme.pdf + GPT (répond UNIQUEMENT si l'info est dans le dossier)
 const pdfParse = require('pdf-parse');
 
 const CORS = {
@@ -13,34 +9,37 @@ const CORS = {
   'Content-Type': 'application/json'
 };
 
+// Cache en mémoire entre invocations
 let PDF_TEXT_CACHE = null;
-let INDEX = null; // { blocks:[{text, tf}], idf:Map }
+let INDEX = null; // { blocks:[{text, tf}], idf:Map, N:number }
 
-function normalizeText(s){
+function normalizeText(s) {
   return (s || '')
     .replace(/\r/g, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
-function tokenize(s){
+function tokenize(s) {
   const noAccents = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   return (noAccents.toLowerCase().match(/[a-z0-9]+/g) || []);
 }
-function splitBlocks(text){
+function splitBlocks(text) {
   const raw = text.split(/\n{2,}/g).map(b => b.trim()).filter(Boolean);
   const blocks = [];
-  for (let i=0;i<raw.length;i++){
+  for (let i = 0; i < raw.length; i++) {
     const b = raw[i];
-    if (b.length < 60 && i+1 < raw.length){
-      blocks.push((b + '\n' + raw[i+1]).trim()); i++;
+    if (b.length < 60 && i + 1 < raw.length) {
+      blocks.push((b + '\n' + raw[i + 1]).trim());
+      i++;
     } else { blocks.push(b); }
   }
   return blocks;
 }
-async function fetchPdfText(baseUrl){
+
+async function fetchPdfText(baseUrl) {
   if (PDF_TEXT_CACHE) return PDF_TEXT_CACHE;
-  const pdfUrl = `${baseUrl}/assignme.pdf`;
+  const pdfUrl = `${baseUrl}/assignme.pdf`; // Mets ton PDF à la racine du site
   const resp = await fetch(pdfUrl);
   if (!resp.ok) throw new Error(`Impossible de charger le PDF: ${resp.status}`);
   const buf = Buffer.from(await resp.arrayBuffer());
@@ -48,35 +47,32 @@ async function fetchPdfText(baseUrl){
   PDF_TEXT_CACHE = normalizeText(pdf.text || '');
   return PDF_TEXT_CACHE;
 }
-async function buildIndex(text){
+
+async function buildIndex(text) {
   if (INDEX) return INDEX;
   const blocks = splitBlocks(text).map(t => {
     const tf = new Map();
-    tokenize(t).forEach(tok => tf.set(tok, (tf.get(tok)||0)+1));
+    tokenize(t).forEach(tok => tf.set(tok, (tf.get(tok) || 0) + 1));
     return { text: t, tf };
   });
   const df = new Map();
-  for (const b of blocks){
-    for (const tok of b.tf.keys()) df.set(tok, (df.get(tok)||0)+1);
-  }
+  for (const b of blocks) for (const tok of b.tf.keys()) df.set(tok, (df.get(tok) || 0) + 1);
   const N = blocks.length;
   const idf = new Map();
-  for (const [tok, dfi] of df.entries()){
-    idf.set(tok, Math.log((N+1)/(dfi+1)) + 1);
-  }
+  for (const [tok, dfi] of df.entries()) idf.set(tok, Math.log((N + 1) / (dfi + 1)) + 1);
   INDEX = { blocks, idf, N };
   return INDEX;
 }
-function scoreBlock(block, qTokens, idf){
+function scoreBlock(block, qTokens, idf) {
   let s = 0;
-  for (const t of qTokens){ s += (block.tf.get(t) || 0) * (idf.get(t) || 0); }
+  for (const t of qTokens) s += (block.tf.get(t) || 0) * (idf.get(t) || 0);
   return s;
 }
-function unique(a){ return [...new Set(a)]; }
+function unique(a) { return [...new Set(a)]; }
 
-async function callOpenAI(context, question){
+async function callOpenAI(context, question) {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY manquant (Netlify -> Environment variables)');
+  if (!apiKey) throw new Error("OPENAI_API_KEY manquant dans Netlify (Site settings > Environment)");
 
   const system = `Tu es une IA d'ASSIGNME. Réponds UNIQUEMENT à partir du CONTEXTE fourni.
 Si l'information n'y figure pas, réponds exactement : "Ce point n'est pas précisé dans le dossier."`;
@@ -99,14 +95,10 @@ ${question}` }
 
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-
-  if (!resp.ok){
+  if (!resp.ok) {
     const t = await resp.text();
     throw new Error(`OpenAI ${resp.status}: ${t.slice(0,300)}`);
   }
@@ -127,7 +119,6 @@ exports.handler = async (event) => {
     const q = question.trim();
     if (!q) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing "question"' }) };
 
-    // Base URL du site déployé (même origine)
     const proto = event.headers['x-forwarded-proto'] || 'https';
     const host  = event.headers['x-forwarded-host'] || event.headers['host'];
     const baseUrl = `${proto}://${host}`;
@@ -135,7 +126,7 @@ exports.handler = async (event) => {
     const text = await fetchPdfText(baseUrl);
     const { blocks, idf } = await buildIndex(text);
 
-    // Récupère les meilleurs extraits
+    // top-k contexte
     let qTokens = unique(tokenize(q).filter(t => t.length >= 2));
     const scored = blocks.map(b => ({ s: scoreBlock(b, qTokens, idf), text: b.text }))
                          .sort((a,b)=> b.s - a.s)
@@ -146,7 +137,6 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer: "Ce point n'est pas précisé dans le dossier." }) };
     }
 
-    // Contexte limité (env. 8k chars)
     let ctx = '';
     for (const h of scored) {
       if ((ctx.length + h.text.length + 2) > 8000) break;
@@ -154,8 +144,6 @@ exports.handler = async (event) => {
     }
 
     let answer = await callOpenAI(ctx, q);
-
-    // Garde-fou simple
     if (!answer) answer = "Ce point n'est pas précisé dans le dossier.";
 
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer }) };
