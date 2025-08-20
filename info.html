@@ -1,398 +1,125 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASSIGNME - FAQ + Question en bas</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ASSIGNME – Infos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --bg:#000;
-      --text:#e8f4ff;
-      --muted:#a9bbd6;
-      --neon:#5ca0ff;
-      --btn:#5f95ff;
-      --btnHover:#7ecbff;
-      --faq:#cfe0ff;
-      --faqHover:#dff0ff;
-      --faqActive:#6c8cff;
+      --blue1:#6495ed; --blue2:#87ceeb; --text:#e8f4ff; --muted:#b8c8e8;
+      --border: rgba(100,149,237,.3);
     }
-
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      overflow-x:hidden;
+    *{box-sizing:border-box} html,body{margin:0; background:#000; color:var(--text); font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    header{
+      width:100%; padding:20px 40px; display:flex; justify-content:space-between; align-items:center;
+      position:fixed; top:0; left:0; z-index:1000;
+      background:rgba(0,0,0,.95); backdrop-filter:blur(15px);
+      border-bottom:2px solid var(--border); box-shadow:0 4px 20px rgba(100,149,237,.1)
     }
-
-    
-    
-    
-
-    .hero{
-      min-height:100vh;
-      padding-top:120px;
-      position:relative;
-      background:#000 url('design.png') no-repeat left center / contain;
+    .logo-header{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase}
+    .logo-header img{height:50px; width:auto}
+    .contact-btn{
+      padding:12px 24px; border-radius:25px; text-decoration:none; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+      background:linear-gradient(45deg,var(--blue1),var(--blue2)); color:#0f0f23; box-shadow:0 6px 18px rgba(100,149,237,.45); transition:.25s ease
     }
-
-    /* Vignette panel with neon outline */
-    .panel{
-      position:absolute; right:220px; top:56%; transform:translateY(-50%);
-      width:260px; max-height:72vh;
-      display:flex; flex-direction:column;
-      border-radius:14px; background:#000;
-      border:1.5px solid rgba(92,160,255,.9);
-      box-shadow:0 0 14px rgba(92,160,255,.75), 0 0 36px rgba(92,160,255,.28);
-      overflow:hidden; isolation:isolate;
+    .contact-btn:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(100,149,237,.6)}
+    main{max-width:900px; margin:0 auto; padding:140px 20px 40px}
+    h1{font-size:2.2rem; color:#b0e0e6; margin:0 0 10px}
+    p.lead{color:var(--muted); margin:0 0 24px}
+    .card{background:#000; border:1px solid rgba(100,149,237,.25); border-radius:16px; padding:22px; margin-bottom:16px; box-shadow:0 6px 20px rgba(100,149,237,.12)}
+    /* Q&A widget */
+    .qa-wrap{max-width:640px; margin:22px 0 0}
+    #qa-answer{display:none; border:1px solid rgba(100,149,237,.35); border-radius:10px; padding:12px; background:rgba(255,255,255,.04); color:var(--text); margin-bottom:10px; white-space:pre-wrap}
+    .qa-row{display:flex; gap:8px}
+    #qa-input{flex:1; padding:12px; border-radius:10px; border:1px solid rgba(100,149,237,.5); background:#0b0f17; color:var(--text); outline:none}
+    #qa-input:focus{box-shadow:0 0 0 3px rgba(100,149,237,.25); border-color:var(--blue1)}
+    #qa-send{padding:12px 16px; border:none; border-radius:10px; font-weight:800; background:#cfe0ff; color:#001; cursor:pointer}
+    #qa-send:hover{background:#dff0ff}
+    footer{background:#000; padding:40px 20px; text-align:center; border-top:1px solid rgba(100,149,237,.2)}
+    .footer-content{max-width:1200px; margin:0 auto; color:#87ceeb}
+    @media (max-width:768px){
+      header{padding:15px 20px} .logo-header img{height:40px} .contact-btn{padding:10px 16px; font-size:12px}
+      main{padding-top:110px}
     }
-    .panel::before{
-      content:''; position:absolute; inset:-7px; border-radius:inherit; pointer-events:none;
-      border:2px solid rgba(92,160,255,.85);
-      filter:blur(7px); animation:neonPulse 3s ease-in-out infinite;
-      z-index:-1;
-    }
-    @keyframes neonPulse{
-      0%,100%{opacity:.85; filter:blur(6px)}
-      50%{opacity:1; filter:blur(9px)}
-    }
-
-    /* Scrollable content (Answer + FAQ + Question input at the end) */
-    .scroll{
-      flex:1 1 auto; overflow:auto;
-      padding:10px;
-    }
-
-    /* Answer box */
-    .answer-box{
-      margin-bottom:10px; padding:10px;
-      border:1px solid rgba(92,160,255,.35); border-radius:10px;
-      background:rgba(255,255,255,.04); font-size:.8rem; line-height:1.5;
-      display:none; /* hidden until we have an answer */
-    }
-    .answer-box strong{color:#fff}
-
-    /* FAQ list */
-    .faq-list{list-style:none;display:flex;flex-direction:column;gap:8px}
-    .faq-item{border-radius:10px;overflow:hidden}
-    .faq-btn{
-      width:100%; display:flex; align-items:center; justify-content:space-between;
-      gap:10px; cursor:pointer; border:none; outline:none;
-      padding:10px 12px; color:#001; font-weight:800; font-size:.82rem;
-      background:var(--faq); border-radius:10px;
-      box-shadow:0 2px 9px rgba(92,160,255,.22);
-      text-align:left; transition:.18s ease;
-    }
-    .faq-btn:hover{background:var(--faqHover)}
-    .faq-btn[aria-expanded="true"]{background:var(--faqActive); color:#001}
-    .chev{width:10px;height:10px;flex:0 0 auto;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg); transition:.18s ease}
-    .faq-btn[aria-expanded="true"] .chev{transform:rotate(-135deg)}
-    .answer{max-height:0; overflow:hidden; transition:max-height .22s ease}
-    .answer-inner{padding:10px 12px 12px; font-size:.78rem; line-height:1.55; background:rgba(255,255,255,.07); border-radius:10px; margin-top:4px}
-
-    /* Question input placed RIGHT AFTER the FAQ list (not sticky) */
-    .input-wrap{
-      margin-top:12px;
-      display:flex; gap:6px;
-      border-top:1px dashed rgba(92,160,255,.35);
-      padding-top:8px;
-    }
-    .in{
-      flex:1; min-width:0; padding:10px 12px; border-radius:10px;
-      border:1px solid rgba(92,160,255,.5); background:#0b0f17; color:var(--text); font-size:.82rem;
-      outline:none; transition:border-color .15s ease, box-shadow .15s ease;
-    }
-    .in:focus{ border-color:var(--neon); box-shadow:0 0 0 3px rgba(92,160,255,.25) }
-    .send{
-      padding:10px 12px; border:none; border-radius:10px;
-      background:var(--faq); color:#001; font-weight:800; font-size:.8rem;
-      cursor:pointer; box-shadow:0 2px 10px rgba(92,160,255,.25);
-    }
-    .send:hover{ background:var(--faqHover) }
-    .send:active{ transform:translateY(1px) }
-
-    @media (max-width: 1200px){
-      .panel{right:140px; width:260px; top:56%}
-    }
-    @media (max-width: 900px){
-      
-      .hero{padding-top:60px; background-position:center top; background-size:cover}
-      .panel{position:fixed; right:12px; left:auto; top:auto; bottom:18px; transform:none; width:82vw; max-height:55vh}
-    }
-    @media (max-width: 480px){
-      .answer-inner{font-size:.72rem}
-    }
-  
-    header {
-      width: 100%;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(15px);
-      z-index: 1000;
-      border-bottom: 2px solid rgba(100, 149, 237, 0.3);
-      box-shadow: 0 4px 20px rgba(100, 149, 237, 0.1);
-    }
-    .logo-header {
-      font-size: 20px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .contact-btn {
-      padding: 12px 24px;
-      background: linear-gradient(45deg, #6495ed, #87ceeb);
-      color: #0f0f23;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      display: inline-block;
-    }
-    .contact-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
-      background: linear-gradient(45deg, #87ceeb, #b0e0e6);
-    }
-    @media (max-width: 768px) {
-      header { padding: 15px 20px; }
-      .logo-header { font-size: 16px; }
-      .logo-header img { height: 40px !important; margin-right: 8px !important; }
-      .contact-btn { padding: 10px 16px; font-size: 12px; }
-    }
-
-  
-    .footer {
-      background: #000000;
-      padding: 40px 20px;
-      text-align: center;
-      border-top: 1px solid rgba(100, 149, 237, 0.2);
-    }
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      color: #87ceeb;
-    }
-
   </style>
 </head>
 <body>
   <header>
     <div class="logo-header">
-      <img alt="Assignme Logo" src="logo.png" style="height:50px; width:auto; margin-right:10px;">
-      ASSIGNME
+      <img src="logo.png" alt="Assignme Logo"> ASSIGNME
     </div>
-    <a class="contact-btn" href="mailto:contact@assignme.fr">
-      Nous contacter
-    </a>
+    <a class="contact-btn" href="mailto:contact@assignme.fr">Nous contacter</a>
   </header>
 
-  <main class="hero" role="main" aria-label="Hero">
-    <aside class="panel" aria-label="FAQ et question libre">
-      <div class="scroll">
-        <!-- Answer area (shows GPT+dossier response) -->
-        <div id="qa-answer" class="answer-box"></div>
+  <main>
+    <h1>En savoir plus</h1>
+    <p class="lead">Vision, feuille de route et innovation DeepTech d’ASSIGNME.</p>
 
-        <!-- FAQ list -->
-        <ul class="faq-list" role="list">
-          <li class="faq-item">
-            <button id="q1" class="faq-btn" aria-expanded="false" aria-controls="a1">
-              <span>Qu'est-ce qu'ASSIGNME ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a1" class="answer" role="region" aria-labelledby="q1">
-              <div class="answer-inner">
-                ASSIGNME est une plateforme SaaS DeepTech qui automatise le matching candidats &rarr; opportunités via IA, en quelques minutes.
-              </div>
-            </div>
-          </li>
+    <div class="card">
+      <h2>Notre vision</h2>
+      <p>ASSIGNME simplifie et accélère le recrutement en alignant compétences et opportunités grâce à l’IA.</p>
+    </div>
 
-          <li class="faq-item">
-            <button id="q2" class="faq-btn" aria-expanded="false" aria-controls="a2">
-              <span>Quel problème résolvez‑vous ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a2" class="answer" role="region" aria-labelledby="q2">
-              <div class="answer-inner">
-                Nous réduisons drastiquement délais et coûts de recrutement tout en simplifiant le parcours candidat.
-              </div>
-            </div>
-          </li>
+    <div class="card">
+      <h2>Feuille de route</h2>
+      <p>Pilotes, intégrations et industrialisation progressive. Pour les détails, posez votre question ci-dessous.</p>
+    </div>
 
-          <li class="faq-item">
-            <button id="q3" class="faq-btn" aria-expanded="false" aria-controls="a3">
-              <span>Qui peut utiliser ASSIGNME ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a3" class="answer" role="region" aria-labelledby="q3">
-              <div class="answer-inner">
-                Candidats, recruteurs privés (PME, hôpitaux, cabinets RH) et acteurs publics (ex. France Travail).
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q4" class="faq-btn" aria-expanded="false" aria-controls="a4">
-              <span>Comment ça fonctionne ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a4" class="answer" role="region" aria-labelledby="q4">
-              <div class="answer-inner">
-                IA de compréhension sémantique (profils &amp; offres), détection des correspondances implicites et génération automatique de candidatures.
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q5" class="faq-btn" aria-expanded="false" aria-controls="a5">
-              <span>En quoi êtes‑vous différents des job boards ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a5" class="answer" role="region" aria-labelledby="q5">
-              <div class="answer-inner">
-                Pas de recherche par mots‑clés : le matching est contextuel et proactif, l’IA pousse les opportunités pertinentes.
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q6" class="faq-btn" aria-expanded="false" aria-controls="a6">
-              <span>Où en êtes‑vous aujourd'hui ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a6" class="answer" role="region" aria-labelledby="q6">
-              <div class="answer-inner">
-                MVP en cours, démonstrateur en ligne et programme pilotes sur 12&nbsp;mois.
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q7" class="faq-btn" aria-expanded="false" aria-controls="a7">
-              <span>Quelle est votre ambition ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a7" class="answer" role="region" aria-labelledby="q7">
-              <div class="answer-inner">
-                Devenir le standard européen du matching emploi‑compétences basé IA, privé et public.
-              </div>
-            </div>
-          </li>
-        </ul>
-
-        <!-- Question input placed directly below the FAQ list -->
-        <div class="input-wrap">
-          <input id="qa-input" class="in" type="text" placeholder="Pose ta question" aria-label="Votre question">
-          <button id="qa-send" class="send" type="button">Envoyer</button>
-        </div>
+    <!-- Q&A : colle ton PDF assignme.pdf à la racine du site -->
+    <div class="qa-wrap">
+      <div id="qa-answer"></div>
+      <div class="qa-row">
+        <input id="qa-input" type="text" placeholder="Pose ta question" />
+        <button id="qa-send">Envoyer</button>
       </div>
-    </aside>
+    </div>
   </main>
 
-  <script>
-    (function(){
-      /* FAQ accordion */
-      const btns=[...document.querySelectorAll('.faq-btn')];
-      function closeAll(except){
-        btns.forEach(b=>{
-          if(b!==except){
-            b.setAttribute('aria-expanded','false');
-            const id=b.getAttribute('aria-controls');
-            const el=document.getElementById(id);
-            if(el) el.style.maxHeight='0px';
-          }
-        });
-      }
-      function toggle(btn){
-        const open=btn.getAttribute('aria-expanded')==='true';
-        const id=btn.getAttribute('aria-controls');
-        const el=document.getElementById(id);
-        if(!el) return;
-        if(open){ btn.setAttribute('aria-expanded','false'); el.style.maxHeight='0px'; }
-        else{ closeAll(btn); btn.setAttribute('aria-expanded','true'); el.style.maxHeight=el.scrollHeight+'px'; }
-      }
-      btns.forEach(btn=>{
-        btn.addEventListener('click',()=>toggle(btn));
-        btn.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(btn);} });
-      });
-      let t; window.addEventListener('resize',()=>{
-        clearTimeout(t); t=setTimeout(()=>{
-          btns.forEach(btn=>{
-            if(btn.getAttribute('aria-expanded')==='true'){
-              const id=btn.getAttribute('aria-controls');
-              const el=document.getElementById(id);
-              if(el) el.style.maxHeight=el.scrollHeight+'px';
-            }
-          });
-        },120);
-      });
-
-      /* Bottom Q&A using GPT + dossier (backend at /api/ask) */
-      const input = document.getElementById('qa-input');
-      const send  = document.getElementById('qa-send');
-      const box   = document.getElementById('qa-answer');
-      const API_URL = '/api/ask';
-
-      function ensureAnswerBox(){
-        if(!box) return;
-        box.style.display = 'block';
-        if(!box.parentNode) {
-          // safety: should exist
-        }
-      }
-      function showAnswer(text){
-        if(!box) return;
-        box.style.display = 'block';
-        box.innerHTML = text;
-        box.scrollIntoView({ behavior:'smooth', block:'nearest' });
-      }
-
-      async function ask(question){
-        showAnswer('…');
-        try{
-          const res = await fetch(API_URL, {
-            method:'POST',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({ question })
-          });
-          if(!res.ok){
-            const t = await res.text();
-            throw new Error('HTTP ' + res.status + ' — ' + t.slice(0,200));
-          }
-          const data = await res.json();
-          const answer = (data.answer || '').trim() || "Ce point n'est pas précisé dans le dossier.";
-          showAnswer(answer);
-        }catch(err){
-          showAnswer('Erreur : ' + err.message);
-        }
-      }
-
-      function submit(){
-        const q = (input.value || '').trim();
-        if(!q) return;
-        ask(q);
-        input.value='';
-        input.focus();
-      }
-      send.addEventListener('click', submit);
-      input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
-    })();
-  </script>
-
-  <footer class="footer">
+  <footer>
     <div class="footer-content">
       <p>&copy; 2025 ASSIGNME. Tous droits réservés. | Une innovation DeepTech française</p>
     </div>
   </footer>
+
+  <!-- Appel Netlify Function -->
+  <script>
+    const API_URL = '/.netlify/functions/ask'; // ne change pas cette ligne
+
+    const input = document.getElementById('qa-input');
+    const send  = document.getElementById('qa-send');
+    const box   = document.getElementById('qa-answer');
+
+    function showAnswer(text){
+      box.style.display = 'block';
+      box.textContent = text;
+      box.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+
+    async function ask(question){
+      showAnswer('…');
+      try{
+        const res = await fetch(API_URL, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+        showAnswer(data.answer || "Ce point n'est pas précisé dans le dossier.");
+      }catch(e){
+        showAnswer("Ce point n'est pas précisé dans le dossier.");
+      }
+    }
+
+    function submit(){
+      const q = (input.value || '').trim();
+      if(!q) return;
+      ask(q);
+      input.value=''; input.focus();
+    }
+
+    send.addEventListener('click', submit);
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
+  </script>
 </body>
 </html>
