@@ -1,15 +1,23 @@
 // netlify/functions/ask.js
-// Q&A via GPT constrained to assignme.pdf (RAG-lite: TF-IDF -> context -> Chat)
-// Requires env var: OPENAI_API_KEY
-// Place assignme.pdf at the site root (next to index.html).
+// Q&A basé sur le dossier assignme.pdf via GPT (RAG simple).
+// - Placez assignme.pdf à la racine du site (même niveau que index.html).
+// - FRONT: fetch('/.netlify/functions/ask', {method:'POST', body: JSON.stringify({question})})
+// - NETLIFY ENV: ajouter OPENAI_API_KEY
 
 const pdfParse = require('pdf-parse');
 
-// Cache across invocations
-let INDEX = null; // { blocks:[{text, tf:Map}], idf:Map, N:int, builtFrom:string }
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Content-Type': 'application/json'
+};
+
+let PDF_TEXT_CACHE = null;
+let INDEX = null; // { blocks:[{text, tf}], idf:Map }
 
 function normalizeText(s){
-  return s
+  return (s || '')
     .replace(/\r/g, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
@@ -17,8 +25,7 @@ function normalizeText(s){
 }
 function tokenize(s){
   const noAccents = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const tokens = noAccents.toLowerCase().match(/[a-z0-9]+/g) || [];
-  return tokens;
+  return (noAccents.toLowerCase().match(/[a-z0-9]+/g) || []);
 }
 function splitBlocks(text){
   const raw = text.split(/\n{2,}/g).map(b => b.trim()).filter(Boolean);
@@ -26,40 +33,26 @@ function splitBlocks(text){
   for (let i=0;i<raw.length;i++){
     const b = raw[i];
     if (b.length < 60 && i+1 < raw.length){
-      blocks.push((b + '\n' + raw[i+1]).trim());
-      i++;
-    } else {
-      blocks.push(b);
-    }
+      blocks.push((b + '\n' + raw[i+1]).trim()); i++;
+    } else { blocks.push(b); }
   }
   return blocks;
 }
-function scoreBlock(block, qTokens, idf){
-  let s = 0;
-  for (const t of qTokens){
-    const tf = block.tf.get(t) || 0;
-    const w = idf.get(t) || 0;
-    s += tf * w;
-  }
-  return s;
-}
-function uniq(arr){ return [...new Set(arr)] }
-
-async function fetchPdfBuffer(baseUrl){
+async function fetchPdfText(baseUrl){
+  if (PDF_TEXT_CACHE) return PDF_TEXT_CACHE;
   const pdfUrl = `${baseUrl}/assignme.pdf`;
   const resp = await fetch(pdfUrl);
-  if (!resp.ok) throw new Error(`Impossible de récupérer le PDF: ${resp.status}`);
-  const arrayBuffer = await resp.arrayBuffer();
-  return Buffer.from(arrayBuffer);
-}
-
-async function buildIndexFrom(baseUrl){
-  const buf = await fetchPdfBuffer(baseUrl);
+  if (!resp.ok) throw new Error(`Impossible de charger le PDF: ${resp.status}`);
+  const buf = Buffer.from(await resp.arrayBuffer());
   const pdf = await pdfParse(buf);
-  const text = normalizeText(pdf.text || '');
+  PDF_TEXT_CACHE = normalizeText(pdf.text || '');
+  return PDF_TEXT_CACHE;
+}
+async function buildIndex(text){
+  if (INDEX) return INDEX;
   const blocks = splitBlocks(text).map(t => {
     const tf = new Map();
-    for (const tok of tokenize(t)) tf.set(tok, (tf.get(tok)||0)+1);
+    tokenize(t).forEach(tok => tf.set(tok, (tf.get(tok)||0)+1));
     return { text: t, tf };
   });
   const df = new Map();
@@ -71,39 +64,37 @@ async function buildIndexFrom(baseUrl){
   for (const [tok, dfi] of df.entries()){
     idf.set(tok, Math.log((N+1)/(dfi+1)) + 1);
   }
-  INDEX = { blocks, idf, N, builtFrom: baseUrl };
+  INDEX = { blocks, idf, N };
   return INDEX;
 }
-
-async function ensureIndex(baseUrl){
-  if (INDEX && INDEX.builtFrom === baseUrl) return INDEX;
-  return buildIndexFrom(baseUrl);
+function scoreBlock(block, qTokens, idf){
+  let s = 0;
+  for (const t of qTokens){ s += (block.tf.get(t) || 0) * (idf.get(t) || 0); }
+  return s;
 }
+function unique(a){ return [...new Set(a)]; }
 
 async function callOpenAI(context, question){
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY manquant');
+  if (!apiKey) throw new Error('OPENAI_API_KEY manquant (Netlify -> Environment variables)');
 
-  const system = `Tu es une IA d'ASSIGNME. Tu dois répondre UNIQUEMENT à partir du CONTEXTE fourni.
-Si l'information n'est pas présente dans le contexte, réponds exactement: "Ce point n'est pas précisé dans le dossier.".
-Réponds en français, de manière concise et factuelle.`;
-
-  const user = `CONTEXTE:
-\"\"\"
-${context}
-\"\"\"
-
-QUESTION:
-${question}
-`;
+  const system = `Tu es une IA d'ASSIGNME. Réponds UNIQUEMENT à partir du CONTEXTE fourni.
+Si l'information n'y figure pas, réponds exactement : "Ce point n'est pas précisé dans le dossier."`;
 
   const body = {
     model: 'gpt-4o-mini',
+    temperature: 0.2,
     messages: [
       { role: 'system', content: system },
-      { role: 'user', content: user }
-    ],
-    temperature: 0.2
+      { role: 'user', content:
+`CONTEXTE:
+"""
+${context}
+"""
+
+QUESTION:
+${question}` }
+    ]
   };
 
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -117,74 +108,58 @@ ${question}
 
   if (!resp.ok){
     const t = await resp.text();
-    throw new Error('OpenAI ' + resp.status + ' — ' + t.slice(0,500));
+    throw new Error(`OpenAI ${resp.status}: ${t.slice(0,300)}`);
   }
   const data = await resp.json();
-  const answer = (data?.choices?.[0]?.message?.content || '').trim();
-  return answer || "Ce point n'est pas précisé dans le dossier.";
+  return (data?.choices?.[0]?.message?.content || '').trim();
 }
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: CORS, body: '' };
+  }
   try {
-    if (event.httpMethod === 'OPTIONS'){
-      return { statusCode: 200, headers: corsHeaders(), body: 'OK' };
-    }
-    if (event.httpMethod !== 'POST'){
-      return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' };
-    }
-    const body = JSON.parse(event.body || '{}');
-    const question = (body.question || '').trim();
-    if (!question){
-      return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing "question"' }) };
+    if (event.httpMethod !== 'POST') {
+      return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
-    const base = process.env.URL || process.env.DEPLOY_PRIME_URL || `https://${event.headers.host}`;
+    const { question = '' } = JSON.parse(event.body || '{}');
+    const q = question.trim();
+    if (!q) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing "question"' }) };
 
-    const { blocks, idf } = await ensureIndex(base);
+    // Base URL du site déployé (même origine)
+    const proto = event.headers['x-forwarded-proto'] || 'https';
+    const host  = event.headers['x-forwarded-host'] || event.headers['host'];
+    const baseUrl = `${proto}://${host}`;
 
-    let qTokens = tokenize(question).filter(t => t.length >= 2);
-    qTokens = uniq(qTokens);
-    const scored = blocks.map((b,i)=>({
-      i, s: scoreBlock(b, qTokens, idf), text: b.text
-    })).sort((a,b)=> b.s - a.s);
+    const text = await fetchPdfText(baseUrl);
+    const { blocks, idf } = await buildIndex(text);
 
-    const K = 6;
-    const hits = scored.filter(x => x.s > 0).slice(0, K);
-    if (hits.length === 0){
-      return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ answer: "Ce point n'est pas précisé dans le dossier." }) };
+    // Récupère les meilleurs extraits
+    let qTokens = unique(tokenize(q).filter(t => t.length >= 2));
+    const scored = blocks.map(b => ({ s: scoreBlock(b, qTokens, idf), text: b.text }))
+                         .sort((a,b)=> b.s - a.s)
+                         .filter(x => x.s > 0)
+                         .slice(0, 6);
+
+    if (scored.length === 0) {
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer: "Ce point n'est pas précisé dans le dossier." }) };
     }
 
-    const MAX = 8000;
+    // Contexte limité (env. 8k chars)
     let ctx = '';
-    for (const h of hits){
-      const chunk = h.text.trim();
-      if ((ctx.length + chunk.length + 2) > MAX) break;
-      ctx += (ctx ? '\n\n' : '') + chunk;
+    for (const h of scored) {
+      if ((ctx.length + h.text.length + 2) > 8000) break;
+      ctx += (ctx ? '\n\n' : '') + h.text.trim();
     }
 
-    const answer = await callOpenAI(ctx, question);
+    let answer = await callOpenAI(ctx, q);
 
-    // Guardrail: minimal heuristic; if the model hallucinated long text with no token overlap, block.
-    const overlap = qTokens.some(t => ctx.toLowerCase().includes(t));
-    const finalAnswer = (!overlap && answer.split(/\s+/).length > 40)
-      ? "Ce point n'est pas précisé dans le dossier."
-      : answer;
+    // Garde-fou simple
+    if (!answer) answer = "Ce point n'est pas précisé dans le dossier.";
 
-    return {
-      statusCode: 200,
-      headers: corsHeaders(),
-      body: JSON.stringify({ answer: finalAnswer })
-    };
-
-  } catch (err){
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: err.message }) };
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer }) };
+  } catch (err) {
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: err.message }) };
   }
 };
-
-function corsHeaders(){
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-  };
-}
