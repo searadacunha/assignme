@@ -1,16 +1,15 @@
 // netlify/functions/ask.js
 // Q&A multilingue basé EXCLUSIVEMENT sur assignme.pdf, avec recherche sémantique (embeddings) + GPT.
-// - Si l'info n'est pas dans le PDF -> répond exactement : "Ce point n'est pas précisé dans le dossier."
+// + Fallback "avis" (hors dossier) pour les questions subjectives (ex. "c'est révolutionnaire ?").
+// - Si l'info n'est pas dans le PDF ET que la question n'est pas subjective -> "Ce point n'est pas précisé dans le dossier."
 // - Répond dans la langue de la question.
-// Prérequis : mettre assignme.pdf à la racine du site + OPENAI_API_KEY dans Netlify (Environment variables).
+// Prérequis : assignme.pdf à la racine du site + OPENAI_API_KEY dans Netlify (Environment variables).
 
 const pdfParse = require('pdf-parse');
 
-// --- Config modèles OpenAI ---
-const CHAT_MODEL = 'gpt-4o-mini';
-const EMBED_MODEL = 'text-embedding-3-large'; // multilingue, qualité élevée
+const CHAT_MODEL  = 'gpt-4o-mini';
+const EMBED_MODEL = 'text-embedding-3-large';
 
-// --- CORS ---
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -18,14 +17,13 @@ const CORS = {
   'Content-Type': 'application/json'
 };
 
-// --- Caches (persistent tant que la lambda reste "chaude") ---
+// Caches (tant que la lambda reste chaude)
 let PDF_TEXT_CACHE = null;
-let CHUNKS = null;           // tableau de chaînes (chunks de texte)
-let EMBEDS = null;           // tableau de vecteurs embeddings (Float32Array)
-let EMBED_NORMS = null;      // norme (float) de chaque vecteur (pour cosine)
+let CHUNKS = null;
+let EMBEDS = null;       // Float32Array[]
+let EMBED_NORMS = null;  // number[]
 let INDEX_READY = false;
 
-// --------------------- Utils texte ---------------------
 function normalizeText(s) {
   return (s || '')
     .replace(/\r/g, '')
@@ -34,10 +32,7 @@ function normalizeText(s) {
     .trim();
 }
 
-/**
- * Découper en paragraphes, puis assembler en chunks ~1200-1600 caractères
- * avec un léger recouvrement (reprise du paragraphe précédent) pour le contexte.
- */
+// Découpe en chunks ~1400 chars avec léger recouvrement
 function makeChunks(text, target = 1400) {
   const paras = text.split(/\n{2,}/g).map(p => p.trim()).filter(Boolean);
   const out = [];
@@ -49,27 +44,20 @@ function makeChunks(text, target = 1400) {
       chunk += (chunk ? '\n\n' : '') + paras[j];
       j++;
     }
-    if (!chunk) { // paragraphe plus long que target : tronquer
-      chunk = paras[i].slice(0, target);
-      j = i + 1;
-    }
+    if (!chunk) { chunk = paras[i].slice(0, target); j = i + 1; }
     out.push(chunk);
-    // recouvrement d'un paragraphe pour la fenêtre suivante
-    i = Math.max(j - 1, j);
+    i = Math.max(j - 1, j); // recouvrement d'1 paragraphe
   }
   return out;
 }
 
-// --------------------- OpenAI helpers ---------------------
+// ------------ OpenAI helpers ------------
 async function openAI(path, body) {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY manquant dans Netlify > Site settings > Environment');
+  if (!apiKey) throw new Error('OPENAI_API_KEY manquant dans Netlify > Environment');
   const resp = await fetch(`https://api.openai.com/v1/${path}`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
   if (!resp.ok) {
@@ -78,29 +66,17 @@ async function openAI(path, body) {
   }
   return resp.json();
 }
-
 async function embedBatch(texts) {
   const data = await openAI('embeddings', { model: EMBED_MODEL, input: texts });
-  // retourne un tableau de Float32Array
   return data.data.map(d => Float32Array.from(d.embedding));
 }
+function l2norm(vec) { let s=0; for (let i=0;i<vec.length;i++) s+=vec[i]*vec[i]; return Math.sqrt(s); }
+function cosineSim(a, aN, b, bN) { let dot=0; for (let i=0;i<a.length;i++) dot+=a[i]*b[i]; return dot/(aN*bN); }
 
-function l2norm(vec) {
-  let s = 0;
-  for (let i = 0; i < vec.length; i++) s += vec[i] * vec[i];
-  return Math.sqrt(s);
-}
-
-function cosineSim(a, aNorm, b, bNorm) {
-  let dot = 0;
-  for (let i = 0; i < a.length; i++) dot += a[i] * b[i];
-  return dot / (aNorm * bNorm);
-}
-
-// --------------------- Indexation PDF ---------------------
+// ------------ Index PDF ------------
 async function fetchPdfText(baseUrl) {
   if (PDF_TEXT_CACHE) return PDF_TEXT_CACHE;
-  const pdfUrl = `${baseUrl}/assignme.pdf`; // le PDF doit être à la racine du site
+  const pdfUrl = `${baseUrl}/assignme.pdf`;
   const resp = await fetch(pdfUrl);
   if (!resp.ok) throw new Error(`Impossible de charger assignme.pdf (${resp.status})`);
   const buf = Buffer.from(await resp.arrayBuffer());
@@ -108,18 +84,15 @@ async function fetchPdfText(baseUrl) {
   PDF_TEXT_CACHE = normalizeText(pdf.text || '');
   return PDF_TEXT_CACHE;
 }
-
 async function buildIndex(baseUrl) {
   if (INDEX_READY && CHUNKS && EMBEDS && EMBED_NORMS) return;
-
   const text = await fetchPdfText(baseUrl);
   CHUNKS = makeChunks(text, 1400);
 
-  // Embeddings par batchs pour éviter des requêtes trop grosses
   EMBEDS = [];
   const BATCH = 64;
-  for (let i = 0; i < CHUNKS.length; i += BATCH) {
-    const batch = CHUNKS.slice(i, i + BATCH);
+  for (let i=0;i<CHUNKS.length;i+=BATCH) {
+    const batch = CHUNKS.slice(i, i+BATCH);
     const E = await embedBatch(batch);
     EMBEDS.push(...E);
   }
@@ -127,31 +100,34 @@ async function buildIndex(baseUrl) {
   INDEX_READY = true;
 }
 
-// --------------------- Récupération de contexte ---------------------
+// ------------ Recherche sémantique ------------
 async function topKContext(question, k = 8) {
-  // Embedding de la question
-  const qVec = (await embedBatch([question]))[0];
+  const qVec  = (await embedBatch([question]))[0];
   const qNorm = l2norm(qVec);
-
-  // score chaque chunk
   const scored = EMBEDS.map((vec, idx) => ({
-    idx,
-    score: cosineSim(qVec, qNorm, vec, EMBED_NORMS[idx])
-  })).sort((a, b) => b.score - a.score);
+    idx, score: cosineSim(qVec, qNorm, vec, EMBED_NORMS[idx])
+  })).sort((a,b)=> b.score - a.score);
 
-  // seuil simple pour filtrer les questions hors-sujet
-  const THRESH = 0.22; // ajuste si besoin (0.18..0.28)
+  const THRESH = 0.22; // ajuste si besoin
   const hits = scored.filter(s => s.score >= THRESH).slice(0, k);
   return hits.map(h => ({ score: h.score, text: CHUNKS[h.idx] }));
 }
 
-// --------------------- Appel GPT avec garde-fous ---------------------
-async function answerWithGPT(question, contextTexts) {
-  if (!contextTexts || contextTexts.length === 0) {
-    return "Ce point n'est pas précisé dans le dossier.";
-  }
+// ------------ Détection question subjective ------------
+function isSubjective(question) {
+  const q = question.toLowerCase();
+  const patterns = [
+    'révolutionnaire', 'innovant', 'ton avis', 'tu en penses quoi', 'tu penses quoi',
+    'penses-tu', 'subjectif', 'est-ce incroyable', 'game changer',
+    'is it revolutionary', 'what do you think', 'do you think', 'opinion', 'subjective'
+  ];
+  return patterns.some(p => q.includes(p));
+}
 
-  // Construit un contexte compact (max ~10k chars)
+// ------------ Réponses GPT ------------
+async function answerStrict(question, contextTexts) {
+  if (!contextTexts || contextTexts.length === 0) return "Ce point n'est pas précisé dans le dossier.";
+
   let context = '';
   for (const c of contextTexts) {
     if ((context.length + c.text.length + 2) > 10000) break;
@@ -159,11 +135,11 @@ async function answerWithGPT(question, contextTexts) {
   }
 
   const system = [
-    "Tu es l’assistant d’ASSIGNME. ",
-    "Tu dois répondre UNIQUEMENT à partir du CONTEXTE fourni (extraits du dossier). ",
-    "Si l’information n’y figure pas, réponds exactement : \"Ce point n'est pas précisé dans le dossier.\" ",
+    "Tu es l’assistant d’ASSIGNME.",
+    "Réponds UNIQUEMENT à partir du CONTEXTE fourni (extraits du dossier).",
+    "Si l’information n’y figure pas, réponds exactement : \"Ce point n'est pas précisé dans le dossier.\"",
     "Réponds dans la langue de la question, de façon concise et précise."
-  ].join('');
+  ].join(' ');
 
   const user = `CONTEXTE:
 """
@@ -179,28 +155,62 @@ ${question}
     temperature: 0.2,
     messages: [
       { role: 'system', content: system },
-      { role: 'user', content: user }
+      { role: 'user',   content: user }
     ]
   });
 
   const raw = (data?.choices?.[0]?.message?.content || '').trim();
-  if (!raw) return "Ce point n'est pas précisé dans le dossier.";
+  return raw || "Ce point n'est pas précisé dans le dossier.";
+}
 
-  // Garde-fou supplémentaire : si la réponse ressemble à une supposition ➜ no-answer
-  const lowered = raw.toLowerCase();
-  const ban = [
-    "je pense que", "il est probable", "il semble que", "peut-être",
-    "je ne suis pas sûr", "je ne suis pas certaine", "je ne sais pas",
-    "i think", "maybe", "probably", "not sure"
-  ];
-  if (ban.some(b => lowered.includes(b))) {
-    return "Ce point n'est pas précisé dans le dossier.";
+async function answerOpinion(question, contextTexts) {
+  // On peut utiliser les mots-clés repérés dans le contexte (s'il y en a) comme "indices",
+  // mais on ne doit PAS affirmer des faits absents du dossier.
+  let hints = '';
+  if (contextTexts && contextTexts.length) {
+    const joined = contextTexts.map(c => c.text).join('\n\n').slice(0, 2000);
+    hints = `INDICES (extraits du dossier, ne pas inventer de faits) :
+"""
+${joined}
+"""`;
   }
 
+  const system = [
+    "Tu donnes un avis COURT et équilibré, en te basant sur des critères généraux de l'innovation (impact, différenciation, mise à l'échelle, preuves).",
+    "NE PAS inventer de faits non présents dans le dossier.",
+    "Si tu n'as pas assez d’éléments, formule un avis prudent (conditionnel) sans inventer.",
+    "Toujours répondre dans la langue de la question."
+  ].join(' ');
+
+  const user = `${hints}
+
+QUESTION (avis) :
+${question}
+
+Consigne :
+- 3 à 5 phrases maximum.
+- Si le dossier ne donne pas d'éléments factuels, dis-le clairement et garde l'avis hypothétique (ex: \"potentiellement\", \"si les résultats annoncés se confirment\").`;
+
+  const data = await openAI('chat/completions', {
+    model: CHAT_MODEL,
+    temperature: 0.5,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user',   content: user }
+    ]
+  });
+
+  const raw = (data?.choices?.[0]?.message?.content || '').trim();
+  // Sécurité : si le modèle part trop en spéculation brute
+  const lowered = raw.toLowerCase();
+  const risky = ["je pense que", "il est probable", "il semble que", "maybe", "probably"];
+  if (!raw || risky.some(x => lowered.startsWith(x))) {
+    return "Ce point n'est pas précisé dans le dossier.";
+  }
   return raw;
 }
 
-// --------------------- Handler Netlify ---------------------
+// ------------ Handler Netlify ------------
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: CORS, body: '' };
@@ -214,24 +224,28 @@ exports.handler = async (event) => {
     const q = (question || '').trim();
     if (!q) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing \"question\"' }) };
 
-    // URL du site (même origine)
+    // URL du site pour charger le PDF
     const proto = event.headers['x-forwarded-proto'] || 'https';
     const host  = event.headers['x-forwarded-host'] || event.headers['host'];
     const baseUrl = `${proto}://${host}`;
 
-    // 1) Construire/charger l’index embeddings du PDF
+    // 1) Index embeddings du PDF
     await buildIndex(baseUrl);
 
-    // 2) Récupérer les meilleurs extraits par similarité sémantique
+    // 2) Contexte sémantique
     const hits = await topKContext(q, 8);
 
-    // 3) Si rien n’est pertinent, retour direct no-answer
-    if (!hits || hits.length === 0) {
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer: "Ce point n'est pas précisé dans le dossier." }) };
+    // 3) Réponse stricte depuis le dossier
+    let answer = await answerStrict(q, hits);
+
+    // 4) Si pas d'info ET question subjective -> donner un "avis" court (hors dossier, mais prudent)
+    const NO_ANSWER = "Ce point n'est pas précisé dans le dossier.";
+    if ((answer === NO_ANSWER || !answer) && isSubjective(q)) {
+      answer = await answerOpinion(q, hits);
     }
 
-    // 4) Appeler GPT contraint par le contexte
-    const answer = await answerWithGPT(q, hits);
+    // 5) Si toujours rien -> no-answer
+    if (!answer) answer = NO_ANSWER;
 
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer }) };
   } catch (err) {
