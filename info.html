@@ -340,11 +340,11 @@
         },120);
       });
 
-      /* Bottom Q&A using GPT + dossier (backend at /api/ask) */
+      /* Bottom Q&A using GPT + dossier (backend at /.netlify/functions/ask) */
       const input = document.getElementById('qa-input');
       const send  = document.getElementById('qa-send');
       const box   = document.getElementById('qa-answer');
-      const API_URL = '/api/ask';
+      const API_URL = '/.netlify/functions/ask';
 
       function ensureAnswerBox(){
         if(!box) return;
@@ -356,12 +356,12 @@
       function showAnswer(text){
         if(!box) return;
         box.style.display = 'block';
-        box.innerHTML = text;
+        box.innerHTML = `<div style="color: #e8f4ff; line-height: 1.6;">${text}</div>`;
         box.scrollIntoView({ behavior:'smooth', block:'nearest' });
       }
 
       async function ask(question){
-        showAnswer('…');
+        showAnswer('<div style="color: #87ceeb; font-style: italic;">🤔 Analyse de la question en cours...</div>');
         try{
           const res = await fetch(API_URL, {
             method:'POST',
@@ -369,14 +369,17 @@
             body: JSON.stringify({ question })
           });
           if(!res.ok){
-            const t = await res.text();
-            throw new Error('HTTP ' + res.status + ' – ' + t.slice(0,200));
+            const errorData = await res.json().catch(() => ({}));
+            if (res.status === 429) {
+              throw new Error('Limite de requêtes atteinte. Veuillez réessayer dans quelques minutes.');
+            }
+            throw new Error(errorData.error || `Erreur ${res.status}`);
           }
           const data = await res.json();
-          const answer = (data.answer || '').trim() || "Ce point n'est pas précisé dans le dossier.";
+          const answer = (data.answer || '').trim() || "Cette information n'est pas disponible dans le dossier ASSIGNME.";
           showAnswer(answer);
         }catch(err){
-          showAnswer('Erreur : ' + err.message);
+          showAnswer(`<div style="color: #ff6b6b;">❌ Erreur : ${err.message}</div>`);
         }
       }
 
