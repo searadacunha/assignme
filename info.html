@@ -29,10 +29,6 @@
       overflow-x:hidden;
     }
 
-    
-    
-    
-
     .hero{
       min-height:100vh;
       padding-top:120px;
@@ -119,7 +115,6 @@
       .panel{right:140px; width:260px; top:56%}
     }
     @media (max-width: 900px){
-      
       .hero{padding-top:60px; background-position:left center; background-size:cover}
       .panel{position:fixed; right:12px; left:auto; top:auto; bottom:18px; transform:none; width:82vw; max-height:55vh}
     }
@@ -181,7 +176,6 @@
       .contact-btn { padding: 10px 16px; font-size: 12px; }
     }
 
-  
     .footer {
       background: #000000;
       padding: 40px 20px;
@@ -221,7 +215,7 @@
             </button>
             <div id="a1" class="answer" role="region" aria-labelledby="q1">
               <div class="answer-inner">
-                ASSIGNME est une plateforme SaaS DeepTech qui automatise le matching candidats &rarr; opportunités via IA, en quelques minutes.
+                ASSIGNME est une plateforme SaaS DeepTech qui automatise le matching candidats → opportunités via IA, en quelques minutes.
               </div>
             </div>
           </li>
@@ -361,7 +355,7 @@
       }
 
       async function ask(question){
-        showAnswer('<div style="color: #87ceeb; font-style: italic;">🤔 Analyse de la question en cours...</div>');
+        showAnswer('<div style="color: #87ceeb; font-style: italic;">Analyse de la question en cours...</div>');
         try{
           const res = await fetch(API_URL, {
             method:'POST',
@@ -379,7 +373,7 @@
           const answer = (data.answer || '').trim() || "Cette information n'est pas disponible dans le dossier ASSIGNME.";
           showAnswer(answer);
         }catch(err){
-          showAnswer(`<div style="color: #ff6b6b;">❌ Erreur : ${err.message}</div>`);
+          showAnswer(`<div style="color: #ff6b6b;">Erreur : ${err.message}</div>`);
         }
       }
 
