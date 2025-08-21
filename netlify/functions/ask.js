@@ -1,254 +1,268 @@
 // netlify/functions/ask.js
-// Q&A multilingue basé EXCLUSIVEMENT sur assignme.pdf, avec recherche sémantique (embeddings) + GPT.
-// + Fallback "avis" (hors dossier) pour les questions subjectives (ex. "c'est révolutionnaire ?").
-// - Si l'info n'est pas dans le PDF ET que la question n'est pas subjective -> "Ce point n'est pas précisé dans le dossier."
-// - Répond dans la langue de la question.
-// Prérequis : assignme.pdf à la racine du site + OPENAI_API_KEY dans Netlify (Environment variables).
+// Q&A via GPT basé sur assignme.pdf (RAG avec TF-IDF)
+// Nécessite: OPENAI_API_KEY dans les variables d'environnement
+// Place assignme.pdf à la racine du site (à côté d'index.html)
 
 const pdfParse = require('pdf-parse');
 
-const CHAT_MODEL  = 'gpt-4o-mini';
-const EMBED_MODEL = 'text-embedding-3-large';
+// Cache entre les invocations
+let INDEX = null; // { blocks:[{text, tf:Map}], idf:Map, N:int, builtFrom:string }
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Content-Type': 'application/json'
-};
-
-// Caches (tant que la lambda reste chaude)
-let PDF_TEXT_CACHE = null;
-let CHUNKS = null;
-let EMBEDS = null;       // Float32Array[]
-let EMBED_NORMS = null;  // number[]
-let INDEX_READY = false;
-
-function normalizeText(s) {
-  return (s || '')
+function normalizeText(s){
+  return s
     .replace(/\r/g, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
-// Découpe en chunks ~1400 chars avec léger recouvrement
-function makeChunks(text, target = 1400) {
-  const paras = text.split(/\n{2,}/g).map(p => p.trim()).filter(Boolean);
-  const out = [];
-  let i = 0;
-  while (i < paras.length) {
-    let chunk = '';
-    let j = i;
-    while (j < paras.length && (chunk.length + (chunk ? 2 : 0) + paras[j].length) <= target) {
-      chunk += (chunk ? '\n\n' : '') + paras[j];
-      j++;
+function tokenize(s){
+  const noAccents = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const tokens = noAccents.toLowerCase().match(/[a-z0-9]+/g) || [];
+  return tokens;
+}
+
+function splitBlocks(text){
+  const raw = text.split(/\n{2,}/g).map(b => b.trim()).filter(Boolean);
+  const blocks = [];
+  for (let i=0; i<raw.length; i++){
+    const b = raw[i];
+    if (b.length < 60 && i+1 < raw.length){
+      blocks.push((b + '\n' + raw[i+1]).trim());
+      i++;
+    } else {
+      blocks.push(b);
     }
-    if (!chunk) { chunk = paras[i].slice(0, target); j = i + 1; }
-    out.push(chunk);
-    i = Math.max(j - 1, j); // recouvrement d'1 paragraphe
   }
-  return out;
+  return blocks;
 }
 
-// ------------ OpenAI helpers ------------
-async function openAI(path, body) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY manquant dans Netlify > Environment');
-  const resp = await fetch(`https://api.openai.com/v1/${path}`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`OpenAI ${resp.status}: ${txt.slice(0, 400)}`);
+function scoreBlock(block, qTokens, idf){
+  let s = 0;
+  for (const t of qTokens){
+    const tf = block.tf.get(t) || 0;
+    const w = idf.get(t) || 0;
+    s += tf * w;
   }
-  return resp.json();
+  return s;
 }
-async function embedBatch(texts) {
-  const data = await openAI('embeddings', { model: EMBED_MODEL, input: texts });
-  return data.data.map(d => Float32Array.from(d.embedding));
-}
-function l2norm(vec) { let s=0; for (let i=0;i<vec.length;i++) s+=vec[i]*vec[i]; return Math.sqrt(s); }
-function cosineSim(a, aN, b, bN) { let dot=0; for (let i=0;i<a.length;i++) dot+=a[i]*b[i]; return dot/(aN*bN); }
 
-// ------------ Index PDF ------------
-async function fetchPdfText(baseUrl) {
-  if (PDF_TEXT_CACHE) return PDF_TEXT_CACHE;
+function uniq(arr){ return [...new Set(arr)] }
+
+async function fetchPdfBuffer(baseUrl){
   const pdfUrl = `${baseUrl}/assignme.pdf`;
   const resp = await fetch(pdfUrl);
-  if (!resp.ok) throw new Error(`Impossible de charger assignme.pdf (${resp.status})`);
-  const buf = Buffer.from(await resp.arrayBuffer());
+  if (!resp.ok) throw new Error(`Impossible de récupérer le PDF ASSIGNME: ${resp.status}`);
+  const arrayBuffer = await resp.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+async function buildIndexFrom(baseUrl){
+  const buf = await fetchPdfBuffer(baseUrl);
   const pdf = await pdfParse(buf);
-  PDF_TEXT_CACHE = normalizeText(pdf.text || '');
-  return PDF_TEXT_CACHE;
-}
-async function buildIndex(baseUrl) {
-  if (INDEX_READY && CHUNKS && EMBEDS && EMBED_NORMS) return;
-  const text = await fetchPdfText(baseUrl);
-  CHUNKS = makeChunks(text, 1400);
-
-  EMBEDS = [];
-  const BATCH = 64;
-  for (let i=0;i<CHUNKS.length;i+=BATCH) {
-    const batch = CHUNKS.slice(i, i+BATCH);
-    const E = await embedBatch(batch);
-    EMBEDS.push(...E);
+  const text = normalizeText(pdf.text || '');
+  
+  const blocks = splitBlocks(text).map(t => {
+    const tf = new Map();
+    for (const tok of tokenize(t)) tf.set(tok, (tf.get(tok)||0)+1);
+    return { text: t, tf };
+  });
+  
+  const df = new Map();
+  for (const b of blocks){
+    for (const tok of b.tf.keys()) df.set(tok, (df.get(tok)||0)+1);
   }
-  EMBED_NORMS = EMBEDS.map(v => l2norm(v));
-  INDEX_READY = true;
-}
-
-// ------------ Recherche sémantique ------------
-async function topKContext(question, k = 8) {
-  const qVec  = (await embedBatch([question]))[0];
-  const qNorm = l2norm(qVec);
-  const scored = EMBEDS.map((vec, idx) => ({
-    idx, score: cosineSim(qVec, qNorm, vec, EMBED_NORMS[idx])
-  })).sort((a,b)=> b.score - a.score);
-
-  const THRESH = 0.22; // ajuste si besoin
-  const hits = scored.filter(s => s.score >= THRESH).slice(0, k);
-  return hits.map(h => ({ score: h.score, text: CHUNKS[h.idx] }));
-}
-
-// ------------ Détection question subjective ------------
-function isSubjective(question) {
-  const q = question.toLowerCase();
-  const patterns = [
-    'révolutionnaire', 'innovant', 'ton avis', 'tu en penses quoi', 'tu penses quoi',
-    'penses-tu', 'subjectif', 'est-ce incroyable', 'game changer',
-    'is it revolutionary', 'what do you think', 'do you think', 'opinion', 'subjective'
-  ];
-  return patterns.some(p => q.includes(p));
-}
-
-// ------------ Réponses GPT ------------
-async function answerStrict(question, contextTexts) {
-  if (!contextTexts || contextTexts.length === 0) return "Ce point n'est pas précisé dans le dossier.";
-
-  let context = '';
-  for (const c of contextTexts) {
-    if ((context.length + c.text.length + 2) > 10000) break;
-    context += (context ? '\n\n' : '') + c.text.trim();
+  
+  const N = blocks.length;
+  const idf = new Map();
+  for (const [tok, dfi] of df.entries()){
+    idf.set(tok, Math.log((N+1)/(dfi+1)) + 1);
   }
+  
+  INDEX = { blocks, idf, N, builtFrom: baseUrl };
+  return INDEX;
+}
 
-  const system = [
-    "Tu es l’assistant d’ASSIGNME.",
-    "Réponds UNIQUEMENT à partir du CONTEXTE fourni (extraits du dossier).",
-    "Si l’information n’y figure pas, réponds exactement : \"Ce point n'est pas précisé dans le dossier.\"",
-    "Réponds dans la langue de la question, de façon concise et précise."
-  ].join(' ');
+async function ensureIndex(baseUrl){
+  if (INDEX && INDEX.builtFrom === baseUrl) return INDEX;
+  return buildIndexFrom(baseUrl);
+}
 
-  const user = `CONTEXTE:
+async function callOpenAI(context, question){
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OPENAI_API_KEY manquant dans la configuration');
+
+  const system = `Tu es l'assistant IA officiel d'ASSIGNME, une startup française DeepTech spécialisée dans le recrutement par intelligence artificielle.
+
+INSTRUCTIONS IMPORTANTES :
+1. Réponds UNIQUEMENT à partir du CONTEXTE fourni ci-dessous
+2. Si l'information n'est pas dans le contexte, réponds exactement: "Ce point n'est pas précisé dans le dossier ASSIGNME."
+3. Sois précis, professionnel et enthousiaste sur le projet ASSIGNME
+4. Utilise un ton accessible mais expert
+5. Réponds en français
+
+CONTEXTE SPÉCIFIQUE :
+- Benjamin Da Cunha est le CEO et fondateur d'ASSIGNME
+- ASSIGNME est une innovation DeepTech française
+- La plateforme révolutionne le recrutement par l'IA
+- Recherche active de financement pour levée de fonds
+- MVP en développement avec démonstrateur en ligne`;
+
+  const user = `CONTEXTE ASSIGNME:
 """
 ${context}
 """
 
 QUESTION:
 ${question}
-`;
 
-  const data = await openAI('chat/completions', {
-    model: CHAT_MODEL,
-    temperature: 0.2,
+Réponds de manière claire et engageante en te basant uniquement sur le contexte fourni.`;
+
+  const body = {
+    model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: system },
-      { role: 'user',   content: user }
-    ]
+      { role: 'user', content: user }
+    ],
+    temperature: 0.3,
+    max_tokens: 400
+  };
+
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
   });
 
-  const raw = (data?.choices?.[0]?.message?.content || '').trim();
-  return raw || "Ce point n'est pas précisé dans le dossier.";
+  if (!resp.ok){
+    const errorText = await resp.text();
+    if (resp.status === 429) {
+      throw new Error('Limite de requêtes OpenAI atteinte. Réessayez dans quelques minutes.');
+    }
+    if (resp.status === 401) {
+      throw new Error('Clé API OpenAI invalide');
+    }
+    throw new Error(`Erreur OpenAI ${resp.status}: ${errorText.slice(0,200)}`);
+  }
+  
+  const data = await resp.json();
+  const answer = (data?.choices?.[0]?.message?.content || '').trim();
+  return answer || "Ce point n'est pas précisé dans le dossier ASSIGNME.";
 }
 
-async function answerOpinion(question, contextTexts) {
-  // On peut utiliser les mots-clés repérés dans le contexte (s'il y en a) comme "indices",
-  // mais on ne doit PAS affirmer des faits absents du dossier.
-  let hints = '';
-  if (contextTexts && contextTexts.length) {
-    const joined = contextTexts.map(c => c.text).join('\n\n').slice(0, 2000);
-    hints = `INDICES (extraits du dossier, ne pas inventer de faits) :
-"""
-${joined}
-"""`;
-  }
-
-  const system = [
-    "Tu donnes un avis COURT et équilibré, en te basant sur des critères généraux de l'innovation (impact, différenciation, mise à l'échelle, preuves).",
-    "NE PAS inventer de faits non présents dans le dossier.",
-    "Si tu n'as pas assez d’éléments, formule un avis prudent (conditionnel) sans inventer.",
-    "Toujours répondre dans la langue de la question."
-  ].join(' ');
-
-  const user = `${hints}
-
-QUESTION (avis) :
-${question}
-
-Consigne :
-- 3 à 5 phrases maximum.
-- Si le dossier ne donne pas d'éléments factuels, dis-le clairement et garde l'avis hypothétique (ex: \"potentiellement\", \"si les résultats annoncés se confirment\").`;
-
-  const data = await openAI('chat/completions', {
-    model: CHAT_MODEL,
-    temperature: 0.5,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user',   content: user }
-    ]
-  });
-
-  const raw = (data?.choices?.[0]?.message?.content || '').trim();
-  // Sécurité : si le modèle part trop en spéculation brute
-  const lowered = raw.toLowerCase();
-  const risky = ["je pense que", "il est probable", "il semble que", "maybe", "probably"];
-  if (!raw || risky.some(x => lowered.startsWith(x))) {
-    return "Ce point n'est pas précisé dans le dossier.";
-  }
-  return raw;
+function corsHeaders(){
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Content-Type': 'application/json'
+  };
 }
 
-// ------------ Handler Netlify ------------
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: CORS, body: '' };
-  }
+exports.handler = async (event, context) => {
   try {
-    if (event.httpMethod !== 'POST') {
-      return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Method not allowed' }) };
+    // Gestion CORS
+    if (event.httpMethod === 'OPTIONS'){
+      return { 
+        statusCode: 200, 
+        headers: corsHeaders(), 
+        body: 'OK' 
+      };
+    }
+    
+    if (event.httpMethod !== 'POST'){
+      return { 
+        statusCode: 405, 
+        headers: corsHeaders(), 
+        body: JSON.stringify({ error: 'Méthode non autorisée' })
+      };
     }
 
-    const { question = '' } = JSON.parse(event.body || '{}');
-    const q = (question || '').trim();
-    if (!q) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing \"question\"' }) };
-
-    // URL du site pour charger le PDF
-    const proto = event.headers['x-forwarded-proto'] || 'https';
-    const host  = event.headers['x-forwarded-host'] || event.headers['host'];
-    const baseUrl = `${proto}://${host}`;
-
-    // 1) Index embeddings du PDF
-    await buildIndex(baseUrl);
-
-    // 2) Contexte sémantique
-    const hits = await topKContext(q, 8);
-
-    // 3) Réponse stricte depuis le dossier
-    let answer = await answerStrict(q, hits);
-
-    // 4) Si pas d'info ET question subjective -> donner un "avis" court (hors dossier, mais prudent)
-    const NO_ANSWER = "Ce point n'est pas précisé dans le dossier.";
-    if ((answer === NO_ANSWER || !answer) && isSubjective(q)) {
-      answer = await answerOpinion(q, hits);
+    // Parse de la question
+    const body = JSON.parse(event.body || '{}');
+    const question = (body.question || '').trim();
+    
+    if (!question){
+      return { 
+        statusCode: 400, 
+        headers: corsHeaders(), 
+        body: JSON.stringify({ error: 'Question manquante' })
+      };
     }
 
-    // 5) Si toujours rien -> no-answer
-    if (!answer) answer = NO_ANSWER;
+    // Détection de l'URL de base
+    const base = process.env.URL || process.env.DEPLOY_PRIME_URL || `https://${event.headers.host}`;
 
-    return { statusCode: 200, headers: CORS, body: JSON.stringify({ answer }) };
+    // Construction/récupération de l'index du PDF
+    const { blocks, idf } = await ensureIndex(base);
+
+    // Recherche TF-IDF des blocs pertinents
+    let qTokens = tokenize(question).filter(t => t.length >= 2);
+    qTokens = uniq(qTokens);
+    
+    const scored = blocks.map((b,i) => ({
+      i, 
+      s: scoreBlock(b, qTokens, idf), 
+      text: b.text
+    })).sort((a,b) => b.s - a.s);
+
+    // Sélection des meilleurs blocs
+    const K = 8; // Plus de contexte pour de meilleures réponses
+    const hits = scored.filter(x => x.s > 0).slice(0, K);
+    
+    if (hits.length === 0){
+      return { 
+        statusCode: 200, 
+        headers: corsHeaders(), 
+        body: JSON.stringify({ 
+          answer: "Ce point n'est pas précisé dans le dossier ASSIGNME." 
+        })
+      };
+    }
+
+    // Construction du contexte
+    const MAX_CONTEXT = 6000;
+    let ctx = '';
+    for (const h of hits){
+      const chunk = h.text.trim();
+      if ((ctx.length + chunk.length + 2) > MAX_CONTEXT) break;
+      ctx += (ctx ? '\n\n' : '') + chunk;
+    }
+
+    // Génération de la réponse avec GPT
+    const answer = await callOpenAI(ctx, question);
+
+    // Vérification de pertinence (anti-hallucination basique)
+    const hasOverlap = qTokens.some(t => ctx.toLowerCase().includes(t));
+    const isLongAnswer = answer.split(/\s+/).length > 50;
+    
+    const finalAnswer = (!hasOverlap && isLongAnswer)
+      ? "Ce point n'est pas précisé dans le dossier ASSIGNME."
+      : answer;
+
+    return {
+      statusCode: 200,
+      headers: corsHeaders(),
+      body: JSON.stringify({ 
+        answer: finalAnswer,
+        timestamp: new Date().toISOString()
+      })
+    };
+
   } catch (err) {
-    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: err.message }) };
+    console.error('Erreur fonction ask:', err);
+    
+    return { 
+      statusCode: 500, 
+      headers: corsHeaders(), 
+      body: JSON.stringify({ 
+        error: err.message.includes('PDF') 
+          ? 'Le dossier ASSIGNME est temporairement indisponible'
+          : 'Erreur lors du traitement de votre question'
+      })
+    };
   }
 };
