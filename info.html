@@ -29,6 +29,10 @@
       overflow-x:hidden;
     }
 
+    
+    
+    
+
     .hero{
       min-height:100vh;
       padding-top:120px;
@@ -36,6 +40,7 @@
       background:#000 url('design.png') no-repeat left center / contain;
     }
 
+    /* Vignette panel with neon outline */
     .panel{
       position:absolute; right:220px; top:56%; transform:translateY(-50%);
       width:260px; max-height:72vh;
@@ -56,19 +61,22 @@
       50%{opacity:1; filter:blur(9px)}
     }
 
+    /* Scrollable content (Answer + FAQ + Question input at the end) */
     .scroll{
       flex:1 1 auto; overflow:auto;
       padding:10px;
     }
 
+    /* Answer box */
     .answer-box{
       margin-bottom:10px; padding:10px;
       border:1px solid rgba(92,160,255,.35); border-radius:10px;
       background:rgba(255,255,255,.04); font-size:.8rem; line-height:1.5;
-      display:none;
+      display:none; /* hidden until we have an answer */
     }
     .answer-box strong{color:#fff}
 
+    /* FAQ list */
     .faq-list{list-style:none;display:flex;flex-direction:column;gap:8px}
     .faq-item{border-radius:10px;overflow:hidden}
     .faq-btn{
@@ -86,6 +94,7 @@
     .answer{max-height:0; overflow:hidden; transition:max-height .22s ease}
     .answer-inner{padding:10px 12px 12px; font-size:.78rem; line-height:1.55; background:rgba(255,255,255,.07); border-radius:10px; margin-top:4px}
 
+    /* Question input placed RIGHT AFTER the FAQ list (not sticky) */
     .input-wrap{
       margin-top:12px;
       display:flex; gap:6px;
@@ -110,6 +119,7 @@
       .panel{right:140px; width:260px; top:56%}
     }
     @media (max-width: 900px){
+      
       .hero{padding-top:60px; background-position:left center; background-size:cover}
       .panel{position:fixed; right:12px; left:auto; top:auto; bottom:18px; transform:none; width:82vw; max-height:55vh}
     }
@@ -140,6 +150,7 @@
       color: white;
       text-transform: uppercase;
       letter-spacing: 1px;
+      text-decoration: none;
     }
     .contact-btn {
       padding: 12px 24px;
@@ -161,6 +172,8 @@
       box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
       background: linear-gradient(45deg, #87ceeb, #b0e0e6);
     }
+    .logo-header:visited{ color:white; }
+    .logo-header:hover{ color:white; text-decoration:none; }
     @media (max-width: 768px) {
       header { padding: 15px 20px; }
       .logo-header { font-size: 16px; }
@@ -168,6 +181,7 @@
       .contact-btn { padding: 10px 16px; font-size: 12px; }
     }
 
+  
     .footer {
       background: #000000;
       padding: 40px 20px;
@@ -184,10 +198,10 @@
 </head>
 <body>
   <header>
-    <div class="logo-header">
+    <a class="logo-header" href="index.html">
       <img alt="Assignme Logo" src="logo.png" style="height:50px; width:auto; margin-right:10px;">
       ASSIGNME
-    </div>
+    </a>
     <a class="contact-btn" href="mailto:contact@assignme.fr">
       Nous contacter
     </a>
@@ -196,8 +210,10 @@
   <main class="hero" role="main" aria-label="Hero">
     <aside class="panel" aria-label="FAQ et question libre">
       <div class="scroll">
+        <!-- Answer area (shows GPT+dossier response) -->
         <div id="qa-answer" class="answer-box"></div>
 
+        <!-- FAQ list -->
         <ul class="faq-list" role="list">
           <li class="faq-item">
             <button id="q1" class="faq-btn" aria-expanded="false" aria-controls="a1">
@@ -212,7 +228,7 @@
 
           <li class="faq-item">
             <button id="q2" class="faq-btn" aria-expanded="false" aria-controls="a2">
-              <span>Quel problème résolvez-vous ?</span><span class="chev" aria-hidden="true"></span>
+              <span>Quel problème résolvez‑vous ?</span><span class="chev" aria-hidden="true"></span>
             </button>
             <div id="a2" class="answer" role="region" aria-labelledby="q2">
               <div class="answer-inner">
@@ -245,18 +261,18 @@
 
           <li class="faq-item">
             <button id="q5" class="faq-btn" aria-expanded="false" aria-controls="a5">
-              <span>En quoi êtes-vous différents des job boards ?</span><span class="chev" aria-hidden="true"></span>
+              <span>En quoi êtes‑vous différents des job boards ?</span><span class="chev" aria-hidden="true"></span>
             </button>
             <div id="a5" class="answer" role="region" aria-labelledby="q5">
               <div class="answer-inner">
-                Pas de recherche par mots-clés : le matching est contextuel et proactif, l’IA pousse les opportunités pertinentes.
+                Pas de recherche par mots‑clés : le matching est contextuel et proactif, l'IA pousse les opportunités pertinentes.
               </div>
             </div>
           </li>
 
           <li class="faq-item">
             <button id="q6" class="faq-btn" aria-expanded="false" aria-controls="a6">
-              <span>Où en êtes-vous aujourd'hui ?</span><span class="chev" aria-hidden="true"></span>
+              <span>Où en êtes‑vous aujourd'hui ?</span><span class="chev" aria-hidden="true"></span>
             </button>
             <div id="a6" class="answer" role="region" aria-labelledby="q6">
               <div class="answer-inner">
@@ -271,12 +287,13 @@
             </button>
             <div id="a7" class="answer" role="region" aria-labelledby="q7">
               <div class="answer-inner">
-                Devenir le standard européen du matching emploi-compétences basé IA, privé et public.
+                Devenir le standard européen du matching emploi‑compétences basé IA, privé et public.
               </div>
             </div>
           </li>
         </ul>
 
+        <!-- Question input placed directly below the FAQ list -->
         <div class="input-wrap">
           <input id="qa-input" class="in" type="text" placeholder="Pose ta question" aria-label="Votre question">
           <button id="qa-send" class="send" type="button">Envoyer</button>
@@ -287,6 +304,7 @@
 
   <script>
     (function(){
+      /* FAQ accordion */
       const btns=[...document.querySelectorAll('.faq-btn')];
       function closeAll(except){
         btns.forEach(b=>{
@@ -322,11 +340,19 @@
         },120);
       });
 
+      /* Bottom Q&A using GPT + dossier (backend at /api/ask) */
       const input = document.getElementById('qa-input');
       const send  = document.getElementById('qa-send');
       const box   = document.getElementById('qa-answer');
       const API_URL = '/api/ask';
 
+      function ensureAnswerBox(){
+        if(!box) return;
+        box.style.display = 'block';
+        if(!box.parentNode) {
+          // safety: should exist
+        }
+      }
       function showAnswer(text){
         if(!box) return;
         box.style.display = 'block';
@@ -344,7 +370,7 @@
           });
           if(!res.ok){
             const t = await res.text();
-            throw new Error('HTTP ' + res.status + ' — ' + t.slice(0,200));
+            throw new Error('HTTP ' + res.status + ' – ' + t.slice(0,200));
           }
           const data = await res.json();
           const answer = (data.answer || '').trim() || "Ce point n'est pas précisé dans le dossier.";
@@ -368,7 +394,7 @@
 
   <footer class="footer">
     <div class="footer-content">
-      <p>© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</p>
+      <p>&copy; 2025 ASSIGNME. Tous droits réservés. | Une innovation DeepTech française</p>
     </div>
   </footer>
 </body>
