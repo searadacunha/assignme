@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASSIGNME - FAQ + Question en bas</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
     :root{
@@ -29,244 +29,155 @@
       overflow-x:hidden;
     }
 
-    header {
-      width: 100%;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(15px);
-      z-index: 1000;
-      border-bottom: 2px solid rgba(100, 149, 237, 0.3);
-      box-shadow: 0 4px 20px rgba(100, 149, 237, 0.1);
-      height: 80px;
+    /* ===== Header ===== */
+    header{
+      width:100%;
+      padding:20px 40px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:fixed;
+      top:0;left:0;
+      background:rgba(0,0,0,.95);
+      backdrop-filter:blur(15px);
+      z-index:1000;
+      border-bottom:2px solid rgba(100,149,237,.3);
+      box-shadow:0 4px 20px rgba(100,149,237,.1);
+      height:80px;
     }
+    .logo-header{
+      font-size:20px;font-weight:bold;display:flex;align-items:center;color:#fff;
+      text-transform:uppercase;letter-spacing:1px;text-decoration:none;
+    }
+    .logo-header:visited,.logo-header:hover{color:#fff;text-decoration:none}
+    .contact-btn{
+      padding:12px 24px;
+      background:linear-gradient(45deg,#6495ed,#87ceeb);
+      color:#0f0f23;border:none;border-radius:25px;cursor:pointer;
+      font-weight:bold;text-decoration:none;transition:all .3s ease;
+      box-shadow:0 4px 15px rgba(100,149,237,.4);text-transform:uppercase;letter-spacing:1px;display:inline-block;
+    }
+    .contact-btn:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(100,149,237,.6);background:linear-gradient(45deg,#87ceeb,#b0e0e6)}
 
+    /* ===== Hero + Image de fond ===== */
     .hero{
-      min-height: 100vh;
-      padding-top: 80px; /* Hauteur du header */
-      position: relative;
-      background: #000 url('design.png') no-repeat center center / contain;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      min-height:100vh;
+      padding-top:80px; /* hauteur du header */
+      position:relative;
+      background:#000 url('design.png') no-repeat center center / contain;
+      display:flex;align-items:center;justify-content:center;
     }
 
-    /* Vignette panel avec positionnement amélioré */
+    /* ===== Vignette ===== */
     .panel{
-      position: absolute; 
-      right: 220px; 
-      top: 50%; 
-      transform: translateY(-50%);
-      width: 260px; 
-      max-height: calc(100vh - 120px); /* Évite le débordement sur header/footer */
-      display: flex; 
-      flex-direction: column;
-      border-radius: 14px; 
-      background: #000;
-      border: 1.5px solid rgba(92,160,255,.9);
-      box-shadow: 0 0 14px rgba(92,160,255,.75), 0 0 36px rgba(92,160,255,.28);
-      overflow: hidden; 
-      isolation: isolate;
+      position:absolute;
+      right:220px;
+      top:50%;
+      transform:translateY(-50%);
+      width:260px;
+      max-height:calc(100vh - 120px);
+      display:flex;flex-direction:column;
+      border-radius:14px;background:#000;
+      border:1.5px solid rgba(92,160,255,.9);
+      box-shadow:0 0 14px rgba(92,160,255,.75),0 0 36px rgba(92,160,255,.28);
+      overflow:hidden;isolation:isolate;
     }
-    
     .panel::before{
-      content:''; position:absolute; inset:-7px; border-radius:inherit; pointer-events:none;
+      content:'';position:absolute;inset:-7px;border-radius:inherit;pointer-events:none;
       border:2px solid rgba(92,160,255,.85);
-      filter:blur(7px); animation:neonPulse 3s ease-in-out infinite;
-      z-index:-1;
+      filter:blur(7px);animation:neonPulse 3s ease-in-out infinite;z-index:-1;
     }
-    
-    @keyframes neonPulse{
-      0%,100%{opacity:.85; filter:blur(6px)}
-      50%{opacity:1; filter:blur(9px)}
-    }
+    @keyframes neonPulse{0%,100%{opacity:.85;filter:blur(6px)}50%{opacity:1;filter:blur(9px)}}
+    .scroll{flex:1 1 auto;overflow:auto;padding:10px}
 
-    /* Scrollable content */
-    .scroll{
-      flex:1 1 auto; overflow:auto;
-      padding:10px;
-    }
-
-    /* Answer box */
-    .answer-box{
-      margin-bottom:10px; padding:10px;
-      border:1px solid rgba(92,160,255,.35); border-radius:10px;
-      background:rgba(255,255,255,.04); font-size:.8rem; line-height:1.5;
-      display:none;
-    }
+    /* Zone de réponse */
+    .answer-box{margin-bottom:10px;padding:10px;border:1px solid rgba(92,160,255,.35);border-radius:10px;background:rgba(255,255,255,.04);font-size:.8rem;line-height:1.5;display:none}
     .answer-box strong{color:#fff}
 
-    /* FAQ list */
+    /* FAQ */
     .faq-list{list-style:none;display:flex;flex-direction:column;gap:8px}
     .faq-item{border-radius:10px;overflow:hidden}
     .faq-btn{
-      width:100%; display:flex; align-items:center; justify-content:space-between;
-      gap:10px; cursor:pointer; border:none; outline:none;
-      padding:10px 12px; color:#001; font-weight:800; font-size:.82rem;
-      background:var(--faq); border-radius:10px;
-      box-shadow:0 2px 9px rgba(92,160,255,.22);
-      text-align:left; transition:.18s ease;
+      width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;border:none;outline:none;
+      padding:10px 12px;color:#001;font-weight:800;font-size:.82rem;background:var(--faq);border-radius:10px;
+      box-shadow:0 2px 9px rgba(92,160,255,.22);text-align:left;transition:.18s ease;
     }
     .faq-btn:hover{background:var(--faqHover)}
-    .faq-btn[aria-expanded="true"]{background:var(--faqActive); color:#001}
-    .chev{width:10px;height:10px;flex:0 0 auto;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg); transition:.18s ease}
+    .faq-btn[aria-expanded="true"]{background:var(--faqActive);color:#001}
+    .chev{width:10px;height:10px;flex:0 0 auto;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:.18s ease}
     .faq-btn[aria-expanded="true"] .chev{transform:rotate(-135deg)}
-    .answer{max-height:0; overflow:hidden; transition:max-height .22s ease}
-    .answer-inner{padding:10px 12px 12px; font-size:.78rem; line-height:1.55; background:rgba(255,255,255,.07); border-radius:10px; margin-top:4px}
+    .answer{max-height:0;overflow:hidden;transition:max-height .22s ease}
+    .answer-inner{padding:10px 12px 12px;font-size:.78rem;line-height:1.55;background:rgba(255,255,255,.07);border-radius:10px;margin-top:4px}
 
-    /* Question input */
-    .input-wrap{
-      margin-top:12px;
-      display:flex; gap:6px;
-      border-top:1px dashed rgba(92,160,255,.35);
-      padding-top:8px;
-    }
+    /* Input question */
+    .input-wrap{margin-top:12px;display:flex;gap:6px;border-top:1px dashed rgba(92,160,255,.35);padding-top:8px}
     .in{
-      flex:1; min-width:0; padding:10px 12px; border-radius:10px;
-      border:1px solid rgba(92,160,255,.5); background:#0b0f17; color:var(--text); font-size:.82rem;
-      outline:none; transition:border-color .15s ease, box-shadow .15s ease;
+      flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(92,160,255,.5);
+      background:#0b0f17;color:var(--text);font-size:.82rem;outline:none;transition:border-color .15s ease, box-shadow .15s ease;
     }
-    .in:focus{ border-color:var(--neon); box-shadow:0 0 0 3px rgba(92,160,255,.25) }
-    .send{
-      padding:10px 12px; border:none; border-radius:10px;
-      background:var(--faq); color:#001; font-weight:800; font-size:.8rem;
-      cursor:pointer; box-shadow:0 2px 10px rgba(92,160,255,.25);
-    }
-    .send:hover{ background:var(--faqHover) }
-    .send:active{ transform:translateY(1px) }
+    .in:focus{border-color:var(--neon);box-shadow:0 0 0 3px rgba(92,160,255,.25)}
+    .send{padding:10px 12px;border:none;border-radius:10px;background:var(--faq);color:#001;font-weight:800;font-size:.8rem;cursor:pointer;box-shadow:0 2px 10px rgba(92,160,255,.25)}
+    .send:hover{background:var(--faqHover)}
+    .send:active{transform:translateY(1px)}
 
-    .logo-header {
-      font-size: 20px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      text-decoration: none;
-    }
-    .contact-btn {
-      padding: 12px 24px;
-      background: linear-gradient(45deg, #6495ed, #87ceeb);
-      color: #0f0f23;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      display: inline-block;
-    }
-    .contact-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
-      background: linear-gradient(45deg, #87ceeb, #b0e0e6);
-    }
-    .logo-header:visited{ color:white; }
-    .logo-header:hover{ color:white; text-decoration:none; }
+    /* ===== Footer ===== */
+    .footer{background:#000;padding:40px 20px;text-align:center;border-top:1px solid rgba(100,149,237,.2)}
+    .footer-content{max-width:1200px;margin:0 auto;color:#87ceeb}
 
-    .footer {
-      background: #000000;
-      padding: 40px 20px;
-      text-align: center;
-      border-top: 1px solid rgba(100, 149, 237, 0.2);
-    }
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      color: #87ceeb;
+    /* ===== Responsive ===== */
+    @media (max-width:1200px){
+      .panel{right:140px;width:260px;}
     }
 
-    /* Responsive design amélioré */
-    @media (max-width: 1200px){
-      .panel{right:140px; width:260px;}
-    }
-
-    @media (max-width: 900px){
+    /* --- Tablettes et petits laptops --- */
+    @media (max-width:900px){
+      /* Image plus visible, moins de noir */
       .hero{
-        padding-top: 80px;
-        background-position: center center;
-        background-size: contain;
-        min-height: calc(100vh - 80px);
+        /* on garde le header */
+        padding-top:80px;
+        /* on place l'image plus haut et on la recadre pour réduire le "noir" au-dessus */
+        background-position: top center;
+        background-size: cover;  /* occupe mieux l'écran */
+        /* on retire la contrainte de hauteur minimale qui laisse du noir vide */
+        min-height:auto;
+        /* on ajoute un padding bas pour aérer le scroll et respecter safe-area iOS */
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+        display:block; /* pour laisser le panel entrer dans le flux */
       }
-      
+
+      /* Le panel passe dans le flux : il NE PEUT plus recouvrir le footer */
       .panel{
-        position: fixed;
-        right: 50%;
-        left: auto;
-        top: auto;
-        bottom: 20px;
-        transform: translateX(50%);
-        width: min(90vw, 400px);
-        max-height: 60vh;
-        z-index: 999;
+        position:static;
+        transform:none;
+        margin:20px auto;
+        width:min(95vw, 420px);
+        max-height:none;
+        z-index:auto;
       }
     }
 
-    /* Spécial iPhone et petits écrans */
-    @media (max-width: 768px) {
-      header { 
-        padding: 15px 20px; 
-        height: 70px;
-      }
-      
-      .hero {
-        padding-top: 70px;
-        background-position: center center;
-        background-size: 80% auto;
-        min-height: calc(100vh - 70px);
-      }
-      
-      .logo-header { 
-        font-size: 16px; 
-      }
-      
-      .logo-header img { 
-        height: 40px !important; 
-        margin-right: 8px !important; 
-      }
-      
-      .contact-btn { 
-        padding: 10px 16px; 
-        font-size: 12px; 
-      }
-      
-      .panel {
-        bottom: 15px;
-        width: min(95vw, 380px);
-        max-height: 55vh;
-      }
+    /* --- Smartphones --- */
+    @media (max-width:768px){
+      header{padding:15px 20px;height:70px}
+      .hero{padding-top:70px}
+      .logo-header{font-size:16px}
+      .logo-header img{height:40px !important;margin-right:8px !important}
+      .contact-btn{padding:10px 16px;font-size:12px}
+
+      .panel{margin:16px auto;width:min(95vw, 400px)}
+      .answer-inner{font-size:.75rem}
     }
 
-    @media (max-width: 480px){
-      .hero {
-        background-size: 90% auto;
-      }
-      
-      .answer-inner{
-        font-size:.72rem;
-      }
-      
-      .panel {
-        width: calc(100vw - 20px);
-        max-height: 50vh;
-        bottom: 10px;
-      }
+    /* --- Très petits écrans --- */
+    @media (max-width:480px){
+      .hero{background-size:cover;background-position:top center}
+      .panel{width:calc(100vw - 20px);margin:12px auto}
+      .answer-inner{font-size:.72rem}
     }
 
-    /* Éviter le débordement sur très petits écrans */
-    @media (max-height: 600px) {
-      .panel {
-        max-height: 40vh;
-      }
+    /* --- Écrans très "plats" (hauteur faible) --- */
+    @media (max-height:600px){
+      .panel{max-height:none}
     }
   </style>
 </head>
@@ -276,9 +187,7 @@
       <img alt="Assignme Logo" src="logo.png" style="height:50px; width:auto; margin-right:10px;">
       ASSIGNME
     </a>
-    <a class="contact-btn" href="mailto:contact@assignme.fr">
-      Nous contacter
-    </a>
+    <a class="contact-btn" href="mailto:contact@assignme.fr">Nous contacter</a>
   </header>
 
   <main class="hero" role="main" aria-label="Hero">
@@ -302,7 +211,7 @@
 
           <li class="faq-item">
             <button id="q2" class="faq-btn" aria-expanded="false" aria-controls="a2">
-              <span>Quel problème résolvez‑vous ?</span><span class="chev" aria-hidden="true"></span>
+              <span>Quel problème résolvez-vous ?</span><span class="chev" aria-hidden="true"></span>
             </button>
             <div id="a2" class="answer" role="region" aria-labelledby="q2">
               <div class="answer-inner">
@@ -335,18 +244,18 @@
 
           <li class="faq-item">
             <button id="q5" class="faq-btn" aria-expanded="false" aria-controls="a5">
-              <span>En quoi êtes‑vous différents des job boards ?</span><span class="chev" aria-hidden="true"></span>
+              <span>En quoi êtes-vous différents des job boards ?</span><span class="chev" aria-hidden="true"></span>
             </button>
             <div id="a5" class="answer" role="region" aria-labelledby="q5">
               <div class="answer-inner">
-                Pas de recherche par mots‑clés : le matching est contextuel et proactif, l'IA pousse les opportunités pertinentes.
+                Pas de recherche par mots-clés : le matching est contextuel et proactif, l'IA pousse les opportunités pertinentes.
               </div>
             </div>
           </li>
 
           <li class="faq-item">
             <button id="q6" class="faq-btn" aria-expanded="false" aria-controls="a6">
-              <span>Où en êtes‑vous aujourd'hui ?</span><span class="chev" aria-hidden="true"></span>
+              <span>Où en êtes-vous aujourd'hui ?</span><span class="chev" aria-hidden="true"></span>
             </button>
             <div id="a6" class="answer" role="region" aria-labelledby="q6">
               <div class="answer-inner">
@@ -361,7 +270,7 @@
             </button>
             <div id="a7" class="answer" role="region" aria-labelledby="q7">
               <div class="answer-inner">
-                Devenir le standard européen du matching emploi‑compétences basé IA, privé et public.
+                Devenir le standard européen du matching emploi-compétences basé IA, privé et public.
               </div>
             </div>
           </li>
@@ -369,7 +278,7 @@
 
         <!-- Question input placed directly below the FAQ list -->
         <div class="input-wrap">
-          <input id="qa-input" class="in" type="text" placeholder="Pose ta question" aria-label="Votre question">
+          <input id="qa-input" class="in" type="text" placeholder="Pose ta question" aria-label="Votre question" />
           <button id="qa-send" class="send" type="button">Envoyer</button>
         </div>
       </div>
@@ -420,22 +329,15 @@
       const box   = document.getElementById('qa-answer');
       const API_URL = '/.netlify/functions/ask';
 
-      function ensureAnswerBox(){
-        if(!box) return;
-        box.style.display = 'block';
-        if(!box.parentNode) {
-          // safety: should exist
-        }
-      }
       function showAnswer(text){
         if(!box) return;
         box.style.display = 'block';
-        box.innerHTML = `<div style="color: #e8f4ff; line-height: 1.6;">${text}</div>`;
+        box.innerHTML = `<div style="color:#e8f4ff;line-height:1.6;">${text}</div>`;
         box.scrollIntoView({ behavior:'smooth', block:'nearest' });
       }
 
       async function ask(question){
-        showAnswer('<div style="color: #87ceeb; font-style: italic;">Analyse de la question en cours...</div>');
+        showAnswer('<div style="color:#87ceeb;font-style:italic;">Analyse de la question en cours...</div>');
         try{
           const res = await fetch(API_URL, {
             method:'POST',
@@ -453,7 +355,7 @@
           const answer = (data.answer || '').trim() || "Cette information n'est pas disponible dans le dossier ASSIGNME.";
           showAnswer(answer);
         }catch(err){
-          showAnswer(`<div style="color: #ff6b6b;">Erreur : ${err.message}</div>`);
+          showAnswer(`<div style="color:#ff6b6b;">Erreur : ${err.message}</div>`);
         }
       }
 
@@ -461,8 +363,7 @@
         const q = (input.value || '').trim();
         if(!q) return;
         ask(q);
-        input.value='';
-        input.focus();
+        input.value=''; input.focus();
       }
       send.addEventListener('click', submit);
       input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
