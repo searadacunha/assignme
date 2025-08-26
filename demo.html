@@ -19,6 +19,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
     
     * {
       margin: 0;
@@ -35,39 +36,119 @@
       min-height: 100vh;
     }
 
-    /* === Styles globaux existants === */
+    header {
+      position: fixed;
+      top: 0;
+      inset-x: 0;
+      z-index: 50;
+    }
+
+    .glass {
+      backdrop-filter: blur(10px);
+      background: rgba(16,18,27,.45);
+      border: 1px solid rgba(149,210,230,.18);
+    }
+
+    nav {
+      margin: 16px auto 0;
+      width: min(1100px, 92%);
+      border-radius: 16px;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ffffff !important;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: tight;
+      text-transform: uppercase;
+      text-decoration: none;
+      font-family: 'Space Grotesk', ui-sans-serif, system-ui;
+    }
+
+    .logo-header:visited,
+    .logo-header:hover {
+      color: #ffffff !important;
+      text-decoration: none;
+    }
+
+    .contact-btn {
+      display: inline-flex;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: #eaf2ff;
+      color: #000000;
+      font-weight: 600;
+      box-shadow: 0 0 80px rgba(149, 210, 230, 0.35);
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-family: 'Space Grotesk', ui-sans-serif, system-ui;
+    }
+
+    .contact-btn:hover {
+      filter: brightness(1.1);
+    }
+
     .footer {
       background: #000000;
-      padding: 40px 20px;
-      text-align: center;
+      padding: 48px 20px 64px;
       border-top: 1px solid rgba(100, 149, 237, 0.2);
     }
+
     .footer-content {
-      max-width: 1200px;
+      max-width: min(1100px, 92%);
       margin: 0 auto;
-      color: #b8c8e8;
+      color: #a9b9d6;
     }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff !important;
+      font-family: 'Space Grotesk', ui-sans-serif, system-ui;
+    }
+
+    .footer-text {
+      margin-top: 12px;
+      color: #a9b9d6;
+      max-width: 28rem;
+    }
+
     .gradient-bg {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
     }
+    
     .neon-glow {
       box-shadow: 0 0 20px rgba(100, 149, 237, 0.3), 0 0 40px rgba(100, 149, 237, 0.1);
       border: 1px solid rgba(100, 149, 237, 0.3);
     }
+    
     .retro-card {
       background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
       border: 1px solid rgba(100, 149, 237, 0.2);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
+    
     .cyber-border {
       border: 2px solid transparent;
       background: linear-gradient(145deg, #1a1a1a, #0a0a0a) padding-box,
                   linear-gradient(45deg, #6495ed, #87ceeb) border-box;
     }
+    
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    
     @keyframes pulse-neon {
       0%, 100% { 
         box-shadow: 0 0 20px rgba(100, 149, 237, 0.3), 0 0 40px rgba(100, 149, 237, 0.1);
@@ -76,13 +157,21 @@
         box-shadow: 0 0 30px rgba(100, 149, 237, 0.5), 0 0 60px rgba(100, 149, 237, 0.2);
       }
     }
-    .fade-in-up { animation: fadeInUp 0.8s ease-out; }
-    .pulse-cyber { animation: pulse-neon 2s ease-in-out infinite; }
+    
+    .fade-in-up {
+      animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .pulse-cyber {
+      animation: pulse-neon 2s ease-in-out infinite;
+    }
+    
     .glass-effect {
       background: rgba(26, 26, 26, 0.6);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(100, 149, 237, 0.1);
     }
+
     .progress-bar {
       width: 100%;
       height: 4px;
@@ -91,12 +180,14 @@
       overflow: hidden;
       margin: 10px 0;
     }
+
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #6495ed, #87ceeb);
       border-radius: 2px;
       transition: width 0.3s ease;
     }
+
     .notification {
       position: fixed;
       top: 100px;
@@ -109,34 +200,563 @@
       transform: translateX(400px);
       transition: transform 0.3s ease;
     }
-    .notification.show { transform: translateX(0); }
-    .score-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 50px; height: 50px; border-radius: 50%; font-weight: bold; font-size: 14px;
-    }
-    .score-excellent { background: linear-gradient(45deg, #10b981, #059669); color: white; }
-    .score-good { background: linear-gradient(45deg, #3b82f6, #1d4ed8); color: white; }
-    .score-average { background: linear-gradient(45deg, #f59e0b, #d97706); color: white; }
 
-    .action-btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-primary { background: linear-gradient(45deg, #6495ed, #87ceeb); color: #0f0f23; }
-    .btn-secondary { background: rgba(100, 149, 237, 0.1); border: 1px solid rgba(100, 149, 237, 0.3); color: #87ceeb; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4); }
-    .btn-secondary:hover { background: rgba(100, 149, 237, 0.2); }
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .score-excellent {
+      background: linear-gradient(45deg, #10b981, #059669);
+      color: white;
+    }
+
+    .score-good {
+      background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+      color: white;
+    }
+
+    .score-average {
+      background: linear-gradient(45deg, #f59e0b, #d97706);
+      color: white;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, #6495ed, #87ceeb);
+      color: #0f0f23;
+    }
+
+    .btn-secondary {
+      background: rgba(100, 149, 237, 0.1);
+      border: 1px solid rgba(100, 149, 237, 0.3);
+      color: #87ceeb;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(100, 149, 237, 0.2);
+    }
 
     @media (max-width: 768px) {
-      .nav-links { display: none; }
+      header {
+        padding: 15px 20px;
+      }
+
+      .logo-header {
+        font-size: 16px;
+      }
+
+      .logo-header img {
+        height: 40px !important;
+        margin-right: 8px !important;
+      }
+
+      .contact-btn {
+        padding: 10px 16px;
+        font-size: 12px;
+      }
     }
 
-    .main-content { padding-top: 120px; }
-
-    /* Liens ASSIGNME toujours blancs */
-    .brand-white, .brand-white:visited, .brand-white:hover { color: #fff; text-decoration: none; }
-  </style>
+    .main-content {
+      padding-top: 120px;
+    }
+</style>
   <link href="favicon.png" rel="icon" type="image/png">
 </head>
 <body class="gradient-bg">
+  <header>
+    <nav class="glass">
+      <a class="logo-header" href="index.html">
+        <img alt="Assignme Logo" src="logo.png" style="height:32px; width:auto; border-radius:6px;">
+        ASSIGNME
+      </a>
+      <a class="contact-btn" href="mailto:contact@assignme.fr">
+        Nous contacter
+      </a>
+    </nav>
+  </header>
 
-  <!-- === HEADER (comme homepage), uniquement header changé === -->
-  <header class="fixed top-0 inset-x-0 z-50">
-    <nav class="mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between glass-effect">
+  <div id="root"></div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.png" alt="ASSIGNME" style="height:32px; width:auto; border-radius:6px;"/>
+        ASSIGNME
+      </div>
+      <p class="footer-text">© 2025 ASSIGNME. Tous droits réservés<br>Une innovation DeepTech française</p>
+    </div>
+  </footer>
+
+  <script type="text/babel">
+    const { useState, useCallback, useEffect } = React;
+    
+    const AssignmeAnalyzer = () => {
+      const [isAnalyzing, setIsAnalyzing] = useState(false);
+      const [analysisComplete, setAnalysisComplete] = useState(false);
+      const [candidateProfile, setCandidateProfile] = useState(null);
+      const [recommendations, setRecommendations] = useState([]);
+      const [error, setError] = useState('');
+      const [debugLogs, setDebugLogs] = useState([]);
+      const [pdfReady, setPdfReady] = useState(false);
+      const [fileName, setFileName] = useState('');
+      const [progress, setProgress] = useState(0);
+      const [currentStep, setCurrentStep] = useState('');
+
+      useEffect(() => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          setPdfReady(true);
+        }
+      }, []);
+
+      const addDebugLog = (message) => {
+        console.log(message);
+        setDebugLogs(prev => [...prev, {
+          time: new Date().toLocaleTimeString(),
+          message: message
+        }]);
+      };
+
+      const showNotification = (message, type = 'info') => {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span>${type === 'success' ? 'SUCCÈS' : type === 'error' ? 'ERREUR' : 'INFO'}</span>
+            <span>${message}</span>
+          </div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 3000);
+      };
+
+      const validateFile = (file) => {
+        const maxSize = 10 * 1024 * 1024;
+        const allowedTypes = [
+          'application/pdf', 
+          'text/plain', 
+          'application/msword', 
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        
+        if (!file) {
+          throw new Error('Aucun fichier sélectionné');
+        }
+        
+        if (file.size > maxSize) {
+          throw new Error('Le fichier est trop volumineux (max 10MB)');
+        }
+        
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Format de fichier non supporté. Utilisez PDF, DOC, DOCX ou TXT');
+        }
+        
+        return true;
+      };
+
+      const updateProgress = (step, progressValue) => {
+        setCurrentStep(step);
+        setProgress(progressValue);
+        addDebugLog(step);
+      };
+
+      const extractTextFromPDF = async (file) => {
+        if (!pdfReady) {
+          throw new Error('PDF.js non initialisé');
+        }
+
+        updateProgress("Lecture du fichier PDF...", 10);
+        
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          updateProgress("Analyse de la structure PDF...", 20);
+          
+          const pdf = await window.pdfjsLib.getDocument(arrayBuffer).promise;
+          updateProgress(`PDF ouvert: ${pdf.numPages} page(s) détectée(s)`, 30);
+          
+          let fullText = '';
+          
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            updateProgress(`Extraction page ${pageNum}/${pdf.numPages}...`, 30 + (pageNum / pdf.numPages) * 30);
+            
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n\n';
+          }
+          
+          if (fullText.trim().length === 0) {
+            throw new Error('PDF vide ou texte non extractible (PDF image?)');
+          }
+          
+          updateProgress(`Extraction terminée: ${fullText.length} caractères extraits`, 60);
+          return fullText;
+          
+        } catch (error) {
+          updateProgress(`Erreur lecture PDF: ${error.message}`, 0);
+          throw new Error(`Impossible de lire le PDF: ${error.message}`);
+        }
+      };
+
+      const extractTextFromFile = async (file) => {
+        const fileType = file.type;
+        const fileName = file.name.toLowerCase();
+        
+        updateProgress(`Analyse du fichier: ${file.name}`, 5);
+        
+        if (fileType === 'application/pdf') {
+          return await extractTextFromPDF(file);
+        }
+        
+        if (fileType === 'text/plain') {
+          updateProgress("Lecture du fichier texte...", 30);
+          const text = await file.text();
+          updateProgress("Fichier texte lu avec succès", 60);
+          return text;
+        }
+        
+        if (fileType.includes('word') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+          updateProgress("Fichier Word détecté - Conversion simplifiée", 30);
+          try {
+            const text = await file.text();
+            updateProgress("Fichier Word traité", 60);
+            return text;
+          } catch {
+            throw new Error('Fichier Word non pris en charge. Utilisez un fichier PDF ou TXT.');
+          }
+        }
+        
+        throw new Error(`Format non pris en charge: ${fileType}. Utilisez un fichier PDF, TXT ou Word.`);
+      };
+
+      const analyzeWithNetlifyFunction = async (cvText) => {
+        updateProgress("Connexion à l'IA ASSIGNME...", 70);
+        
+        try {
+          const response = await fetch('/.netlify/functions/analyze-cv', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ cvText })
+          });
+          
+          updateProgress(`Réponse du serveur: ${response.status}`, 80);
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            
+            if (response.status === 500) {
+              throw new Error('Erreur serveur. Veuillez réessayer dans quelques minutes.');
+            }
+            if (response.status === 400) {
+              throw new Error('Données invalides envoyées au serveur.');
+            }
+            if (response.status === 429) {
+              throw new Error('Limite de requêtes atteinte. Veuillez réessayer plus tard.');
+            }
+            
+            throw new Error(`Erreur ${response.status}: ${errorData.error || 'Erreur inconnue'}`);
+          }
+          
+          const result = await response.json();
+          updateProgress("Analyse terminée avec succès", 100);
+          
+          return result;
+          
+        } catch (error) {
+          if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            updateProgress("Erreur de connexion réseau", 0);
+            throw new Error('Problème de connexion. Vérifiez votre connexion internet.');
+          }
+          
+          updateProgress(`Erreur lors de l'analyse: ${error.message}`, 0);
+          throw error;
+        }
+      };
+
+      const calculateMatchScore = (recommendation) => {
+        let score = Math.floor(Math.random() * 30) + 70;
+        
+        if (recommendation.salary_min > 50000) score += 5;
+        if (recommendation.contract_type === 'CDI') score += 5;
+        if (recommendation.required_skills?.length <= 4) score += 5;
+        
+        return Math.min(100, score);
+      };
+
+      const saveAnalysisLocally = (analysis) => {
+        try {
+          const savedAnalyses = JSON.parse(localStorage.getItem('assignme_analyses') || '[]');
+          savedAnalyses.push({
+            id: Date.now(),
+            timestamp: new Date().toLocaleString('fr-FR'),
+            filename: fileName,
+            analysis: analysis
+          });
+          
+          if (savedAnalyses.length > 3) {
+            savedAnalyses.splice(0, savedAnalyses.length - 3);
+          }
+          
+          localStorage.setItem('assignme_analyses', JSON.stringify(savedAnalyses));
+          showNotification('Analyse sauvegardée localement', 'success');
+        } catch (e) {
+          console.log('Sauvegarde locale non disponible');
+        }
+      };
+
+      const downloadResults = () => {
+        if (!candidateProfile || !recommendations.length) return;
+        
+        const results = {
+          candidat: candidateProfile,
+          recommandations: recommendations,
+          date_analyse: new Date().toLocaleString('fr-FR'),
+          source: 'ASSIGNME Demo'
+        };
+        
+        const dataStr = JSON.stringify(results, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `assignme_analyse_${candidateProfile.name?.replace(/\s+/g, '_') || 'candidat'}_${Date.now()}.json`;
+        link.click();
+        
+        URL.revokeObjectURL(url);
+        showNotification('Résultats téléchargés', 'success');
+      };
+
+      const shareResults = () => {
+        if (navigator.share && candidateProfile) {
+          navigator.share({
+            title: 'Mon analyse ASSIGNME',
+            text: `J'ai analysé mon CV avec ASSIGNME et j'ai reçu ${recommendations.length} recommandations personnalisées !`,
+            url: window.location.href
+          });
+        } else {
+          navigator.clipboard.writeText(window.location.href);
+          showNotification('Lien copié dans le presse-papiers', 'success');
+        }
+      };
+
+      const handleFileSelect = useCallback(async (file) => {
+        if (!file) return;
+
+        try {
+          validateFile(file);
+          
+          setFileName(file.name);
+          setIsAnalyzing(true);
+          setError('');
+          setDebugLogs([]);
+          setRecommendations([]);
+          setAnalysisComplete(false);
+          setProgress(0);
+
+          addDebugLog(`Démarrage de l'analyse: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+          
+          const cvText = await extractTextFromFile(file);
+          
+          if (cvText.length < 100) {
+            throw new Error('Le contenu du CV semble trop court ou vide. Vérifiez que le fichier contient bien du texte.');
+          }
+          
+          const analysis = await analyzeWithNetlifyFunction(cvText);
+          
+          setCandidateProfile({
+            ...analysis.candidate_analysis,
+            ai_metadata: analysis.ai_metadata,
+            training_suggestions: analysis.training_suggestions,
+            reconversion_paths: analysis.reconversion_paths,
+            cv_preview: cvText.substring(0, 400) + '...'
+          });
+          
+          const recommendationsWithScores = (analysis.recommendations || []).map(rec => ({
+            ...rec,
+            match_score: calculateMatchScore(rec)
+          }));
+          
+          setRecommendations(recommendationsWithScores);
+          setAnalysisComplete(true);
+          
+          saveAnalysisLocally(analysis);
+          
+          showNotification('Analyse terminée avec succès !', 'success');
+          
+        } catch (error) {
+          console.error("Erreur:", error);
+          setError(error.message);
+          showNotification(error.message, 'error');
+          setProgress(0);
+        }
+        
+        setIsAnalyzing(false);
+      }, [pdfReady]);
+
+      const resetAnalysis = () => {
+        setAnalysisComplete(false);
+        setCandidateProfile(null);
+        setRecommendations([]);
+        setError('');
+        setDebugLogs([]);
+        setFileName('');
+        setProgress(0);
+        setCurrentStep('');
+      };
+
+      const triggerFileInput = () => {
+        if (isAnalyzing || !pdfReady) return;
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf,.txt,.doc,.docx';
+        input.onchange = (e) => handleFileSelect(e.target.files[0]);
+        input.click();
+      };
+
+      const getScoreClass = (score) => {
+        if (score >= 90) return 'score-excellent';
+        if (score >= 75) return 'score-good';
+        return 'score-average';
+      };
+
+      return (
+        <div className="min-h-screen main-content">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            {!analysisComplete ? (
+              <div>
+                <div className="text-center mb-16 fade-in-up">
+                  <h2 className="text-6xl font-black mb-6 text-white" style={{fontFamily: "'Poppins', sans-serif", fontWeight: 700, lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '-1px', textShadow: '0 0 20px rgba(176, 224, 230, 0.5)'}}>
+                    Déposez votre CV
+                    <span className="ia-neon block" style={{color: '#e8f4ff', textShadow: '0 0 10px rgba(232, 244, 255, 0.8), 0 0 20px rgba(232, 244, 255, 0.6), 0 0 30px rgba(232, 244, 255, 0.4)', fontWeight: 'bold'}}>ASSIGNME fait le reste</span>
+                  </h2>
+                  <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                    Une seule action. L'intelligence artificielle analyse votre profil et vous trouve automatiquement les meilleures opportunités d'emploi adaptées à vos compétences.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mb-8 retro-card border-red-500/50 text-red-400 px-6 py-4 rounded-xl max-w-2xl mx-auto">
+                    <strong>ERREUR:</strong> {error}
+                  </div>
+                )}
+
+                {isAnalyzing && (
+                  <div className="mb-8 retro-card p-6 rounded-xl max-w-4xl mx-auto">
+                    <h3 className="text-cyan-400 font-bold mb-4 text-lg">Progression de l'analyse</h3>
+                    <div className="mb-4">
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{width: `${progress}%`}}></div>
+                      </div>
+                      <p className="text-sm text-cyan-300 mt-2">{currentStep}</p>
+                    </div>
+                  </div>
+                )}
+
+                {debugLogs.length > 0 && (
+                  <div className="mb-8 retro-card p-6 rounded-xl max-w-4xl mx-auto">
+                    <h3 className="text-cyan-400 font-bold mb-4 text-lg">Journal d'analyse</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {debugLogs.map((log, i) => (
+                        <p key={i} className="text-sm text-gray-300 font-mono bg-black/30 px-3 py-1 rounded">
+                          <span className="text-cyan-400">{log.time}</span> - {log.message}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="max-w-4xl mx-auto mb-16">
+                  <div
+                    className={`cyber-border rounded-3xl p-16 text-center cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+                      isAnalyzing || !pdfReady
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'hover:shadow-2xl neon-glow'
+                    } ${isAnalyzing ? 'pulse-cyber' : ''}`}
+                    onClick={triggerFileInput}
+                  >
+                    {isAnalyzing ? (
+                      <div className="space-y-8">
+                        <div className="relative">
+                          <div className="animate-spin rounded-full h-20 w-20 border-4 border-cyan-400/20 border-t-cyan-400 mx-auto"></div>
+                          <div className="absolute inset-0 rounded-full h-20 w-20 border-4 border-blue-500/20 border-r-blue-500 mx-auto animate-spin" style={{animationDirection: 'reverse'}}></div>
+                        </div>
+                        <div>
+                          <p className="text-white font-bold text-3xl mb-2">
+                            Analyse ASSIGNME en cours...
+                          </p>
+                          <p className="text-gray-400 text-lg">
+                            {currentStep || 'Préparation de l\'analyse'}
+                          </p>
+                          {fileName && (
+                            <p className="text-cyan-400 text-sm mt-2">
+                              Fichier: {fileName}
+                            </p>
+                          )}
+                          <div className="mt-4">
+                            <div className="text-cyan-300 text-sm">{progress}% terminé</div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-8">
+                        <div className="text-9xl mb-6">📄</div>
+                        <div>
+                          <p className="text-white text-3xl font-bold mb-4">
+                            Glissez-déposez votre CV ou cliquez ici
+                          </p>
+                          <p className="text-gray-400 text-lg mb-8">
+                            Formats acceptés: PDF, DOC, DOCX, TXT (max 10MB)
+                          </p>
+                          <div className="inline-block bg-gradient-to-r from-blue-500 to-blue-400 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-blue-400 hover:to-blue-300 transition duration-300 transform hover:scale-105 neon-glow">
+                            Parcourir les fichiers
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                  <div className
