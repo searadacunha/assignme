@@ -442,70 +442,47 @@
       const analyzeWithNetlifyFunction = async (cvText) => {
         updateProgress("Connexion à l'IA ASSIGNME...", 70);
         
-        // Simuler l'analyse IA pour la démo
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              candidate_analysis: {
-                name: "Jean Dupont",
-                location: "Paris, France",
-                mobility: "Nationale",
-                total_experience_years: 5,
-                current_position: "Développeur Full Stack",
-                education_level: "Master",
-                education_details: "Master en Informatique",
-                career_aspirations: "Lead Developer",
-                constraints: "Télétravail souhaité",
-                technical_skills: ["JavaScript", "React", "Node.js", "Python", "SQL"],
-                soft_skills: ["Leadership", "Communication", "Travail d'équipe", "Autonomie"]
-              },
-              recommendations: [
-                {
-                  job_title: "Senior Full Stack Developer",
-                  sector: "Tech",
-                  contract_type: "CDI",
-                  salary_min: 55000,
-                  salary_max: 70000,
-                  evolution_potential: "Lead Developer en 2-3 ans",
-                  match_justification: "Votre expérience en JavaScript et React correspond parfaitement aux exigences. L'évolution vers Lead Developer est clairement définie.",
-                  required_skills: ["React", "Node.js", "TypeScript"],
-                  company_types: ["Start-up", "Scale-up", "ESN"]
-                },
-                {
-                  job_title: "Tech Lead",
-                  sector: "Finance",
-                  contract_type: "CDI",
-                  salary_min: 65000,
-                  salary_max: 85000,
-                  evolution_potential: "CTO en 5 ans",
-                  match_justification: "Vos compétences techniques et vos qualités de leadership vous positionnent idéalement pour ce rôle de management technique.",
-                  required_skills: ["Management", "Architecture", "JavaScript"],
-                  company_types: ["Banque", "Fintech", "Assurance"]
-                }
-              ],
-              ai_metadata: {
-                provider: "ASSIGNME AI",
-                confidence: 0.92
-              },
-              training_suggestions: [
-                {
-                  title: "Formation Leadership Technique",
-                  description: "Développez vos compétences en management d'équipe technique",
-                  duration: "3 mois",
-                  relevance: "Haute"
-                }
-              ],
-              reconversion_paths: [
-                {
-                  target_field: "Data Science",
-                  feasibility: "modérée",
-                  timeline: "12-18 mois",
-                  required_steps: ["Formation Python avancé", "Machine Learning", "Statistiques"]
-                }
-              ]
-            });
-          }, 2000);
-        });
+        try {
+          const response = await fetch('/.netlify/functions/analyze-cv', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ cvText })
+          });
+          
+          updateProgress(`Réponse du serveur: ${response.status}`, 80);
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            
+            if (response.status === 500) {
+              throw new Error('Erreur serveur. Veuillez réessayer dans quelques minutes.');
+            }
+            if (response.status === 400) {
+              throw new Error('Données invalides envoyées au serveur.');
+            }
+            if (response.status === 429) {
+              throw new Error('Limite de requêtes atteinte. Veuillez réessayer plus tard.');
+            }
+            
+            throw new Error(`Erreur ${response.status}: ${errorData.error || 'Erreur inconnue'}`);
+          }
+          
+          const result = await response.json();
+          updateProgress("Analyse terminée avec succès", 100);
+          
+          return result;
+          
+        } catch (error) {
+          if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            updateProgress("Erreur de connexion réseau", 0);
+            throw new Error('Problème de connexion. Vérifiez votre connexion internet.');
+          }
+          
+          updateProgress(`Erreur lors de l'analyse: ${error.message}`, 0);
+          throw error;
+        }
       };
 
       const calculateMatchScore = (recommendation) => {
