@@ -19,7 +19,6 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
     
     * {
       margin: 0;
@@ -37,90 +36,65 @@
     }
 
     header {
+      width: 100%;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       position: fixed;
       top: 0;
-      inset-x: 0;
-      z-index: 50;
-    }
-
-    .glass {
-      backdrop-filter: blur(10px);
-      background: rgba(16,18,27,.45);
-      border: 1px solid rgba(149,210,230,.18);
-    }
-
-    nav {
-      margin: 16px auto 0;
-      width: min(1100px, 92%);
-      border-radius: 16px;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      left: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(15px);
+      z-index: 1000;
+      border-bottom: 2px solid rgba(100, 149, 237, 0.3);
+      box-shadow: 0 4px 20px rgba(100, 149, 237, 0.1);
     }
 
     .logo-header {
+      font-size: 20px;
+      font-weight: bold;
       display: flex;
       align-items: center;
-      gap: 8px;
-      color: #ffffff !important;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: tight;
+      color: white;
       text-transform: uppercase;
-      text-decoration: none;
-      font-family: 'Space Grotesk', ui-sans-serif, system-ui;
-    }
-
-    .logo-header:visited,
-    .logo-header:hover {
-      color: #ffffff !important;
+      letter-spacing: 1px;
       text-decoration: none;
     }
 
     .contact-btn {
-      display: inline-flex;
-      padding: 8px 16px;
-      border-radius: 12px;
-      background: #eaf2ff;
-      color: #000000;
-      font-weight: 600;
-      box-shadow: 0 0 80px rgba(149, 210, 230, 0.35);
-      transition: all 0.3s ease;
+      padding: 12px 24px;
+      background: linear-gradient(45deg, #6495ed, #87ceeb);
+      color: #0f0f23;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
       text-decoration: none;
-      font-family: 'Space Grotesk', ui-sans-serif, system-ui;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: inline-block;
     }
 
     .contact-btn:hover {
-      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
+      background: linear-gradient(45deg, #87ceeb, #b0e0e6);
     }
 
     .footer {
       background: #000000;
-      padding: 48px 20px 64px;
+      padding: 40px 20px;
+      text-align: center;
       border-top: 1px solid rgba(100, 149, 237, 0.2);
     }
 
     .footer-content {
-      max-width: min(1100px, 92%);
+      max-width: 1200px;
       margin: 0 auto;
-      color: #a9b9d6;
-    }
-
-    .footer-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #ffffff !important;
-      font-family: 'Space Grotesk', ui-sans-serif, system-ui;
-    }
-
-    .footer-text {
-      margin-top: 12px;
-      color: #a9b9d6;
-      max-width: 28rem;
+      color: #b8c8e8;
     }
 
     .gradient-bg {
@@ -287,31 +261,29 @@
     .main-content {
       padding-top: 120px;
     }
-</style>
+
+    .logo-header:visited{ color:white; }
+    .logo-header:hover{ color:white; text-decoration:none; }
+  </style>
   <link href="favicon.png" rel="icon" type="image/png">
 </head>
 <body class="gradient-bg">
   <header>
-    <nav class="glass">
-      <a class="logo-header" href="index.html">
-        <img alt="Assignme Logo" src="logo.png" style="height:32px; width:auto; border-radius:6px;">
-        ASSIGNME
-      </a>
-      <a class="contact-btn" href="mailto:contact@assignme.fr">
-        Nous contacter
-      </a>
-    </nav>
+    <a class="logo-header" href="index.html">
+      <img alt="Assignme Logo" src="logo.png" style="height:50px; width:auto; margin-right:10px;">
+      ASSIGNME
+    </a>
+    <a class="contact-btn" href="mailto:contact@assignme.fr">
+      Nous contacter
+    </a>
   </header>
 
   <div id="root"></div>
 
   <footer class="footer">
     <div class="footer-content">
-      <div class="footer-brand">
-        <img src="logo.png" alt="ASSIGNME" style="height:32px; width:auto; border-radius:6px;"/>
-        ASSIGNME
-      </div>
-      <p class="footer-text">© 2025 ASSIGNME. Tous droits réservés<br>Une innovation DeepTech française</p>
+      <p>
+        &copy; 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</p>
     </div>
   </footer>
 
@@ -759,4 +731,10 @@
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                  <div className
+                  <div className="retro-card p-8 rounded-2xl text-center">
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Téléchargez</h3>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Déposez votre CV en quelques secondes</p>
+                  </div>
+                  
+                  <div className="retro-card p-8 rounded-2xl text-center">
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter
