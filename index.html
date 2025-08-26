@@ -180,8 +180,24 @@
     function handleContactForm(event) {
       event.preventDefault();
       const email = document.getElementById('emailInput').value;
-      window.location.href = `mailto:contact@assignme.fr?body=Mon adresse e-mail : ${email}`;
+      
+      // Envoyer l'email via la Netlify Function
+      fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Succès:', data);
+      })
+      .catch(error => {
+        console.log('Erreur (mais on continue):', error);
+      });
+      
+      // Afficher le message de confirmation
       alert('Merci ! Nous revenons vers vous rapidement.');
+      document.getElementById('emailInput').value = ''; // Vider le champ
     }
   </script>
 </body>
