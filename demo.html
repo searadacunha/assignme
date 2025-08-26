@@ -1,102 +1,142 @@
 <!DOCTYPE html>
-<html lang="fr" class="scroll-smooth">
+<html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ASSIGNME – Démo</title>
-  <meta name="description" content="ASSIGNME – démo de la plateforme IA de matching emploi." />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-  <link href="favicon.png" rel="icon" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASSIGNME - Analyseur CV IA</title>
+  
+  <!-- React et Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- PDF.js pour lire les vrais PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui'] },
-          colors: {
-            base: '#0a0b10',
-            ink: '#eaf2ff',
-            muted: '#a9b9d6',
-            neon: '#95D2E6',
-            accent: '#8ad9e6',
-            accent2: '#CFE6E4'
-          },
-          boxShadow: { glow: '0 0 80px rgba(149, 210, 230, 0.35)' },
-        }
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #000000;
+      color: #e8f4ff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* === Styles globaux existants === */
+    .footer {
+      background: #000000;
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid rgba(100, 149, 237, 0.2);
+    }
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      color: #b8c8e8;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
+    }
+    .neon-glow {
+      box-shadow: 0 0 20px rgba(100, 149, 237, 0.3), 0 0 40px rgba(100, 149, 237, 0.1);
+      border: 1px solid rgba(100, 149, 237, 0.3);
+    }
+    .retro-card {
+      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+      border: 1px solid rgba(100, 149, 237, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .cyber-border {
+      border: 2px solid transparent;
+      background: linear-gradient(145deg, #1a1a1a, #0a0a0a) padding-box,
+                  linear-gradient(45deg, #6495ed, #87ceeb) border-box;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-neon {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(100, 149, 237, 0.3), 0 0 40px rgba(100, 149, 237, 0.1);
+      }
+      50% { 
+        box-shadow: 0 0 30px rgba(100, 149, 237, 0.5), 0 0 60px rgba(100, 149, 237, 0.2);
       }
     }
-  </script>
-  <style>
-    html, body { background:#0a0b10; color:#eaf2ff; }
-    .glass { backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); }
-    .chip { background: linear-gradient(135deg, rgba(149,210,230,.18), rgba(207,230,228,.10)); border: 1px solid rgba(149,210,230,.25); }
-    .mask-fade { -webkit-mask-image: radial-gradient(1200px 600px at 50% 0%, rgba(0,0,0,1), rgba(0,0,0,0.2) 60%, transparent 75%); mask-image: radial-gradient(1200px 600px at 50% 0%, rgba(0,0,0,1), rgba(0,0,0,0.2) 60%, transparent 75%); }
-    @media (max-width: 768px){ .desktop-only{ display:none; } }
+    .fade-in-up { animation: fadeInUp 0.8s ease-out; }
+    .pulse-cyber { animation: pulse-neon 2s ease-in-out infinite; }
+    .glass-effect {
+      background: rgba(26, 26, 26, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(100, 149, 237, 0.1);
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(100, 149, 237, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6495ed, #87ceeb);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .notification {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+      border: 1px solid rgba(100, 149, 237, 0.3);
+      padding: 15px 20px;
+      border-radius: 10px;
+      z-index: 1001;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+    .notification.show { transform: translateX(0); }
+    .score-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 50px; height: 50px; border-radius: 50%; font-weight: bold; font-size: 14px;
+    }
+    .score-excellent { background: linear-gradient(45deg, #10b981, #059669); color: white; }
+    .score-good { background: linear-gradient(45deg, #3b82f6, #1d4ed8); color: white; }
+    .score-average { background: linear-gradient(45deg, #f59e0b, #d97706); color: white; }
+
+    .action-btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(45deg, #6495ed, #87ceeb); color: #0f0f23; }
+    .btn-secondary { background: rgba(100, 149, 237, 0.1); border: 1px solid rgba(100, 149, 237, 0.3); color: #87ceeb; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4); }
+    .btn-secondary:hover { background: rgba(100, 149, 237, 0.2); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    .main-content { padding-top: 120px; }
+
+    /* Liens ASSIGNME toujours blancs */
+    .brand-white, .brand-white:visited, .brand-white:hover { color: #fff; text-decoration: none; }
   </style>
+  <link href="favicon.png" rel="icon" type="image/png">
 </head>
-<body class="font-sans antialiased selection:bg-accent/30">
+<body class="gradient-bg">
 
-  <!-- HEADER mis à jour -->
+  <!-- === HEADER (comme homepage), uniquement header changé === -->
   <header class="fixed top-0 inset-x-0 z-50">
-    <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-8">
-        <a href="index.html" class="flex items-center gap-2">
-          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
-          <span class="text-base font-semibold tracking-tight uppercase text-white">ASSIGNME</span>
-        </a>
-        <div class="hidden md:flex items-center gap-6 text-sm text-muted">
-          <a href="index.html" class="hover:text-ink">Accueil</a>
-          <a href="#about" class="hover:text-ink">Présentation</a>
-          <a href="demo.html" class="hover:text-ink">Démo</a>
-          <a href="info.html" class="hover:text-ink">À propos</a>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <a href="#contact" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Nous contacter</a>
-      </div>
-    </nav>
-  </header>
-
-  <!-- CONTENU DEMO : à conserver tel que tu avais -->
-  <main class="pt-36 pb-20">
-    <div class="mx-auto w-[min(1100px,92%)] text-center">
-      <h1 class="text-4xl sm:text-5xl font-bold mb-6">Démo ASSIGNME</h1>
-      <p class="text-muted max-w-2xl mx-auto">Découvrez comment notre plateforme IA optimise le recrutement et le matching des candidats et offres.</p>
-      <div class="mt-10">
-        <!-- Exemple vidéo ou iframe de démo -->
-        <video controls class="mx-auto rounded-xl shadow-glow" style="max-width:100%; height:auto;">
-          <source src="as.mp4" type="video/mp4">
-          Votre navigateur ne supporte pas la vidéo.
-        </video>
-      </div>
-    </div>
-  </main>
-
-  <!-- FOOTER mis à jour -->
-  <footer id="contact" class="pt-12 pb-16">
-    <div class="mx-auto w-[min(1100px,92%)] grid md:grid-cols-2 gap-8 items-start">
-      <div>
-        <div class="flex items-center gap-2">
-          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
-          <span class="text-base font-semibold text-white">ASSIGNME</span>
-        </div>
-        <p class="mt-3 text-muted max-w-md">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</p>
-      </div>
-      <form class="glass rounded-2xl p-4 grid sm:grid-cols-[1fr_auto] gap-3" onsubmit="event.preventDefault(); alert('Merci ! Nous revenons vers vous rapidement.');">
-        <input type="email" placeholder="Votre e-mail" required class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ink/60" />
-        <button class="px-5 py-3 rounded-xl bg-ink text-black font-semibold shadow-glow">Envoyer</button>
-      </form>
-    </div>
-  </footer>
-
-  <script>
-    const io = new IntersectionObserver((entries)=> {
-      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('opacity-100','translate-y-0'); } })
-    }, { threshold: .08 });
-    document.querySelectorAll('section > div').forEach(el=>{
-      el.classList.add('opacity-0','translate-y-6','transition','duration-700');
-      io.observe(el)
-    });
-  </script>
-</body>
-</html>
+    <nav class="mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between glass-effect">
