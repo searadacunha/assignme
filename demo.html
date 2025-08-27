@@ -19,6 +19,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
     
     * {
       margin: 0;
@@ -44,8 +45,8 @@
     .bg-ink { background-color: #eaf2ff; }
     .shadow-glow { box-shadow: 0 0 80px rgba(149, 210, 230, 0.35); }
     .hover\:brightness-110:hover { filter: brightness(1.1); }
-    .nav-brand { color:#ffffff !important; }
-    .footer-brand { color:#ffffff !important; }
+    .nav-brand { color:#ffffff !important; font-family: 'Space Grotesk', ui-sans-serif, system-ui !important; }
+    .footer-brand { color:#ffffff !important; font-family: 'Space Grotesk', ui-sans-serif, system-ui !important; }
 
     @media (max-width: 768px) {
       .nav-brand { font-size: 16px; }
@@ -244,7 +245,7 @@
       <div class="flex items-center gap-8" style="display: flex; align-items: center; gap: 32px;">
         <a href="index.html" class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
           <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl" style="height: 32px; width: auto; border-radius: 12px;"/>
-          <span class="text-base font-semibold tracking-tight uppercase nav-brand" style="font-size: 16px; font-weight: 600; letter-spacing: -0.025em; text-transform: uppercase; color: #ffffff !important;">ASSIGNME</span>
+          <span class="text-base font-semibold tracking-tight uppercase nav-brand" style="font-size: 16px; font-weight: 600; letter-spacing: -0.025em; text-transform: uppercase; color: #ffffff !important; font-family: 'Space Grotesk', ui-sans-serif, system-ui !important;">ASSIGNME</span>
         </a>
         <div class="hidden md:flex items-center gap-6 text-sm text-muted" style="display: none; align-items: center; gap: 24px; font-size: 14px; color: #a9b9d6;">
           <a href="index.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Accueil</a>
@@ -265,7 +266,7 @@
     <div class="mx-auto w-[min(1100px,92%)] flex items-center justify-center">
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
-        <span class="text-base font-semibold footer-brand">ASSIGNME</span>
+        <span class="text-base font-semibold footer-brand" style="font-family: 'Space Grotesk', ui-sans-serif, system-ui !important;">ASSIGNME</span>
         <span class="text-muted mx-2">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
       </div>
     </div>
