@@ -248,9 +248,9 @@
         </a>
         <div class="hidden md:flex items-center gap-6 text-sm text-muted" style="display: none; align-items: center; gap: 24px; font-size: 14px; color: #a9b9d6;">
           <a href="index.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Accueil</a>
-          <a href="index.html#about" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">PrÃ©sentation</a>
-          <a href="demo.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">DÃ©mo</a>
-          <a href="info.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Ã€ propos</a>
+          <a href="index.html#about" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Présentation</a>
+          <a href="demo.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Démo</a>
+          <a href="info.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">À propos</a>
         </div>
       </div>
       <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
@@ -266,7 +266,7 @@
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
         <span class="text-base font-semibold footer-brand">ASSIGNME</span>
-        <span class="text-muted mx-2">Â© 2025 ASSIGNME. Tous droits rÃ©servÃ©s | Une innovation DeepTech franÃ§aise</span>
+        <span class="text-muted mx-2">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
       </div>
     </div>
   </footer>
@@ -306,7 +306,7 @@
         notification.className = `notification ${type}`;
         notification.innerHTML = `
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span>${type === 'success' ? 'SUCCÃˆS' : type === 'error' ? 'ERREUR' : 'INFO'}</span>
+            <span>${type === 'success' ? 'SUCCÈS' : type === 'error' ? 'ERREUR' : 'INFO'}</span>
             <span>${message}</span>
           </div>
         `;
@@ -334,7 +334,7 @@
         ];
         
         if (!file) {
-          throw new Error('Aucun fichier sÃ©lectionnÃ©');
+          throw new Error('Aucun fichier sélectionné');
         }
         
         if (file.size > maxSize) {
@@ -342,7 +342,7 @@
         }
         
         if (!allowedTypes.includes(file.type)) {
-          throw new Error('Format de fichier non supportÃ©. Utilisez PDF, DOC, DOCX ou TXT');
+          throw new Error('Format de fichier non supporté. Utilisez PDF, DOC, DOCX ou TXT');
         }
         
         return true;
@@ -356,7 +356,7 @@
 
       const extractTextFromPDF = async (file) => {
         if (!pdfReady) {
-          throw new Error('PDF.js non initialisÃ©');
+          throw new Error('PDF.js non initialisé');
         }
 
         updateProgress("Lecture du fichier PDF...", 10);
@@ -366,7 +366,7 @@
           updateProgress("Analyse de la structure PDF...", 20);
           
           const pdf = await window.pdfjsLib.getDocument(arrayBuffer).promise;
-          updateProgress(`PDF ouvert: ${pdf.numPages} page(s) dÃ©tectÃ©e(s)`, 30);
+          updateProgress(`PDF ouvert: ${pdf.numPages} page(s) détectée(s)`, 30);
           
           let fullText = '';
           
@@ -384,7 +384,7 @@
             throw new Error('PDF vide ou texte non extractible (PDF image?)');
           }
           
-          updateProgress(`Extraction terminÃ©e: ${fullText.length} caractÃ¨res extraits`, 60);
+          updateProgress(`Extraction terminée: ${fullText.length} caractères extraits`, 60);
           return fullText;
           
         } catch (error) {
@@ -406,15 +406,15 @@
         if (fileType === 'text/plain') {
           updateProgress("Lecture du fichier texte...", 30);
           const text = await file.text();
-          updateProgress("Fichier texte lu avec succÃ¨s", 60);
+          updateProgress("Fichier texte lu avec succès", 60);
           return text;
         }
         
         if (fileType.includes('word') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
-          updateProgress("Fichier Word dÃ©tectÃ© - Conversion simplifiÃ©e", 30);
+          updateProgress("Fichier Word détecté - Conversion simplifiée", 30);
           try {
             const text = await file.text();
-            updateProgress("Fichier Word traitÃ©", 60);
+            updateProgress("Fichier Word traité", 60);
             return text;
           } catch {
             throw new Error('Fichier Word non pris en charge. Utilisez un fichier PDF ou TXT.');
@@ -425,7 +425,7 @@
       };
 
       const analyzeWithNetlifyFunction = async (cvText) => {
-        updateProgress("Connexion Ã  l'IA ASSIGNME...", 70);
+        updateProgress("Connexion à l'IA ASSIGNME...", 70);
         
         try {
           const response = await fetch('/.netlify/functions/analyze-cv', {
@@ -436,33 +436,33 @@
             body: JSON.stringify({ cvText })
           });
           
-          updateProgress(`RÃ©ponse du serveur: ${response.status}`, 80);
+          updateProgress(`Réponse du serveur: ${response.status}`, 80);
           
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             
             if (response.status === 500) {
-              throw new Error('Erreur serveur. Veuillez rÃ©essayer dans quelques minutes.');
+              throw new Error('Erreur serveur. Veuillez réessayer dans quelques minutes.');
             }
             if (response.status === 400) {
-              throw new Error('DonnÃ©es invalides envoyÃ©es au serveur.');
+              throw new Error('Données invalides envoyées au serveur.');
             }
             if (response.status === 429) {
-              throw new Error('Limite de requÃªtes atteinte. Veuillez rÃ©essayer plus tard.');
+              throw new Error('Limite de requêtes atteinte. Veuillez réessayer plus tard.');
             }
             
             throw new Error(`Erreur ${response.status}: ${errorData.error || 'Erreur inconnue'}`);
           }
           
           const result = await response.json();
-          updateProgress("Analyse terminÃ©e avec succÃ¨s", 100);
+          updateProgress("Analyse terminée avec succès", 100);
           
           return result;
           
         } catch (error) {
           if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-            updateProgress("Erreur de connexion rÃ©seau", 0);
-            throw new Error('ProblÃ¨me de connexion. VÃ©rifiez votre connexion internet.');
+            updateProgress("Erreur de connexion réseau", 0);
+            throw new Error('Problème de connexion. Vérifiez votre connexion internet.');
           }
           
           updateProgress(`Erreur lors de l'analyse: ${error.message}`, 0);
@@ -505,19 +505,19 @@
         link.click();
         
         URL.revokeObjectURL(url);
-        showNotification('RÃ©sultats tÃ©lÃ©chargÃ©s', 'success');
+        showNotification('Résultats téléchargés', 'success');
       };
 
       const shareResults = () => {
         if (navigator.share && candidateProfile) {
           navigator.share({
             title: 'Mon analyse ASSIGNME',
-            text: `J'ai analysÃ© mon CV avec ASSIGNME et j'ai reÃ§u ${recommendations.length} recommandations personnalisÃ©es !`,
+            text: `J'ai analysé mon CV avec ASSIGNME et j'ai reçu ${recommendations.length} recommandations personnalisées !`,
             url: window.location.href
           });
         } else {
           navigator.clipboard.writeText(window.location.href);
-          showNotification('Lien copiÃ© dans le presse-papiers', 'success');
+          showNotification('Lien copié dans le presse-papiers', 'success');
         }
       };
 
@@ -535,12 +535,12 @@
           setAnalysisComplete(false);
           setProgress(0);
 
-          addDebugLog(`DÃ©marrage de l'analyse: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+          addDebugLog(`Démarrage de l'analyse: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
           
           const cvText = await extractTextFromFile(file);
           
           if (cvText.length < 100) {
-            throw new Error('Le contenu du CV semble trop court ou vide. VÃ©rifiez que le fichier contient bien du texte.');
+            throw new Error('Le contenu du CV semble trop court ou vide. Vérifiez que le fichier contient bien du texte.');
           }
           
           const analysis = await analyzeWithNetlifyFunction(cvText);
@@ -563,7 +563,7 @@
           
           saveAnalysisLocally(analysis);
           
-          showNotification('Analyse terminÃ©e avec succÃ¨s !', 'success');
+          showNotification('Analyse terminée avec succès !', 'success');
           
         } catch (error) {
           console.error("Erreur:", error);
@@ -608,11 +608,11 @@
               <div>
                 <div className="text-center mb-16 fade-in-up">
                   <h2 className="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
-                    DÃ©posez votre CV
+                    Déposez votre CV
                     <span className="ia-neon block"><span className="text-neon">ASSIGNME</span> fait le reste</span>
                   </h2>
                   <p className="text-lg text-muted max-w-3xl mx-auto leading-relaxed mb-8">
-                    Une seule action. L'intelligence artificielle analyse votre profil et vous trouve automatiquement les meilleures opportunitÃ©s d'emploi adaptÃ©es Ã  vos compÃ©tences.
+                    Une seule action. L'intelligence artificielle analyse votre profil et vous trouve automatiquement les meilleures opportunités d'emploi adaptées à vos compétences.
                   </p>
                 </div>
 
@@ -667,7 +667,7 @@
                             Analyse ASSIGNME en cours...
                           </p>
                           <p className="text-gray-400 text-lg">
-                            {currentStep || 'PrÃ©paration de l\'analyse'}
+                            {currentStep || 'Préparation de l\'analyse'}
                           </p>
                           {fileName && (
                             <p className="text-cyan-400 text-sm mt-2">
@@ -675,19 +675,19 @@
                             </p>
                           )}
                           <div className="mt-4">
-                            <div className="text-cyan-300 text-sm">{progress}% terminÃ©</div>
+                            <div className="text-cyan-300 text-sm">{progress}% terminé</div>
                           </div>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-8">
-                        <div className="text-9xl mb-6">ðŸ“„</div>
+                        <div className="text-9xl mb-6">📄</div>
                         <div>
                           <p className="text-white text-3xl font-bold mb-4">
-                            Glissez-dÃ©posez votre CV ou cliquez ici
+                            Glissez-déposez votre CV ou cliquez ici
                           </p>
                           <p className="text-gray-400 text-lg mb-8">
-                            Formats acceptÃ©s: PDF, DOC, DOCX, TXT (max 10MB)
+                            Formats acceptés: PDF, DOC, DOCX, TXT (max 10MB)
                           </p>
                           <div className="inline-block bg-gradient-to-r from-blue-500 to-blue-400 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-blue-400 hover:to-blue-300 transition duration-300 transform hover:scale-105 neon-glow">
                             Parcourir les fichiers
@@ -700,18 +700,18 @@
 
                 <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>TÃ©lÃ©chargez</h3>
-                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>DÃ©posez votre CV en quelques secondes</p>
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Téléchargez</h3>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Déposez votre CV en quelques secondes</p>
                   </div>
                   
                   <div className="retro-card p-8 rounded-2xl text-center">
                     <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>IA analyse</h3>
-                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>L'intelligence artificielle extrait intelligemment vos compÃ©tences et expÃ©riences</p>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>L'intelligence artificielle extrait intelligemment vos compétences et expériences</p>
                   </div>
                   
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Emplois trouvÃ©s</h3>
-                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Candidatez aux offres parfaitement adaptÃ©es Ã  votre profil</p>
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Emplois trouvés</h3>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Candidatez aux offres parfaitement adaptées à votre profil</p>
                   </div>
                 </div>
               </div>
@@ -721,7 +721,7 @@
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex-1">
                       <h2 className="text-3xl font-bold text-white mb-4">
-                        Profil analysÃ© : {candidateProfile.name || 'Candidat'}
+                        Profil analysé : {candidateProfile.name || 'Candidat'}
                       </h2>
                       
                       {candidateProfile.ai_metadata && (
@@ -730,28 +730,28 @@
                             {candidateProfile.ai_metadata.provider}
                           </span>
                           <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">
-                            Analyse terminÃ©e
+                            Analyse terminée
                           </span>
                         </div>
                       )}
                       
                       <div className="grid md:grid-cols-2 gap-6 mb-6">
                         <div className="glass-effect p-4 rounded-lg">
-                          <h4 className="text-blue-400 font-semibold mb-3">Informations gÃ©nÃ©rales</h4>
+                          <h4 className="text-blue-400 font-semibold mb-3">Informations générales</h4>
                           <div className="space-y-2 text-sm text-gray-300">
-                            <p><strong>Localisation:</strong> {candidateProfile.location || 'Non spÃ©cifiÃ©e'}</p>
-                            <p><strong>MobilitÃ©:</strong> {candidateProfile.mobility || 'Non spÃ©cifiÃ©e'}</p>
-                            <p><strong>ExpÃ©rience totale:</strong> {candidateProfile.total_experience_years || 0} ans</p>
-                            <p><strong>Poste actuel:</strong> {candidateProfile.current_position || 'Non spÃ©cifiÃ©'}</p>
+                            <p><strong>Localisation:</strong> {candidateProfile.location || 'Non spécifiée'}</p>
+                            <p><strong>Mobilité:</strong> {candidateProfile.mobility || 'Non spécifiée'}</p>
+                            <p><strong>Expérience totale:</strong> {candidateProfile.total_experience_years || 0} ans</p>
+                            <p><strong>Poste actuel:</strong> {candidateProfile.current_position || 'Non spécifié'}</p>
                           </div>
                         </div>
                         
                         <div className="glass-effect p-4 rounded-lg">
                           <h4 className="text-blue-400 font-semibold mb-3">Formation & Objectifs</h4>
                           <div className="space-y-2 text-sm text-gray-300">
-                            <p><strong>Niveau:</strong> {candidateProfile.education_level || 'Non spÃ©cifiÃ©'}</p>
-                            <p><strong>Formation:</strong> {candidateProfile.education_details || 'Non spÃ©cifiÃ©e'}</p>
-                            <p><strong>Aspirations:</strong> {candidateProfile.career_aspirations || 'Non spÃ©cifiÃ©es'}</p>
+                            <p><strong>Niveau:</strong> {candidateProfile.education_level || 'Non spécifié'}</p>
+                            <p><strong>Formation:</strong> {candidateProfile.education_details || 'Non spécifiée'}</p>
+                            <p><strong>Aspirations:</strong> {candidateProfile.career_aspirations || 'Non spécifiées'}</p>
                             <p><strong>Contraintes:</strong> {candidateProfile.constraints || 'Aucune'}</p>
                           </div>
                         </div>
@@ -759,7 +759,7 @@
 
                       {candidateProfile.technical_skills?.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-blue-400 font-semibold mb-3">CompÃ©tences techniques</h4>
+                          <h4 className="text-blue-400 font-semibold mb-3">Compétences techniques</h4>
                           <div className="flex flex-wrap gap-2">
                             {candidateProfile.technical_skills.map((skill, i) => (
                               <span key={i} className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded border border-blue-500/30">
@@ -772,7 +772,7 @@
 
                       {candidateProfile.soft_skills?.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-green-400 font-semibold mb-3">QualitÃ©s personnelles</h4>
+                          <h4 className="text-green-400 font-semibold mb-3">Qualités personnelles</h4>
                           <div className="flex flex-wrap gap-2">
                             {candidateProfile.soft_skills.map((skill, i) => (
                               <span key={i} className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded border border-green-500/30">
@@ -788,14 +788,14 @@
                       <button
                         onClick={downloadResults}
                         className="action-btn btn-primary"
-                        title="TÃ©lÃ©charger les rÃ©sultats"
+                        title="Télécharger les résultats"
                       >
-                        TÃ©lÃ©charger
+                        Télécharger
                       </button>
                       <button
                         onClick={shareResults}
                         className="action-btn btn-secondary"
-                        title="Partager les rÃ©sultats"
+                        title="Partager les résultats"
                       >
                         Partager
                       </button>
@@ -834,7 +834,7 @@
                           </div>
                           
                           <p className="text-blue-400 font-medium mb-4 text-lg">
-                            {job.sector} â€¢ {job.contract_type}
+                            {job.sector} • {job.contract_type}
                           </p>
                           
                           <div className="glass-effect border border-green-500/30 p-6 rounded-lg mb-6">
@@ -842,7 +842,7 @@
                             <p className="text-green-300">{job.match_justification}</p>
                             {job.match_score && (
                               <div className="mt-3 text-sm text-green-400">
-                                Score de compatibilitÃ© : {job.match_score}%
+                                Score de compatibilité : {job.match_score}%
                               </div>
                             )}
                           </div>
@@ -850,18 +850,18 @@
                           <div className="grid md:grid-cols-2 gap-6 mb-6">
                             <div className="glass-effect p-4 rounded-lg">
                               <p className="text-gray-300 mb-3">
-                                <strong className="text-yellow-400">RÃ©munÃ©ration estimÃ©e:</strong><br/>
-                                <span className="text-xl font-bold">{job.salary_min?.toLocaleString()}â‚¬ - {job.salary_max?.toLocaleString()}â‚¬</span>
+                                <strong className="text-yellow-400">Rémunération estimée:</strong><br/>
+                                <span className="text-xl font-bold">{job.salary_min?.toLocaleString()}€ - {job.salary_max?.toLocaleString()}€</span>
                               </p>
                               <p className="text-gray-300">
-                                <strong className="text-purple-400">Ã‰volution:</strong> {job.evolution_potential}
+                                <strong className="text-purple-400">Évolution:</strong> {job.evolution_potential}
                               </p>
                             </div>
                             
                             <div className="glass-effect p-4 rounded-lg">
                               {job.required_skills?.length > 0 && (
                                 <div>
-                                  <strong className="text-blue-400">CompÃ©tences requises:</strong>
+                                  <strong className="text-blue-400">Compétences requises:</strong>
                                   <div className="flex flex-wrap gap-2 mt-2">
                                     {job.required_skills.map((skill, i) => (
                                       <span key={i} className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded border border-gray-600">
@@ -902,7 +902,7 @@
                 {candidateProfile.training_suggestions?.length > 0 && (
                   <div className="mb-8">
                     <h3 className="text-3xl font-bold text-white mb-8">
-                      Formations recommandÃ©es
+                      Formations recommandées
                     </h3>
                     <div className="space-y-4">
                       {candidateProfile.training_suggestions.map((training, index) => (
@@ -913,10 +913,10 @@
                               <p className="text-gray-300 mb-4">{training.description}</p>
                               <div className="flex gap-6 text-sm">
                                 <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded border border-yellow-500/30">
-                                  DurÃ©e: {training.duration}
+                                  Durée: {training.duration}
                                 </span>
                                 <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
-                                  IntÃ©rÃªt: {training.relevance}
+                                  Intérêt: {training.relevance}
                                 </span>
                               </div>
                             </div>
@@ -949,16 +949,16 @@
                               <div className="mb-4">
                                 <span className={`px-4 py-2 text-sm rounded-full font-medium ${
                                   path.feasibility === 'facile' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                                  path.feasibility === 'modÃ©rÃ©e' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                  path.feasibility === 'modérée' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                                   'bg-red-500/20 text-red-400 border border-red-500/30'
                                 }`}>
                                   {path.feasibility === 'facile' ? 'Facile' : 
-                                   path.feasibility === 'modÃ©rÃ©e' ? 'ModÃ©rÃ©e' : 'Difficile'} - {path.timeline}
+                                   path.feasibility === 'modérée' ? 'Modérée' : 'Difficile'} - {path.timeline}
                                 </span>
                               </div>
                               {path.required_steps?.length > 0 && (
                                 <div>
-                                  <h5 className="text-blue-400 font-medium mb-3">Ã‰tapes recommandÃ©es :</h5>
+                                  <h5 className="text-blue-400 font-medium mb-3">Étapes recommandées :</h5>
                                   <ul className="list-disc list-inside text-gray-300 space-y-2">
                                     {path.required_steps.map((step, i) => (
                                       <li key={i} className="text-sm">{step}</li>
@@ -983,16 +983,16 @@
                 )}
 
                 <div className="cyber-border p-8 rounded-2xl text-center neon-glow">
-                  <h4 className="text-2xl font-bold text-white mb-4">Analyse ASSIGNME terminÃ©e !</h4>
+                  <h4 className="text-2xl font-bold text-white mb-4">Analyse ASSIGNME terminée !</h4>
                   <p className="text-gray-300 mb-6 text-lg">
-                    Votre CV a Ã©tÃ© analysÃ© par l'IA ASSIGNME selon vos critÃ¨res professionnels.
+                    Votre CV a été analysé par l'IA ASSIGNME selon vos critères professionnels.
                   </p>
                   <div className="flex justify-center gap-4 flex-wrap">
                     <button
                       onClick={downloadResults}
                       className="bg-gradient-to-r from-green-500 to-green-400 text-white px-8 py-3 rounded-xl font-bold text-lg hover:from-green-400 hover:to-green-300 transition duration-300 transform hover:scale-105"
                     >
-                      TÃ©lÃ©charger les rÃ©sultats
+                      Télécharger les résultats
                     </button>
                     <button
                       onClick={shareResults}
@@ -1010,7 +1010,7 @@
                   
                   <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
                     <p className="text-cyan-300 text-sm">
-                      <strong>Conseil ASSIGNME :</strong> Sauvegardez vos rÃ©sultats et revenez rÃ©guliÃ¨rement pour dÃ©couvrir de nouvelles opportunitÃ©s !
+                      <strong>Conseil ASSIGNME :</strong> Sauvegardez vos résultats et revenez régulièrement pour découvrir de nouvelles opportunités !
                     </p>
                   </div>
                 </div>
