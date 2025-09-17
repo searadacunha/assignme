@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASSIGNME - AI CV Analyzer</title>
+  <title>ASSIGNME - Analyseur CV IA</title>
   
-  <!-- React and Babel -->
+  <!-- React et Babel -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
-  <!-- PDF.js for reading real PDFs -->
+  <!-- PDF.js pour lire les vrais PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
     
     * {
@@ -27,49 +29,84 @@
 
     body {
       margin: 0;
-      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-      background: #ffffff;
-      color: #1e3a8a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #000000;
+      color: #e8f4ff;
       overflow-x: hidden;
       min-height: 100vh;
     }
 
-    /* Styles for header and footer */
-    html, body { background:#ffffff; color:#1e3a8a; }
-    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,.85); border: 1px solid rgba(59,130,246,.2); box-shadow: 0 8px 32px rgba(59,130,246,.1); }
-    .text-muted { color: #64748b; }
-    .text-ink { color: #1e3a8a; }
-    .hover\:text-ink:hover { color: #1e3a8a; }
-    .bg-accent { background-color: #2563eb; }
-    .shadow-glow { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3); }
+    /* Styles pour header et footer */
+    html, body { background:#0a0b10; color:#eaf2ff; }
+    .glass { backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); }
+    .text-muted { color: #a9b9d6; }
+    .text-ink { color: #eaf2ff; }
+    .hover\:text-ink:hover { color: #eaf2ff; }
+    .bg-ink { background-color: #eaf2ff; }
+    .shadow-glow { box-shadow: 0 0 80px rgba(149, 210, 230, 0.35); }
     .hover\:brightness-110:hover { filter: brightness(1.1); }
-    .nav-brand { color:#1e3a8a !important; }
-    .footer-brand { color:#1e3a8a !important; }
+    .nav-brand { color:#ffffff !important; }
+    .footer-brand { color:#ffffff !important; }
 
     @media (max-width: 768px) {
       .nav-brand { font-size: 16px; }
       .nav-brand img { height: 40px !important; margin-right: 8px !important; }
     }
 
-    .hero-gradient { 
-      background-image: radial-gradient(1200px 600px at 60% 10%, rgba(59,130,246,.08), rgba(219,234,254,.05) 35%, rgba(255,255,255,1) 65%), 
-                        radial-gradient(900px 500px at 10% 20%, rgba(37,99,235,.06), rgba(255,255,255,1) 60%); 
+    .contact-btn {
+      padding: 12px 24px;
+      background: linear-gradient(45deg, #6495ed, #87ceeb);
+      color: #0f0f23;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: inline-block;
     }
 
+    .contact-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
+      background: linear-gradient(45deg, #87ceeb, #b0e0e6);
+    }
+
+    .footer {
+      background: #000000;
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid rgba(100, 149, 237, 0.2);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      color: #b8c8e8;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
+    }
+    
     .neon-glow {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.3);
+      box-shadow: 0 0 20px rgba(100, 149, 237, 0.3), 0 0 40px rgba(100, 149, 237, 0.1);
+      border: 1px solid rgba(100, 149, 237, 0.3);
     }
     
     .retro-card {
-      background: rgba(255,255,255,.95);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+      border: 1px solid rgba(100, 149, 237, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
     
     .cyber-border {
-      border: 2px solid rgba(59, 130, 246, 0.3);
-      background: rgba(255,255,255,.95);
+      border: 2px solid transparent;
+      background: linear-gradient(145deg, #1a1a1a, #0a0a0a) padding-box,
+                  linear-gradient(45deg, #6495ed, #87ceeb) border-box;
     }
     
     @keyframes fadeInUp {
@@ -79,10 +116,10 @@
     
     @keyframes pulse-neon {
       0%, 100% { 
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
+        box-shadow: 0 0 20px rgba(100, 149, 237, 0.3), 0 0 40px rgba(100, 149, 237, 0.1);
       }
       50% { 
-        box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 30px rgba(100, 149, 237, 0.5), 0 0 60px rgba(100, 149, 237, 0.2);
       }
     }
     
@@ -95,15 +132,15 @@
     }
     
     .glass-effect {
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(26, 26, 26, 0.6);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(100, 149, 237, 0.1);
     }
 
     .progress-bar {
       width: 100%;
       height: 4px;
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(100, 149, 237, 0.2);
       border-radius: 2px;
       overflow: hidden;
       margin: 10px 0;
@@ -111,7 +148,7 @@
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      background: linear-gradient(90deg, #6495ed, #87ceeb);
       border-radius: 2px;
       transition: width 0.3s ease;
     }
@@ -120,14 +157,13 @@
       position: fixed;
       top: 100px;
       right: 20px;
-      background: rgba(255,255,255,.95);
-      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+      border: 1px solid rgba(100, 149, 237, 0.3);
       padding: 15px 20px;
       border-radius: 10px;
       z-index: 1001;
       transform: translateX(400px);
       transition: transform 0.3s ease;
-      color: #1e3a8a;
     }
 
     .notification.show {
@@ -174,60 +210,52 @@
     }
 
     .btn-primary {
-      background: linear-gradient(45deg, #3b82f6, #2563eb);
-      color: white;
+      background: linear-gradient(45deg, #6495ed, #87ceeb);
+      color: #0f0f23;
     }
 
     .btn-secondary {
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: #2563eb;
+      background: rgba(100, 149, 237, 0.1);
+      border: 1px solid rgba(100, 149, 237, 0.3);
+      color: #87ceeb;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
     }
 
     .btn-secondary:hover {
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(100, 149, 237, 0.2);
     }
 
     .main-content {
       padding-top: 120px;
     }
 
-    .chip { 
-      background: linear-gradient(135deg, rgba(59,130,246,.1), rgba(219,234,254,.3)); 
-      border: 1px solid rgba(59,130,246,.3); 
-    }
-
-    /* Color scheme adjustments */
-    .text-neon { color: #3b82f6; }
-    .text-accent { color: #2563eb; }
-    .bg-neon { background-color: #3b82f6; }
-    .border-neon { border-color: #3b82f6; }
+    .logo-header:visited{ color:white; }
+    .logo-header:hover{ color:white; text-decoration:none; }
   </style>
   <link href="favicon.png" rel="icon" type="image/png">
 </head>
-<body class="hero-gradient">
+<body class="gradient-bg">
   <!-- Header -->
   <header class="fixed top-0 inset-x-0 z-50">
     <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-8">
         <a href="index.html" class="flex items-center gap-2">
           <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
-          <span class="text-base font-semibold tracking-tight uppercase nav-brand">ASSIGNME</span>
+          <span class="text-base font-semibold tracking-tight uppercase text-white text-white nav-brand uppercase text-white">ASSIGNME</span>
         </a>
         <div class="hidden md:flex items-center gap-6 text-sm text-muted">
-          <a href="index.html" class="hover:text-ink">Home</a>
-          <a href="index.html#about" class="hover:text-ink">About</a>
-          <a href="demo.html" class="hover:text-ink">Demo</a>
-          <a href="info.html" class="hover:text-ink">Info</a>
+          <a href="index.html" class="hover:text-ink">Accueil</a>
+          <a href="index.html#about" class="hover:text-ink">Présentation</a>
+          <a href="demo.html" class="hover:text-ink">Démo</a>
+          <a href="info.html" class="hover:text-ink">À propos</a>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-accent text-white font-semibold shadow-glow hover:brightness-110">Contact Us</a>
+        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Nous contacter</a>
       </div>
     </nav>
   </header>
@@ -238,8 +266,8 @@
     <div class="mx-auto w-[min(1100px,92%)] flex items-center justify-center">
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
-        <span class="text-base font-semibold footer-brand">ASSIGNME</span>
-        <span class="text-muted mx-2">© 2025 ASSIGNME</span>
+        <span class="text-base font-semibold footer-brand" style="font-family: 'Space Grotesk', ui-sans-serif, system-ui !important;">ASSIGNME</span>
+        <span class="text-muted mx-2">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
       </div>
     </div>
   </footer>
@@ -279,7 +307,7 @@
         notification.className = `notification ${type}`;
         notification.innerHTML = `
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span>${type === 'success' ? 'SUCCESS' : type === 'error' ? 'ERROR' : 'INFO'}</span>
+            <span>${type === 'success' ? 'SUCCÈS' : type === 'error' ? 'ERREUR' : 'INFO'}</span>
             <span>${message}</span>
           </div>
         `;
@@ -307,15 +335,15 @@
         ];
         
         if (!file) {
-          throw new Error('No file selected');
+          throw new Error('Aucun fichier sélectionné');
         }
         
         if (file.size > maxSize) {
-          throw new Error('File is too large (max 10MB)');
+          throw new Error('Le fichier est trop volumineux (max 10MB)');
         }
         
         if (!allowedTypes.includes(file.type)) {
-          throw new Error('Unsupported file format. Use PDF, DOC, DOCX or TXT');
+          throw new Error('Format de fichier non supporté. Utilisez PDF, DOC, DOCX ou TXT');
         }
         
         return true;
@@ -329,22 +357,22 @@
 
       const extractTextFromPDF = async (file) => {
         if (!pdfReady) {
-          throw new Error('PDF.js not initialized');
+          throw new Error('PDF.js non initialisé');
         }
 
-        updateProgress("Reading PDF file...", 10);
+        updateProgress("Lecture du fichier PDF...", 10);
         
         try {
           const arrayBuffer = await file.arrayBuffer();
-          updateProgress("Analyzing PDF structure...", 20);
+          updateProgress("Analyse de la structure PDF...", 20);
           
           const pdf = await window.pdfjsLib.getDocument(arrayBuffer).promise;
-          updateProgress(`PDF opened: ${pdf.numPages} page(s) detected`, 30);
+          updateProgress(`PDF ouvert: ${pdf.numPages} page(s) détectée(s)`, 30);
           
           let fullText = '';
           
           for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            updateProgress(`Extracting page ${pageNum}/${pdf.numPages}...`, 30 + (pageNum / pdf.numPages) * 30);
+            updateProgress(`Extraction page ${pageNum}/${pdf.numPages}...`, 30 + (pageNum / pdf.numPages) * 30);
             
             const page = await pdf.getPage(pageNum);
             const textContent = await page.getTextContent();
@@ -354,15 +382,15 @@
           }
           
           if (fullText.trim().length === 0) {
-            throw new Error('Empty PDF or non-extractable text (image PDF?)');
+            throw new Error('PDF vide ou texte non extractible (PDF image?)');
           }
           
-          updateProgress(`Extraction complete: ${fullText.length} characters extracted`, 60);
+          updateProgress(`Extraction terminée: ${fullText.length} caractères extraits`, 60);
           return fullText;
           
         } catch (error) {
-          updateProgress(`PDF reading error: ${error.message}`, 0);
-          throw new Error(`Unable to read PDF: ${error.message}`);
+          updateProgress(`Erreur lecture PDF: ${error.message}`, 0);
+          throw new Error(`Impossible de lire le PDF: ${error.message}`);
         }
       };
 
@@ -370,35 +398,35 @@
         const fileType = file.type;
         const fileName = file.name.toLowerCase();
         
-        updateProgress(`Analyzing file: ${file.name}`, 5);
+        updateProgress(`Analyse du fichier: ${file.name}`, 5);
         
         if (fileType === 'application/pdf') {
           return await extractTextFromPDF(file);
         }
         
         if (fileType === 'text/plain') {
-          updateProgress("Reading text file...", 30);
+          updateProgress("Lecture du fichier texte...", 30);
           const text = await file.text();
-          updateProgress("Text file read successfully", 60);
+          updateProgress("Fichier texte lu avec succès", 60);
           return text;
         }
         
         if (fileType.includes('word') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
-          updateProgress("Word file detected - Simplified conversion", 30);
+          updateProgress("Fichier Word détecté - Conversion simplifiée", 30);
           try {
             const text = await file.text();
-            updateProgress("Word file processed", 60);
+            updateProgress("Fichier Word traité", 60);
             return text;
           } catch {
-            throw new Error('Word file not supported. Use a PDF or TXT file.');
+            throw new Error('Fichier Word non pris en charge. Utilisez un fichier PDF ou TXT.');
           }
         }
         
-        throw new Error(`Unsupported format: ${fileType}. Use a PDF, TXT or Word file.`);
+        throw new Error(`Format non pris en charge: ${fileType}. Utilisez un fichier PDF, TXT ou Word.`);
       };
 
       const analyzeWithNetlifyFunction = async (cvText) => {
-        updateProgress("Connecting to ASSIGNME AI...", 70);
+        updateProgress("Connexion à l'IA ASSIGNME...", 70);
         
         try {
           const response = await fetch('/.netlify/functions/analyze-cv', {
@@ -409,36 +437,36 @@
             body: JSON.stringify({ cvText })
           });
           
-          updateProgress(`Server response: ${response.status}`, 80);
+          updateProgress(`Réponse du serveur: ${response.status}`, 80);
           
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             
             if (response.status === 500) {
-              throw new Error('Server error. Please try again in a few minutes.');
+              throw new Error('Erreur serveur. Veuillez réessayer dans quelques minutes.');
             }
             if (response.status === 400) {
-              throw new Error('Invalid data sent to server.');
+              throw new Error('Données invalides envoyées au serveur.');
             }
             if (response.status === 429) {
-              throw new Error('Request limit reached. Please try again later.');
+              throw new Error('Limite de requêtes atteinte. Veuillez réessayer plus tard.');
             }
             
-            throw new Error(`Error ${response.status}: ${errorData.error || 'Unknown error'}`);
+            throw new Error(`Erreur ${response.status}: ${errorData.error || 'Erreur inconnue'}`);
           }
           
           const result = await response.json();
-          updateProgress("Analysis completed successfully", 100);
+          updateProgress("Analyse terminée avec succès", 100);
           
           return result;
           
         } catch (error) {
           if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-            updateProgress("Network connection error", 0);
-            throw new Error('Connection problem. Check your internet connection.');
+            updateProgress("Erreur de connexion réseau", 0);
+            throw new Error('Problème de connexion. Vérifiez votre connexion internet.');
           }
           
-          updateProgress(`Analysis error: ${error.message}`, 0);
+          updateProgress(`Erreur lors de l'analyse: ${error.message}`, 0);
           throw error;
         }
       };
@@ -447,13 +475,14 @@
         let score = Math.floor(Math.random() * 30) + 70;
         
         if (recommendation.salary_min > 50000) score += 5;
-        if (recommendation.contract_type === 'Permanent') score += 5;
+        if (recommendation.contract_type === 'CDI') score += 5;
         if (recommendation.required_skills?.length <= 4) score += 5;
         
         return Math.min(100, score);
       };
 
       const saveAnalysisLocally = (analysis) => {
+        // Note: localStorage simulation for demo
         console.log('Analysis saved locally:', analysis);
       };
 
@@ -461,9 +490,9 @@
         if (!candidateProfile || !recommendations.length) return;
         
         const results = {
-          candidate: candidateProfile,
-          recommendations: recommendations,
-          analysis_date: new Date().toLocaleString('en-US'),
+          candidat: candidateProfile,
+          recommandations: recommendations,
+          date_analyse: new Date().toLocaleString('fr-FR'),
           source: 'ASSIGNME Demo'
         };
         
@@ -473,23 +502,23 @@
         
         const link = document.createElement('a');
         link.href = url;
-        link.download = `assignme_analysis_${candidateProfile.name?.replace(/\s+/g, '_') || 'candidate'}_${Date.now()}.json`;
+        link.download = `assignme_analyse_${candidateProfile.name?.replace(/\s+/g, '_') || 'candidat'}_${Date.now()}.json`;
         link.click();
         
         URL.revokeObjectURL(url);
-        showNotification('Results downloaded', 'success');
+        showNotification('Résultats téléchargés', 'success');
       };
 
       const shareResults = () => {
         if (navigator.share && candidateProfile) {
           navigator.share({
-            title: 'My ASSIGNME analysis',
-            text: `I analyzed my CV with ASSIGNME and received ${recommendations.length} personalized recommendations!`,
+            title: 'Mon analyse ASSIGNME',
+            text: `J'ai analysé mon CV avec ASSIGNME et j'ai reçu ${recommendations.length} recommandations personnalisées !`,
             url: window.location.href
           });
         } else {
           navigator.clipboard.writeText(window.location.href);
-          showNotification('Link copied to clipboard', 'success');
+          showNotification('Lien copié dans le presse-papiers', 'success');
         }
       };
 
@@ -507,12 +536,12 @@
           setAnalysisComplete(false);
           setProgress(0);
 
-          addDebugLog(`Starting analysis: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+          addDebugLog(`Démarrage de l'analyse: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
           
           const cvText = await extractTextFromFile(file);
           
           if (cvText.length < 100) {
-            throw new Error('CV content seems too short or empty. Check that the file contains text.');
+            throw new Error('Le contenu du CV semble trop court ou vide. Vérifiez que le fichier contient bien du texte.');
           }
           
           const analysis = await analyzeWithNetlifyFunction(cvText);
@@ -535,10 +564,10 @@
           
           saveAnalysisLocally(analysis);
           
-          showNotification('Analysis completed successfully!', 'success');
+          showNotification('Analyse terminée avec succès !', 'success');
           
         } catch (error) {
-          console.error("Error:", error);
+          console.error("Erreur:", error);
           setError(error.message);
           showNotification(error.message, 'error');
           setProgress(0);
@@ -580,39 +609,39 @@
               <div>
                 <div className="text-center mb-16 fade-in-up">
                   <h2 className="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
-                    Upload your CV
-                    <span className="block"><span className="text-neon">ASSIGNME</span> does the rest</span>
+                    Déposez votre CV
+                    <span className="ia-neon block"><span className="text-neon">ASSIGNME</span> fait le reste</span>
                   </h2>
                   <p className="text-lg text-muted max-w-3xl mx-auto leading-relaxed mb-8">
-                    One simple action. Our artificial intelligence analyzes your profile and automatically finds you the best job opportunities suited to your skills.
+                    Une seule action. L'intelligence artificielle analyse votre profil et vous trouve automatiquement les meilleures opportunités d'emploi adaptées à vos compétences.
                   </p>
                 </div>
 
                 {error && (
-                  <div className="mb-8 retro-card border-red-500/50 text-red-600 px-6 py-4 rounded-xl max-w-2xl mx-auto">
-                    <strong>ERROR:</strong> {error}
+                  <div className="mb-8 retro-card border-red-500/50 text-red-400 px-6 py-4 rounded-xl max-w-2xl mx-auto">
+                    <strong>ERREUR:</strong> {error}
                   </div>
                 )}
 
                 {isAnalyzing && (
                   <div className="mb-8 retro-card p-6 rounded-xl max-w-4xl mx-auto">
-                    <h3 className="text-accent font-bold mb-4 text-lg">Analysis Progress</h3>
+                    <h3 className="text-cyan-400 font-bold mb-4 text-lg">Progression de l'analyse</h3>
                     <div className="mb-4">
                       <div className="progress-bar">
                         <div className="progress-fill" style={{width: `${progress}%`}}></div>
                       </div>
-                      <p className="text-sm text-accent mt-2">{currentStep}</p>
+                      <p className="text-sm text-cyan-300 mt-2">{currentStep}</p>
                     </div>
                   </div>
                 )}
 
                 {debugLogs.length > 0 && (
                   <div className="mb-8 retro-card p-6 rounded-xl max-w-4xl mx-auto">
-                    <h3 className="text-accent font-bold mb-4 text-lg">Analysis Log</h3>
+                    <h3 className="text-cyan-400 font-bold mb-4 text-lg">Journal d'analyse</h3>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {debugLogs.map((log, i) => (
-                        <p key={i} className="text-sm text-muted font-mono bg-gray-50 px-3 py-1 rounded">
-                          <span className="text-accent">{log.time}</span> - {log.message}
+                        <p key={i} className="text-sm text-gray-300 font-mono bg-black/30 px-3 py-1 rounded">
+                          <span className="text-cyan-400">{log.time}</span> - {log.message}
                         </p>
                       ))}
                     </div>
@@ -631,23 +660,23 @@
                     {isAnalyzing ? (
                       <div className="space-y-8">
                         <div className="relative">
-                          <div className="animate-spin rounded-full h-20 w-20 border-4 border-neon/20 border-t-neon mx-auto"></div>
-                          <div className="absolute inset-0 rounded-full h-20 w-20 border-4 border-accent/20 border-r-accent mx-auto animate-spin" style={{animationDirection: 'reverse'}}></div>
+                          <div className="animate-spin rounded-full h-20 w-20 border-4 border-cyan-400/20 border-t-cyan-400 mx-auto"></div>
+                          <div className="absolute inset-0 rounded-full h-20 w-20 border-4 border-blue-500/20 border-r-blue-500 mx-auto animate-spin" style={{animationDirection: 'reverse'}}></div>
                         </div>
                         <div>
-                          <p className="text-ink font-bold text-3xl mb-2">
-                            ASSIGNME Analysis in progress...
+                          <p className="text-white font-bold text-3xl mb-2">
+                            Analyse ASSIGNME en cours...
                           </p>
-                          <p className="text-muted text-lg">
-                            {currentStep || 'Preparing analysis'}
+                          <p className="text-gray-400 text-lg">
+                            {currentStep || 'Préparation de l\'analyse'}
                           </p>
                           {fileName && (
-                            <p className="text-accent text-sm mt-2">
-                              File: {fileName}
+                            <p className="text-cyan-400 text-sm mt-2">
+                              Fichier: {fileName}
                             </p>
                           )}
                           <div className="mt-4">
-                            <div className="text-accent text-sm">{progress}% complete</div>
+                            <div className="text-cyan-300 text-sm">{progress}% terminé</div>
                           </div>
                         </div>
                       </div>
@@ -655,14 +684,14 @@
                       <div className="space-y-8">
                         <div className="text-9xl mb-6">📄</div>
                         <div>
-                          <p className="text-ink text-3xl font-bold mb-4">
-                            Drag & drop your CV or click here
+                          <p className="text-white text-3xl font-bold mb-4">
+                            Glissez-déposez votre CV ou cliquez ici
                           </p>
-                          <p className="text-muted text-lg mb-8">
-                            Accepted formats: PDF, DOC, DOCX, TXT (max 10MB)
+                          <p className="text-gray-400 text-lg mb-8">
+                            Formats acceptés: PDF, DOC, DOCX, TXT (max 10MB)
                           </p>
-                          <div className="inline-block bg-gradient-to-r from-neon to-accent text-white px-8 py-4 rounded-xl font-bold text-xl hover:brightness-110 transition duration-300 transform hover:scale-105 neon-glow">
-                            Browse Files
+                          <div className="inline-block bg-gradient-to-r from-blue-500 to-blue-400 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-blue-400 hover:to-blue-300 transition duration-300 transform hover:scale-105 neon-glow">
+                            Parcourir les fichiers
                           </div>
                         </div>
                       </div>
@@ -672,18 +701,18 @@
 
                 <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-ink mb-3 uppercase tracking-wide">Upload</h3>
-                    <p className="text-muted">Upload your CV in seconds</p>
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Téléchargez</h3>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Déposez votre CV en quelques secondes</p>
                   </div>
                   
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-ink mb-3 uppercase tracking-wide">AI Analyzes</h3>
-                    <p className="text-muted">Artificial intelligence intelligently extracts your skills and experience</p>
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>IA analyse</h3>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>L'intelligence artificielle extrait intelligemment vos compétences et expériences</p>
                   </div>
                   
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-ink mb-3 uppercase tracking-wide">Jobs Found</h3>
-                    <p className="text-muted">Apply to offers perfectly matched to your profile</p>
+                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Emplois trouvés</h3>
+                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Candidatez aux offres parfaitement adaptées à votre profil</p>
                   </div>
                 </div>
               </div>
@@ -692,49 +721,49 @@
                 <div className="retro-card p-8 rounded-2xl mb-8">
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex-1">
-                      <h2 className="text-3xl font-bold text-ink mb-4">
-                        Analyzed Profile: {candidateProfile.name || 'Candidate'}
+                      <h2 className="text-3xl font-bold text-white mb-4">
+                        Profil analysé : {candidateProfile.name || 'Candidat'}
                       </h2>
                       
                       {candidateProfile.ai_metadata && (
-                        <div className="flex items-center gap-4 text-sm text-muted mb-6">
-                          <span className="chip px-3 py-1 rounded-full">
+                        <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
+                          <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">
                             {candidateProfile.ai_metadata.provider}
                           </span>
-                          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full border border-green-300">
-                            Analysis Complete
+                          <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">
+                            Analyse terminée
                           </span>
                         </div>
                       )}
                       
                       <div className="grid md:grid-cols-2 gap-6 mb-6">
                         <div className="glass-effect p-4 rounded-lg">
-                          <h4 className="text-accent font-semibold mb-3">General Information</h4>
-                          <div className="space-y-2 text-sm text-muted">
-                            <p><strong>Location:</strong> {candidateProfile.location || 'Not specified'}</p>
-                            <p><strong>Mobility:</strong> {candidateProfile.mobility || 'Not specified'}</p>
-                            <p><strong>Total Experience:</strong> {candidateProfile.total_experience_years || 0} years</p>
-                            <p><strong>Current Position:</strong> {candidateProfile.current_position || 'Not specified'}</p>
+                          <h4 className="text-blue-400 font-semibold mb-3">Informations générales</h4>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <p><strong>Localisation:</strong> {candidateProfile.location || 'Non spécifiée'}</p>
+                            <p><strong>Mobilité:</strong> {candidateProfile.mobility || 'Non spécifiée'}</p>
+                            <p><strong>Expérience totale:</strong> {candidateProfile.total_experience_years || 0} ans</p>
+                            <p><strong>Poste actuel:</strong> {candidateProfile.current_position || 'Non spécifié'}</p>
                           </div>
                         </div>
                         
                         <div className="glass-effect p-4 rounded-lg">
-                          <h4 className="text-accent font-semibold mb-3">Education & Objectives</h4>
-                          <div className="space-y-2 text-sm text-muted">
-                            <p><strong>Level:</strong> {candidateProfile.education_level || 'Not specified'}</p>
-                            <p><strong>Education:</strong> {candidateProfile.education_details || 'Not specified'}</p>
-                            <p><strong>Aspirations:</strong> {candidateProfile.career_aspirations || 'Not specified'}</p>
-                            <p><strong>Constraints:</strong> {candidateProfile.constraints || 'None'}</p>
+                          <h4 className="text-blue-400 font-semibold mb-3">Formation & Objectifs</h4>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <p><strong>Niveau:</strong> {candidateProfile.education_level || 'Non spécifié'}</p>
+                            <p><strong>Formation:</strong> {candidateProfile.education_details || 'Non spécifiée'}</p>
+                            <p><strong>Aspirations:</strong> {candidateProfile.career_aspirations || 'Non spécifiées'}</p>
+                            <p><strong>Contraintes:</strong> {candidateProfile.constraints || 'Aucune'}</p>
                           </div>
                         </div>
                       </div>
 
                       {candidateProfile.technical_skills?.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-accent font-semibold mb-3">Technical Skills</h4>
+                          <h4 className="text-blue-400 font-semibold mb-3">Compétences techniques</h4>
                           <div className="flex flex-wrap gap-2">
                             {candidateProfile.technical_skills.map((skill, i) => (
-                              <span key={i} className="chip px-3 py-1 text-sm rounded">
+                              <span key={i} className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded border border-blue-500/30">
                                 {skill}
                               </span>
                             ))}
@@ -744,10 +773,10 @@
 
                       {candidateProfile.soft_skills?.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-green-600 font-semibold mb-3">Personal Qualities</h4>
+                          <h4 className="text-green-400 font-semibold mb-3">Qualités personnelles</h4>
                           <div className="flex flex-wrap gap-2">
                             {candidateProfile.soft_skills.map((skill, i) => (
-                              <span key={i} className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded border border-green-300">
+                              <span key={i} className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded border border-green-500/30">
                                 {skill}
                               </span>
                             ))}
@@ -760,42 +789,42 @@
                       <button
                         onClick={downloadResults}
                         className="action-btn btn-primary"
-                        title="Download results"
+                        title="Télécharger les résultats"
                       >
-                        Download
+                        Télécharger
                       </button>
                       <button
                         onClick={shareResults}
                         className="action-btn btn-secondary"
-                        title="Share results"
+                        title="Partager les résultats"
                       >
-                        Share
+                        Partager
                       </button>
                       <button
                         onClick={resetAnalysis}
                         className="action-btn btn-secondary"
-                        title="Analyze a new CV"
+                        title="Analyser un nouveau CV"
                       >
-                        New CV
+                        Nouveau CV
                       </button>
                     </div>
                   </div>
                 </div>
 
                 <div className="mb-8">
-                  <h3 className="text-3xl font-bold text-ink mb-8">
-                    Professional Recommendations ({recommendations.length})
+                  <h3 className="text-3xl font-bold text-white mb-8">
+                    Recommandations professionnelles ({recommendations.length})
                   </h3>
 
                   <div className="space-y-6">
                     {recommendations.map((job, index) => (
-                      <div key={index} className="retro-card p-8 rounded-2xl hover:border-neon/50 transition-all duration-300">
+                      <div key={index} className="retro-card p-8 rounded-2xl hover:border-cyan-500/50 transition-all duration-300">
                         <div className="mb-6">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-8 h-8 bg-gradient-to-br from-neon to-accent rounded-full flex items-center justify-center text-white font-bold">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
                               {index + 1}
                             </div>
-                            <h4 className="text-2xl font-bold text-ink flex-1">
+                            <h4 className="text-2xl font-bold text-white flex-1">
                               {job.job_title}
                             </h4>
                             {job.match_score && (
@@ -805,38 +834,38 @@
                             )}
                           </div>
                           
-                          <p className="text-accent font-medium mb-4 text-lg">
+                          <p className="text-blue-400 font-medium mb-4 text-lg">
                             {job.sector} • {job.contract_type}
                           </p>
                           
                           <div className="glass-effect border border-green-500/30 p-6 rounded-lg mb-6">
-                            <h5 className="text-green-600 font-semibold mb-3 text-lg">Why this position suits you:</h5>
-                            <p className="text-green-700">{job.match_justification}</p>
+                            <h5 className="text-green-400 font-semibold mb-3 text-lg">Pourquoi ce poste vous convient :</h5>
+                            <p className="text-green-300">{job.match_justification}</p>
                             {job.match_score && (
-                              <div className="mt-3 text-sm text-green-600">
-                                Compatibility Score: {job.match_score}%
+                              <div className="mt-3 text-sm text-green-400">
+                                Score de compatibilité : {job.match_score}%
                               </div>
                             )}
                           </div>
                           
                           <div className="grid md:grid-cols-2 gap-6 mb-6">
                             <div className="glass-effect p-4 rounded-lg">
-                              <p className="text-muted mb-3">
-                                <strong className="text-yellow-600">Estimated Salary:</strong><br/>
-                                <span className="text-xl font-bold text-ink">{job.salary_min?.toLocaleString()}€ - {job.salary_max?.toLocaleString()}€</span>
+                              <p className="text-gray-300 mb-3">
+                                <strong className="text-yellow-400">Rémunération estimée:</strong><br/>
+                                <span className="text-xl font-bold">{job.salary_min?.toLocaleString()}€ - {job.salary_max?.toLocaleString()}€</span>
                               </p>
-                              <p className="text-muted">
-                                <strong className="text-purple-600">Growth:</strong> {job.evolution_potential}
+                              <p className="text-gray-300">
+                                <strong className="text-purple-400">Évolution:</strong> {job.evolution_potential}
                               </p>
                             </div>
                             
                             <div className="glass-effect p-4 rounded-lg">
                               {job.required_skills?.length > 0 && (
                                 <div>
-                                  <strong className="text-accent">Required Skills:</strong>
+                                  <strong className="text-blue-400">Compétences requises:</strong>
                                   <div className="flex flex-wrap gap-2 mt-2">
                                     {job.required_skills.map((skill, i) => (
-                                      <span key={i} className="px-2 py-1 bg-gray-100 text-muted text-xs rounded border border-gray-300">
+                                      <span key={i} className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded border border-gray-600">
                                         {skill}
                                       </span>
                                     ))}
@@ -848,21 +877,21 @@
                           
                           {job.company_types?.length > 0 && (
                             <div className="glass-effect p-3 rounded-lg mb-4">
-                              <p className="text-muted text-sm">
-                                <strong className="text-orange-600">Company Types:</strong> {job.company_types.join(', ')}
+                              <p className="text-gray-400 text-sm">
+                                <strong className="text-orange-400">Types d'entreprises:</strong> {job.company_types.join(', ')}
                               </p>
                             </div>
                           )}
 
                           <div className="flex gap-3">
                             <button className="action-btn btn-primary">
-                              Apply Now
+                              Postuler maintenant
                             </button>
                             <button className="action-btn btn-secondary">
-                              Save
+                              Sauvegarder
                             </button>
                             <button className="action-btn btn-secondary">
-                              Share This Job
+                              Partager cette offre
                             </button>
                           </div>
                         </div>
@@ -873,31 +902,31 @@
 
                 {candidateProfile.training_suggestions?.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-3xl font-bold text-ink mb-8">
-                      Recommended Training
+                    <h3 className="text-3xl font-bold text-white mb-8">
+                      Formations recommandées
                     </h3>
                     <div className="space-y-4">
                       {candidateProfile.training_suggestions.map((training, index) => (
                         <div key={index} className="retro-card p-6 rounded-2xl">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="text-xl font-bold text-ink mb-3">{training.title}</h4>
-                              <p className="text-muted mb-4">{training.description}</p>
+                              <h4 className="text-xl font-bold text-white mb-3">{training.title}</h4>
+                              <p className="text-gray-300 mb-4">{training.description}</p>
                               <div className="flex gap-6 text-sm">
-                                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded border border-yellow-300">
-                                  Duration: {training.duration}
+                                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded border border-yellow-500/30">
+                                  Durée: {training.duration}
                                 </span>
-                                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded border border-purple-300">
-                                  Interest: {training.relevance}
+                                <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
+                                  Intérêt: {training.relevance}
                                 </span>
                               </div>
                             </div>
                             <div className="flex flex-col gap-2 ml-4">
                               <button className="action-btn btn-primary text-sm">
-                                Learn More
+                                En savoir plus
                               </button>
                               <button className="action-btn btn-secondary text-sm">
-                                Save
+                                Sauvegarder
                               </button>
                             </div>
                           </div>
@@ -909,29 +938,29 @@
 
                 {candidateProfile.reconversion_paths?.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-3xl font-bold text-ink mb-8">
-                      Career Change Options
+                    <h3 className="text-3xl font-bold text-white mb-8">
+                      Pistes de reconversion
                     </h3>
                     <div className="space-y-4">
                       {candidateProfile.reconversion_paths.map((path, index) => (
                         <div key={index} className="retro-card p-6 rounded-2xl">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="text-xl font-bold text-ink mb-4">{path.target_field}</h4>
+                              <h4 className="text-xl font-bold text-white mb-4">{path.target_field}</h4>
                               <div className="mb-4">
                                 <span className={`px-4 py-2 text-sm rounded-full font-medium ${
-                                  path.feasibility === 'easy' ? 'bg-green-100 text-green-700 border border-green-300' :
-                                  path.feasibility === 'moderate' ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' :
-                                  'bg-red-100 text-red-700 border border-red-300'
+                                  path.feasibility === 'facile' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                  path.feasibility === 'modérée' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                  'bg-red-500/20 text-red-400 border border-red-500/30'
                                 }`}>
-                                  {path.feasibility === 'easy' ? 'Easy' : 
-                                   path.feasibility === 'moderate' ? 'Moderate' : 'Challenging'} - {path.timeline}
+                                  {path.feasibility === 'facile' ? 'Facile' : 
+                                   path.feasibility === 'modérée' ? 'Modérée' : 'Difficile'} - {path.timeline}
                                 </span>
                               </div>
                               {path.required_steps?.length > 0 && (
                                 <div>
-                                  <h5 className="text-accent font-medium mb-3">Recommended Steps:</h5>
-                                  <ul className="list-disc list-inside text-muted space-y-2">
+                                  <h5 className="text-blue-400 font-medium mb-3">Étapes recommandées :</h5>
+                                  <ul className="list-disc list-inside text-gray-300 space-y-2">
                                     {path.required_steps.map((step, i) => (
                                       <li key={i} className="text-sm">{step}</li>
                                     ))}
@@ -941,10 +970,10 @@
                             </div>
                             <div className="flex flex-col gap-2 ml-4">
                               <button className="action-btn btn-primary text-sm">
-                                Action Plan
+                                Plan d'action
                               </button>
                               <button className="action-btn btn-secondary text-sm">
-                                Advice
+                                Conseils
                               </button>
                             </div>
                           </div>
@@ -955,34 +984,34 @@
                 )}
 
                 <div className="cyber-border p-8 rounded-2xl text-center neon-glow">
-                  <h4 className="text-2xl font-bold text-ink mb-4">ASSIGNME Analysis Complete!</h4>
-                  <p className="text-muted mb-6 text-lg">
-                    Your CV has been analyzed by ASSIGNME AI according to your professional criteria.
+                  <h4 className="text-2xl font-bold text-white mb-4">Analyse ASSIGNME terminée !</h4>
+                  <p className="text-gray-300 mb-6 text-lg">
+                    Votre CV a été analysé par l'IA ASSIGNME selon vos critères professionnels.
                   </p>
                   <div className="flex justify-center gap-4 flex-wrap">
                     <button
                       onClick={downloadResults}
-                      className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-3 rounded-xl font-bold text-lg hover:from-green-400 hover:to-green-500 transition duration-300 transform hover:scale-105"
+                      className="bg-gradient-to-r from-green-500 to-green-400 text-white px-8 py-3 rounded-xl font-bold text-lg hover:from-green-400 hover:to-green-300 transition duration-300 transform hover:scale-105"
                     >
-                      Download Results
+                      Télécharger les résultats
                     </button>
                     <button
                       onClick={shareResults}
-                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-3 rounded-xl font-bold text-lg hover:from-purple-400 hover:to-purple-500 transition duration-300 transform hover:scale-105"
+                      className="bg-gradient-to-r from-purple-500 to-purple-400 text-white px-8 py-3 rounded-xl font-bold text-lg hover:from-purple-400 hover:to-purple-300 transition duration-300 transform hover:scale-105"
                     >
-                      Share My Analysis
+                      Partager mon analyse
                     </button>
                     <button
                       onClick={resetAnalysis}
-                      className="bg-gradient-to-r from-neon to-accent text-white px-8 py-3 rounded-xl font-bold text-lg hover:brightness-110 transition duration-300 transform hover:scale-105"
+                      className="bg-gradient-to-r from-blue-500 to-blue-400 text-white px-8 py-3 rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-300 transition duration-300 transform hover:scale-105"
                     >
-                      Analyze Another CV
+                      Analyser un autre CV
                     </button>
                   </div>
                   
-                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-neon/20">
-                    <p className="text-accent text-sm">
-                      <strong>ASSIGNME Tip:</strong> Save your results and check back regularly to discover new opportunities!
+                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+                    <p className="text-cyan-300 text-sm">
+                      <strong>Conseil ASSIGNME :</strong> Sauvegardez vos résultats et revenez régulièrement pour découvrir de nouvelles opportunités !
                     </p>
                   </div>
                 </div>
