@@ -274,4 +274,86 @@ function generateFallbackRecommendations(candidateProfile) {
   }
   
   // Recommandation généraliste selon le niveau
-  if (candidateProfile.education_level && candidateProfile.education_level !== 'Aucune
+  if (candidateProfile.education_level && candidateProfile.education_level !== 'Aucune qualification') {
+    fallbackJobs.push({
+      job_title: 'Assistant ' + (candidateProfile.key_sectors[0] || 'Administratif'),
+      company: 'PME Locales',
+      location: candidateProfile.location || 'Paris',
+      contract_type: 'CDI',
+      sector: candidateProfile.key_sectors[0] || 'Services',
+      salary_min: 25000 + (candidateProfile.total_experience_years * 2000),
+      salary_max: 35000 + (candidateProfile.total_experience_years * 3000),
+      match_score: 70,
+      match_justification: `Votre formation et expérience vous permettent d'accéder à ce type de poste`,
+      source: 'ASSIGNME Fallback',
+      is_real_offer: false
+    });
+  }
+  
+  // Recommandation formation/reconversion pour profils sans qualification
+  if (candidateProfile.education_level === 'Aucune qualification' || candidateProfile.total_experience_years === 0) {
+    fallbackJobs.push({
+      job_title: 'Agent d\'accueil',
+      company: 'Secteur Services',
+      location: candidateProfile.location || 'Paris',
+      contract_type: 'CDD',
+      sector: 'Services',
+      salary_min: 20000,
+      salary_max: 25000,
+      match_score: 60,
+      match_justification: `Poste accessible sans qualification préalable, formation possible en interne`,
+      source: 'ASSIGNME Fallback',
+      is_real_offer: false
+    });
+    
+    fallbackJobs.push({
+      job_title: 'Préparateur de commandes',
+      company: 'Logistique & Transport',
+      location: candidateProfile.location || 'Paris',
+      contract_type: 'CDI',
+      sector: 'Logistique',
+      salary_min: 22000,
+      salary_max: 28000,
+      match_score: 65,
+      match_justification: `Secteur qui recrute, formation rapide possible, évolution vers responsabilité d'équipe`,
+      source: 'ASSIGNME Fallback',
+      is_real_offer: false
+    });
+  }
+  
+  // Recommandation basée sur l'expérience professionnelle
+  if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') {
+    fallbackJobs.push({
+      job_title: candidateProfile.current_position + ' Confirmé',
+      company: 'Secteur ' + (candidateProfile.key_sectors[0] || 'Privé'),
+      location: candidateProfile.location || 'Paris',
+      contract_type: 'CDI',
+      sector: candidateProfile.key_sectors[0] || 'Services',
+      salary_min: 30000 + (candidateProfile.total_experience_years * 3000),
+      salary_max: 45000 + (candidateProfile.total_experience_years * 4000),
+      match_score: 80,
+      match_justification: `Évolution naturelle de votre poste actuel avec ${candidateProfile.total_experience_years} ans d'expérience`,
+      source: 'ASSIGNME Fallback',
+      is_real_offer: false
+    });
+  }
+  
+  // Assure au moins 3 recommandations
+  while (fallbackJobs.length < 3) {
+    fallbackJobs.push({
+      job_title: 'Employé Polyvalent',
+      company: 'Entreprises Locales',
+      location: candidateProfile.location || 'Paris',
+      contract_type: 'CDI',
+      sector: 'Services',
+      salary_min: 24000,
+      salary_max: 32000,
+      match_score: 55,
+      match_justification: `Poste polyvalent adapté à votre profil, possibilité d'évolution`,
+      source: 'ASSIGNME Fallback',
+      is_real_offer: false
+    });
+  }
+  
+  return fallbackJobs;
+}
