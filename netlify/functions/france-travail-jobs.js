@@ -1,157 +1,465 @@
-
-Skip to main content
-
-
-S
-Switch teams
-Projects
-Builds
-Extensions
-Domains
-Members
-Audit log
-Security Scorecard
-Usage & billing
-Team settings
-Visual editor dashboard
-Upgrade
-
-
-Projects
-assignme.fr
-Switch projects
-Join NTL DEPLOY
-
-News
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Support
-Project navigation
-Project overview
-Project configuration
-Deploys
-Preview Servers
-Logs
-Metrics
-Domain management
-Forms
-Blobs
-Extensions
-Neon
-Function france-travail-jobs
-Logs are retained for 24 hours.
-
-Running in production.
-
-Endpoint:
-https://assignme.fr/.netlify/functions/france-travail-jobs
-
-Learn more about Functions in the docs
-
-Open deploy
-Function log
-
-Last hour
-Start date
-Sep 25, 2025 10:55 AM
-–
-End date
-Sep 25, 2025 11:55 AM
-GMT+1
-
-Filter the log using the following format: Mar 8, 2021 10:49 AM
-
-Filter by request ID, message, log level
-Filter by request ID, message, log level
-
-Sep 25, 11:38:29 AM: 94d67e61 ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:38:31 AM: 94d67e61 Duration: 624.47 ms	Memory Usage: 93 MB	Init Duration: 201.87 ms	Sep 25, 11:39:05 AM: 60d6c7ec ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:39:05 AM: 60d6c7ec Duration: 443.24 ms	Memory Usage: 94 MB	Sep 25, 11:39:22 AM: 8fda8e6e ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:39:22 AM: 8fda8e6e Duration: 446.82 ms	Memory Usage: 120 MB	Sep 25, 11:39:40 AM: 4786c318 ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:39:41 AM: 4786c318 Duration: 422.46 ms	Memory Usage: 120 MB	Sep 25, 11:40:17 AM: 2c3c7354 ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:40:17 AM: 2c3c7354 Duration: 437.10 ms	Memory Usage: 120 MB	Sep 25, 11:40:56 AM: f0ce5f7a ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:40:57 AM: f0ce5f7a Duration: 455.48 ms	Memory Usage: 120 MB	Sep 25, 11:48:05 AM: 235ebb55 ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:48:06 AM: 235ebb55 Duration: 648.59 ms	Memory Usage: 93 MB	Init Duration: 229.23 ms	Sep 25, 11:50:27 AM: 2db43368 ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:50:28 AM: 2db43368 Duration: 438.07 ms	Memory Usage: 103 MB	Sep 25, 11:52:44 AM: e59ca592 ERROR  Erreur token: Authentification échouée: 400 - {"error_description":"Client authentication failed","error":"invalid_client"}Sep 25, 11:52:45 AM: e59ca592 Duration: 441.97 ms	Memory Usage: 119 MB	Sep 25, 11:54:39 AM: 3516426f ERROR  Erreur recherche: Erreur réseau recherche: fetch failedSep 25, 11:54:40 AM: 3516426f Duration: 609.76 ms	Memory Usage: 119 MB	Sep 25, 11:54:59 AM: 22565c62 ERROR  Erreur recherche: Erreur réseau recherche: fetch failedSep 25, 11:55:00 AM: 22565c62 Duration: 554.54 ms	Memory Usage: 119 MB	
-Docs
-Pricing
-Support
-Blog
-Changelog
-Terms
-© 2025 Netlify
-
+// netlify/functions/france-travail-jobs.js
+exports.handler = async (event, context) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method Not Allowed' })
+    };
+  }
+
+  try {
+    const CLIENT_ID = 'PAR_assignme_706e20eb9f90ae0ed2dfd8e9feec3048f8612e02f616083c21c028a9f8a769f8';
+    const CLIENT_SECRET = process.env.FRANCE_TRAVAIL_SECRET;
+    
+    if (!CLIENT_SECRET) {
+      console.error('FRANCE_TRAVAIL_SECRET manquant');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Configuration API France Travail manquante',
+          fallback: true
+        })
+      };
+    }
+
+    const { candidateProfile } = JSON.parse(event.body || '{}');
+    
+    if (!candidateProfile) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Profil candidat requis' })
+      };
+    }
+
+    console.log('Debut authentification France Travail...');
+
+    const tokenResponse = await getAccessToken(CLIENT_ID, CLIENT_SECRET);
+    
+    if (!tokenResponse.success) {
+      console.error('Erreur token:', tokenResponse.error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Erreur authentification France Travail',
+          fallback: true
+        })
+      };
+    }
+
+    console.log('Authentification reussie, recherche offres...');
+
+    const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
+    
+    if (!searchResults.success) {
+      console.error('Erreur recherche:', searchResults.error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Erreur recherche France Travail',
+          fallback: true
+        })
+      };
+    }
+
+    console.log(`${searchResults.jobs.length} offres trouvees`);
+
+    const transformedJobs = transformJobsForAssignme(searchResults.jobs, candidateProfile);
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        jobs: transformedJobs,
+        metadata: {
+          source: 'France Travail',
+          total_found: searchResults.total,
+          query_used: searchResults.query,
+          timestamp: new Date().toISOString()
+        }
+      })
+    };
+
+  } catch (error) {
+    console.error('Erreur fonction France Travail:', error);
+    
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Erreur interne',
+        fallback: true,
+        details: error.message
+      })
+    };
+  }
+};
+
+async function getAccessToken(clientId, clientSecret) {
+  try {
+    const params = new URLSearchParams({
+      'grant_type': 'client_credentials',
+      'client_id': clientId,
+      'client_secret': clientSecret,
+      'scope': 'api_offresdemploiv2 o2dsoffre'
+    });
+
+    console.log('Appel authentification vers France Travail...');
+
+    const response = await fetch('https://api.francetravail.io/partenaire/connexion/oauth2/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: params.toString()
+    });
+
+    console.log('Reponse authentification:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      return {
+        success: false,
+        error: `Authentification echouee: ${response.status} - ${errorData}`
+      };
+    }
+
+    const data = await response.json();
+    
+    if (!data.access_token) {
+      return {
+        success: false,
+        error: 'Token acces non recu'
+      };
+    }
+
+    console.log('Token recu avec succes');
+    return {
+      success: true,
+      token: data.access_token
+    };
+
+  } catch (error) {
+    console.error('Erreur reseau authentification:', error);
+    return {
+      success: false,
+      error: `Erreur reseau authentification: ${error.message}`
+    };
+  }
+}
+
+async function searchJobs(token, candidateProfile) {
+  try {
+    const searchParams = new URLSearchParams({
+      motsCles: buildKeywords(candidateProfile),
+      commune: extractLocation(candidateProfile.location) || '75001',
+      distance: '50',
+      sort: '0',
+      range: '0-19'
+    });
+
+    if (candidateProfile.total_experience_years >= 5) {
+      searchParams.append('experience', '2');
+    } else if (candidateProfile.total_experience_years >= 2) {
+      searchParams.append('experience', '1');
+    }
+
+    console.log('Parametres de recherche:', searchParams.toString());
+
+    const response = await fetch(`https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'User-Agent': 'ASSIGNME/1.0'
+      }
+    });
+
+    console.log('Reponse recherche:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Erreur API:', errorData);
+      return {
+        success: false,
+        error: `Recherche echouee: ${response.status} - ${errorData}`
+      };
+    }
+
+    const data = await response.json();
+    console.log('Donnees recues:', data.resultats?.length || 0, 'offres');
+    
+    return {
+      success: true,
+      jobs: data.resultats || [],
+      total: data.resultats?.length || 0,
+      query: searchParams.toString()
+    };
+
+  } catch (error) {
+    console.error('Erreur reseau recherche:', error);
+    return {
+      success: false,
+      error: `Erreur reseau recherche: ${error.message}`
+    };
+  }
+}
+
+function buildKeywords(candidateProfile) {
+  const keywords = [];
+  
+  if (candidateProfile.technical_skills && candidateProfile.technical_skills.length > 0) {
+    keywords.push(...candidateProfile.technical_skills.slice(0, 3));
+  }
+  
+  if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') {
+    keywords.push(candidateProfile.current_position);
+  }
+  
+  if (candidateProfile.career_aspirations) {
+    keywords.push(candidateProfile.career_aspirations);
+  }
+  
+  if (candidateProfile.key_sectors && candidateProfile.key_sectors.length > 0) {
+    keywords.push(...candidateProfile.key_sectors.slice(0, 2));
+  }
+  
+  const finalKeywords = keywords.slice(0, 5).join(' ');
+  console.log('Mots-cles utilises:', finalKeywords);
+  return finalKeywords;
+}
+
+function extractLocation(location) {
+  if (!location) return null;
+  
+  const cityToPostal = {
+    'paris': '75001',
+    'lyon': '69001',
+    'marseille': '13001',
+    'toulouse': '31000',
+    'lille': '59000',
+    'bordeaux': '33000',
+    'nantes': '44000',
+    'strasbourg': '67000',
+    'montpellier': '34000',
+    'rennes': '35000'
+  };
+  
+  const locationLower = location.toLowerCase();
+  
+  const postalMatch = location.match(/\b(\d{5})\b/);
+  if (postalMatch) {
+    return postalMatch[1];
+  }
+  
+  for (const [city, postal] of Object.entries(cityToPostal)) {
+    if (locationLower.includes(city)) {
+      return postal;
+    }
+  }
+  
+  return '75001';
+}
+
+function transformJobsForAssignme(jobs, candidateProfile) {
+  return jobs.map(job => {
+    const matchScore = calculateMatchScore(job, candidateProfile);
+    
+    return {
+      id: job.id,
+      source: 'France Travail',
+      is_real_offer: true,
+      job_title: job.intitule || 'Poste non specifie',
+      company: job.entreprise?.nom || 'Entreprise non communiquee',
+      location: formatLocation(job.lieuTravail),
+      description: cleanDescription(job.description),
+      contract_type: formatContractType(job.typeContrat),
+      sector: job.secteurActivite || 'Secteur non specifie',
+      salary_display: job.salaire?.libelle || 'Salaire non communique',
+      salary_min: extractSalaryMin(job.salaire?.libelle),
+      salary_max: extractSalaryMax(job.salaire?.libelle),
+      experience_required: formatExperience(job.experienceExige),
+      qualification_required: job.qualificationLibelle || 'Non specifie',
+      date_creation: job.dateCreation,
+      date_actualisation: job.dateActualisation,
+      match_score: matchScore,
+      match_justification: generateMatchJustification(job, candidateProfile, matchScore),
+      france_travail_url: `https://candidat.francetravail.fr/offres/recherche/detail/${job.id}`,
+      required_skills: extractSkillsFromJob(job),
+      company_types: [job.entreprise?.adaptee ? 'Entreprise adaptee' : 'Standard'],
+      evolution_potential: 'A definir avec employeur'
+    };
+  });
+}
+
+function calculateMatchScore(job, candidateProfile) {
+  let score = 40;
+  
+  const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
+  
+  if (candidateProfile.technical_skills) {
+    const matchingSkills = candidateProfile.technical_skills.filter(skill =>
+      jobText.includes(skill.toLowerCase())
+    );
+    score += Math.min(matchingSkills.length * 8, 32);
+  }
+  
+  if (job.experienceExige === 'D' && candidateProfile.total_experience_years >= 0) {
+    score += 15;
+  } else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) {
+    score += 15;
+  } else if (job.experienceExige === 'E' && candidateProfile.total_experience_years >= 5) {
+    score += 15;
+  }
+  
+  if (candidateProfile.key_sectors) {
+    const hasMatchingSector = candidateProfile.key_sectors.some(sector =>
+      job.secteurActivite?.toLowerCase().includes(sector.toLowerCase())
+    );
+    if (hasMatchingSector) {
+      score += 10;
+    }
+  }
+  
+  if (candidateProfile.location && job.lieuTravail?.libelle) {
+    const candidateLocation = candidateProfile.location.toLowerCase();
+    const jobLocation = job.lieuTravail.libelle.toLowerCase();
+    
+    if (jobLocation.includes(candidateLocation) || candidateLocation.includes(jobLocation)) {
+      score += 8;
+    }
+  }
+  
+  return Math.min(Math.max(score, 25), 95);
+}
+
+function generateMatchJustification(job, candidateProfile, score) {
+  const reasons = [];
+  
+  if (score >= 80) {
+    reasons.push('Excellente correspondance avec votre profil');
+  } else if (score >= 60) {
+    reasons.push('Bonne correspondance avec vos competences');
+  } else if (score >= 40) {
+    reasons.push('Correspondance acceptable');
+  }
+  
+  const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
+  if (candidateProfile.technical_skills) {
+    const matchingSkills = candidateProfile.technical_skills.filter(skill =>
+      jobText.includes(skill.toLowerCase())
+    );
+    
+    if (matchingSkills.length > 0) {
+      reasons.push(`Competences en commun: ${matchingSkills.slice(0, 3).join(', ')}`);
+    }
+  }
+  
+  if (job.experienceExige === 'D') {
+    reasons.push('Ouvert aux debutants');
+  } else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) {
+    reasons.push('Experience compatible');
+  }
+  
+  return reasons.length > 0 ? reasons.join(' • ') : 'Offre a etudier selon vos criteres';
+}
+
+function formatLocation(lieuTravail) {
+  if (!lieuTravail) return 'Lieu non specifie';
+  return lieuTravail.libelle || 'Lieu non specifie';
+}
+
+function formatContractType(typeContrat) {
+  const contractTypes = {
+    'CDI': 'CDI',
+    'CDD': 'CDD',
+    'MIS': 'Mission interim',
+    'SAI': 'Saisonnier',
+    'IND': 'Independant'
+  };
+  
+  return contractTypes[typeContrat] || typeContrat || 'Type non specifie';
+}
+
+function formatExperience(experienceExige) {
+  const experienceLabels = {
+    'D': 'Debutant accepte',
+    'S': 'Experience souhaitee',
+    'E': 'Experience exigee'
+  };
+  
+  return experienceLabels[experienceExige] || 'Non specifie';
+}
+
+function cleanDescription(description) {
+  if (!description) return 'Description non disponible';
+  
+  return description
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 500) + (description.length > 500 ? '...' : '');
+}
+
+function extractSalaryMin(salaireText) {
+  if (!salaireText) return null;
+  
+  const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/);
+  if (match) {
+    return parseInt(match[1].replace(/\s/g, ''));
+  }
+  
+  return null;
+}
+
+function extractSalaryMax(salaireText) {
+  if (!salaireText) return null;
+  
+  const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/);
+  if (matches && matches.length >= 3) {
+    return parseInt(matches[2].replace(/\s/g, ''));
+  }
+  
+  return extractSalaryMin(salaireText);
+}
+
+function extractSkillsFromJob(job) {
+  const skills = [];
+  const text = `${job.intitule} ${job.description || ''}`.toLowerCase();
+  
+  const commonSkills = [
+    'excel', 'word', 'powerpoint', 'office',
+    'javascript', 'python', 'java', 'php', 'sql',
+    'marketing', 'communication', 'vente', 'commerce',
+    'gestion', 'comptabilite', 'finance',
+    'anglais', 'allemand', 'espagnol'
+  ];
+  
+  commonSkills.forEach(skill => {
+    if (text.includes(skill)) {
+      skills.push(skill.charAt(0).toUpperCase() + skill.slice(1));
+    }
+  });
+  
+  return skills.slice(0, 5);
+}
