@@ -76,17 +76,14 @@ async function getAccessToken(clientId, clientSecret) {
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'api_offresdemploiv2 o2dsoffre'   // ✅ scope corrigé
+      scope: 'api_offresdemploiv2 o2dsoffre'
     });
 
-    const response = await fetch(
-      'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', // ✅ nouvelle URL
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-      }
-    );
+    const response = await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -96,6 +93,7 @@ async function getAccessToken(clientId, clientSecret) {
     const data = await response.json();
     if (!data.access_token) return { success: false, error: "Token d'accès non reçu" };
 
+    console.info("✅ Token récupéré (début):", data.access_token.substring(0, 10));
     return { success: true, token: data.access_token };
 
   } catch (error) {
@@ -108,7 +106,7 @@ async function searchJobs(token, candidateProfile) {
   try {
     const searchParams = new URLSearchParams({
       motsCles: buildKeywords(candidateProfile),
-      commune: extractLocation(candidateProfile.location) || '75001',
+      commune: extractLocation(candidateProfile.location) || '75056', // ✅ INSEE Paris par défaut
       distance: '50',
       sort: '0',
       range: '0-19'
@@ -120,10 +118,12 @@ async function searchJobs(token, candidateProfile) {
       searchParams.append('experience', '1');
     }
 
-    const response = await fetch(
-      `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`, // ✅ nouvelle URL
-      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
-    );
+    const url = `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`;
+    console.info("🌐 URL appelée:", url);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+    });
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -148,14 +148,35 @@ function buildKeywords(candidateProfile) {
   return keywords.slice(0, 5).join(' ');
 }
 
+// ✅ Correctif : on renvoie un code INSEE
 function extractLocation(location) {
-  if (!location) return null;
-  const cityToPostal = { paris: '75001', lyon: '69001', marseille: '13001', toulouse: '31000', lille: '59000', bordeaux: '33000', nantes: '44000', strasbourg: '67000', montpellier: '34000', rennes: '35000' };
+  if (!location) return '75056'; // Paris par défaut
+
+  const cityToInsee = {
+    paris: '75056',
+    lyon: '69123',
+    marseille: '13055',
+    toulouse: '31555',
+    lille: '59350',
+    bordeaux: '33063',
+    nantes: '44109',
+    strasbourg: '67482',
+    montpellier: '34172',
+    rennes: '35238'
+  };
+
   const locationLower = location.toLowerCase();
-  const postalMatch = location.match(/\b(\d{5})\b/);
-  if (postalMatch) return postalMatch[1];
-  for (const [city, postal] of Object.entries(cityToPostal)) if (locationLower.includes(city)) return postal;
-  return '75001';
+
+  // Si code INSEE direct
+  const inseeMatch = location.match(/\b(\d{5})\b/);
+  if (inseeMatch) return inseeMatch[1];
+
+  // Si nom de ville
+  for (const [city, insee] of Object.entries(cityToInsee)) {
+    if (locationLower.includes(city)) return insee;
+  }
+
+  return '75056'; // fallback = Paris
 }
 
 function transformJobsForAssignme(jobs, candidateProfile) {
