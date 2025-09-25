@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Fonction pour récupérer les vraies offres d'emploi de France Travail
+// Fonction Netlify pour récupérer les vraies offres d'emploi France Travail
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
 
     if (!CLIENT_SECRET) {
       console.error('FRANCE_TRAVAIL_SECRET manquant');
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Configuration API France Travail manquante', fallback: true }) };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Secret API manquant', fallback: true }) };
     }
 
     const { candidateProfile } = JSON.parse(event.body || '{}');
@@ -31,21 +31,21 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Profil candidat requis' }) };
     }
 
-    // Étape 1: Obtenir le token
+    // Étape 1: Auth
     const tokenResponse = await getAccessToken(CLIENT_ID, CLIENT_SECRET);
     if (!tokenResponse.success) {
       console.error('Erreur token:', tokenResponse.error);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification France Travail', fallback: true }) };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification France Travail', details: tokenResponse.error, fallback: true }) };
     }
 
-    // Étape 2: Rechercher les offres
+    // Étape 2: Recherche
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
     if (!searchResults.success) {
       console.error('Erreur recherche:', searchResults.error);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur recherche France Travail', fallback: true }) };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur recherche France Travail', details: searchResults.error, fallback: true }) };
     }
 
-    // Étape 3: Transformer les offres
+    // Étape 3: Transformation
     const transformedJobs = transformJobsForAssignme(searchResults.jobs, candidateProfile);
 
     return {
@@ -65,7 +65,7 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Erreur fonction France Travail:', error);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', fallback: true, details: error.message }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', details: error.message, fallback: true }) };
   }
 };
 
@@ -76,7 +76,7 @@ async function getAccessToken(clientId, clientSecret) {
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'api_offresdemploiv2' // ✅ scope corrigé
+      scope: 'api_offresdemploiv2' // ✅ seul scope nécessaire
     });
 
     const response = await fetch('https://entreprise.pole-emploi.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
@@ -184,6 +184,7 @@ function transformJobsForAssignme(jobs, candidateProfile) {
   });
 }
 
+// ---- Matching ----
 function calculateMatchScore(job, candidateProfile) {
   let score = 40;
   const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
@@ -221,38 +222,11 @@ function generateMatchJustification(job, candidateProfile, score) {
   return reasons.length > 0 ? reasons.join(' • ') : 'Offre à étudier selon vos critères';
 }
 
-function formatLocation(lieuTravail) {
-  if (!lieuTravail) return 'Lieu non spécifié';
-  return lieuTravail.libelle || 'Lieu non spécifié';
-}
-function formatContractType(typeContrat) {
-  const contractTypes = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission intérim', SAI: 'Saisonnier', IND: 'Indépendant' };
-  return contractTypes[typeContrat] || typeContrat || 'Type non spécifié';
-}
-function formatExperience(experienceExige) {
-  const experienceLabels = { D: 'Débutant accepté', S: 'Expérience souhaitée', E: 'Expérience exigée' };
-  return experienceLabels[experienceExige] || 'Non spécifié';
-}
-function cleanDescription(description) {
-  if (!description) return 'Description non disponible';
-  return description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : '');
-}
-function extractSalaryMin(salaireText) {
-  if (!salaireText) return null;
-  const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/);
-  if (match) return parseInt(match[1].replace(/\s/g, ''));
-  return null;
-}
-function extractSalaryMax(salaireText) {
-  if (!salaireText) return null;
-  const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/);
-  if (matches && matches.length >= 3) return parseInt(matches[2].replace(/\s/g, ''));
-  return extractSalaryMin(salaireText);
-}
-function extractSkillsFromJob(job) {
-  const skills = [];
-  const text = `${job.intitule} ${job.description || ''}`.toLowerCase();
-  const commonSkills = ['excel','word','powerpoint','office','javascript','python','java','php','sql','marketing','communication','vente','commerce','gestion','comptabilité','finance','anglais','allemand','espagnol'];
-  commonSkills.forEach(skill => { if (text.includes(skill)) skills.push(skill.charAt(0).toUpperCase() + skill.slice(1)); });
-  return skills.slice(0, 5);
-}
+// ---- Formatage ----
+function formatLocation(lieuTravail) { return lieuTravail?.libelle || 'Lieu non spécifié'; }
+function formatContractType(typeContrat) { const c = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission intérim', SAI: 'Saisonnier', IND: 'Indépendant' }; return c[typeContrat] || typeContrat || 'Type non spécifié'; }
+function formatExperience(experienceExige) { const e = { D: 'Débutant accepté', S: 'Expérience souhaitée', E: 'Expérience exigée' }; return e[experienceExige] || 'Non spécifié'; }
+function cleanDescription(description) { if (!description) return 'Description non disponible'; return description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : ''); }
+function extractSalaryMin(salaireText) { if (!salaireText) return null; const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); return match ? parseInt(match[1].replace(/\s/g, '')) : null; }
+function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMin(salaireText); }
+function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['excel','word','powerpoint','office','javascript','python','java','php','sql','marketing','communication','vente','commerce','gestion','comptabilité','finance','anglais','allemand','espagnol']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
