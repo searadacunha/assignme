@@ -38,9 +38,6 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification France Travail', details: tokenResponse.error, fallback: true }) };
     }
 
-    // Log token pour debug
-    console.log("✅ Token récupéré (début):", tokenResponse.token.substring(0, 20));
-
     // Étape 2: Recherche
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
     if (!searchResults.success) {
@@ -79,14 +76,17 @@ async function getAccessToken(clientId, clientSecret) {
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'api_offresdemploiv2'
+      scope: 'api_offresdemploiv2 o2dsoffre'   // ✅ scope corrigé
     });
 
-    const response = await fetch('https://entreprise.pole-emploi.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    });
+    const response = await fetch(
+      'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', // ✅ nouvelle URL
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -120,12 +120,10 @@ async function searchJobs(token, candidateProfile) {
       searchParams.append('experience', '1');
     }
 
-    const url = `https://api.pole-emploi.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`;
-    console.log("🌐 URL appelée:", url);
-
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    });
+    const response = await fetch(
+      `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`, // ✅ nouvelle URL
+      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
+    );
 
     if (!response.ok) {
       const errorData = await response.text();
