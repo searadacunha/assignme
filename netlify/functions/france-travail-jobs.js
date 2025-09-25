@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Fonction Netlify pour récupérer les offres d'emploi France Travail
+// Fonction Netlify pour récupérer les vraies offres d'emploi France Travail
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -105,7 +105,7 @@ async function searchJobs(token, candidateProfile) {
   try {
     const searchParams = new URLSearchParams({
       motsCles: buildKeywords(candidateProfile),
-      commune: extractLocation(candidateProfile.location) || '75056', // ✅ code INSEE Paris
+      codePostal: extractLocation(candidateProfile.location) || '75001', // ✅ utiliser codePostal
       distance: '50',
       sort: '0',
       range: '0-19'
@@ -146,35 +146,25 @@ function buildKeywords(candidateProfile) {
   return keywords.slice(0, 5).join(' ');
 }
 
-// ✅ Correction : table de codes INSEE
 function extractLocation(location) {
-  if (!location) return null;
-
-  const cityToInsee = {
-    paris: "75056",
-    lyon: "69123",
-    marseille: "13055",
-    toulouse: "31555",
-    lille: "59350",
-    bordeaux: "33063",
-    nantes: "44109",
-    strasbourg: "67482",
-    montpellier: "34172",
-    rennes: "35238"
+  if (!location) return '75001'; // fallback Paris code postal
+  const map = {
+    paris: "75001",
+    lyon: "69001",
+    marseille: "13001",
+    toulouse: "31000",
+    lille: "59000",
+    bordeaux: "33000",
+    nantes: "44000",
+    strasbourg: "67000",
+    montpellier: "34000",
+    rennes: "35000"
   };
-
   const locationLower = location.toLowerCase();
-
-  const inseeMatch = location.match(/\b(\d{5})\b/);
-  if (inseeMatch) return inseeMatch[1];
-
-  for (const [city, insee] of Object.entries(cityToInsee)) {
-    if (locationLower.includes(city)) {
-      return insee;
-    }
-  }
-
-  return "75056"; // Paris par défaut
+  const postalMatch = location.match(/\b(\d{5})\b/);
+  if (postalMatch) return postalMatch[1];
+  for (const [city, postal] of Object.entries(map)) if (locationLower.includes(city)) return postal;
+  return '75001';
 }
 
 function transformJobsForAssignme(jobs, candidateProfile) {
