@@ -42,7 +42,17 @@ exports.handler = async (event, context) => {
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
     if (!searchResults.success) {
       console.error('Erreur recherche:', searchResults.error);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur recherche France Travail', details: searchResults.error, fallback: true }) };
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: searchResults.error,
+          raw: searchResults.raw || null,
+          fallback: true,
+          jobs: mockJobs(candidateProfile)
+        })
+      };
     }
 
     // Étape 3: Transformation
@@ -65,7 +75,7 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Erreur fonction France Travail:', error);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', details: error.message, fallback: true }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', details: error.message, fallback: true, jobs: mockJobs({}) }) };
   }
 };
 
@@ -76,7 +86,7 @@ async function getAccessToken(clientId, clientSecret) {
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'api_offresdemploiv2 o2dsoffre'
+      scope: 'api_offresdemploiv2 o2dsoffre' // ✅ scope corrigé
     });
 
     const response = await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
@@ -93,6 +103,7 @@ async function getAccessToken(clientId, clientSecret) {
     const data = await response.json();
     if (!data.access_token) return { success: false, error: "Token d'accès non reçu" };
 
+    console.info("✅ Token récupéré (début):", data.access_token.substring(0, 10));
     return { success: true, token: data.access_token };
 
   } catch (error) {
@@ -104,8 +115,8 @@ async function getAccessToken(clientId, clientSecret) {
 async function searchJobs(token, candidateProfile) {
   try {
     const searchParams = new URLSearchParams({
-      motsCles: buildKeywords(candidateProfile),
-      codePostal: extractLocation(candidateProfile.location) || '75001', // ✅ utiliser codePostal
+      motsCles: buildKeywords(candidateProfile) || "developpeur",
+      codePostal: extractLocation(candidateProfile.location) || '75001', // ✅ codePostal au lieu de commune
       distance: '50',
       sort: '0',
       range: '0-19'
@@ -117,18 +128,27 @@ async function searchJobs(token, candidateProfile) {
       searchParams.append('experience', '1');
     }
 
-    console.info("🌐 URL appelée:", `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`);
+    const url = `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`;
+    console.info("🌐 URL appelée:", url);
 
-    const response = await fetch(`https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`, {
+    const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
     });
 
+    const rawText = await response.text(); // ✅ réponse brute
+    console.info("📥 Réponse brute:", rawText);
+
     if (!response.ok) {
-      const errorData = await response.text();
-      return { success: false, error: `Recherche échouée: ${response.status} - ${errorData}` };
+      return { success: false, error: `Recherche échouée: ${response.status} - ${rawText}`, raw: rawText };
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(rawText); // ✅ parse manuel
+    } catch (parseErr) {
+      return { success: false, error: `Réponse non JSON: ${parseErr.message}`, raw: rawText };
+    }
+
     return { success: true, jobs: data.resultats || [], total: data.resultats?.length || 0, query: searchParams.toString() };
 
   } catch (error) {
@@ -147,23 +167,12 @@ function buildKeywords(candidateProfile) {
 }
 
 function extractLocation(location) {
-  if (!location) return '75001'; // fallback Paris code postal
-  const map = {
-    paris: "75001",
-    lyon: "69001",
-    marseille: "13001",
-    toulouse: "31000",
-    lille: "59000",
-    bordeaux: "33000",
-    nantes: "44000",
-    strasbourg: "67000",
-    montpellier: "34000",
-    rennes: "35000"
-  };
+  if (!location) return null;
+  const cityToPostal = { paris: '75001', lyon: '69001', marseille: '13001', toulouse: '31000', lille: '59000', bordeaux: '33000', nantes: '44000', strasbourg: '67000', montpellier: '34000', rennes: '35000' };
   const locationLower = location.toLowerCase();
   const postalMatch = location.match(/\b(\d{5})\b/);
   if (postalMatch) return postalMatch[1];
-  for (const [city, postal] of Object.entries(map)) if (locationLower.includes(city)) return postal;
+  for (const [city, postal] of Object.entries(cityToPostal)) if (locationLower.includes(city)) return postal;
   return '75001';
 }
 
@@ -243,3 +252,33 @@ function cleanDescription(description) { if (!description) return 'Description n
 function extractSalaryMin(salaireText) { if (!salaireText) return null; const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); return match ? parseInt(match[1].replace(/\s/g, '')) : null; }
 function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMin(salaireText); }
 function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['excel','word','powerpoint','office','javascript','python','java','php','sql','marketing','communication','vente','commerce','gestion','comptabilité','finance','anglais','allemand','espagnol']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
+
+// ---- Fallback ----
+function mockJobs(candidateProfile) {
+  return [
+    {
+      id: "fake-1",
+      source: "Mock",
+      is_real_offer: false,
+      job_title: "Développeur Fullstack (exemple)",
+      company: "Startup Innovante",
+      location: "Paris (75001)",
+      description: "Exemple d'offre utilisée en fallback quand France Travail est indisponible.",
+      contract_type: "CDI",
+      sector: "Informatique",
+      salary_display: "40k-50k €",
+      salary_min: 40000,
+      salary_max: 50000,
+      experience_required: "2 ans",
+      qualification_required: "Bac+3 minimum",
+      date_creation: new Date().toISOString(),
+      date_actualisation: new Date().toISOString(),
+      match_score: 70,
+      match_justification: "Fallback automatique",
+      france_travail_url: "#",
+      required_skills: ["JavaScript", "Node.js", "React"],
+      company_types: ["Standard"],
+      evolution_potential: "Rapide évolution possible"
+    }
+  ];
+}
