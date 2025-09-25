@@ -38,6 +38,9 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification France Travail', details: tokenResponse.error, fallback: true }) };
     }
 
+    // Log token pour debug
+    console.log("✅ Token récupéré (début):", tokenResponse.token.substring(0, 20));
+
     // Étape 2: Recherche
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
     if (!searchResults.success) {
@@ -76,7 +79,7 @@ async function getAccessToken(clientId, clientSecret) {
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'api_offresdemploiv2' // ✅ seul scope nécessaire
+      scope: 'api_offresdemploiv2'
     });
 
     const response = await fetch('https://entreprise.pole-emploi.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
@@ -117,7 +120,10 @@ async function searchJobs(token, candidateProfile) {
       searchParams.append('experience', '1');
     }
 
-    const response = await fetch(`https://api.pole-emploi.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`, {
+    const url = `https://api.pole-emploi.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`;
+    console.log("🌐 URL appelée:", url);
+
+    const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
     });
 
