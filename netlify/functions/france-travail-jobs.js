@@ -1,6 +1,8 @@
 // netlify/functions/france-travail-jobs.js
 // Fonction Netlify pour récupérer les vraies offres d'emploi France Travail
 
+const communes = require('./data/communes-ft.json');
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -93,7 +95,6 @@ async function getAccessToken(clientId, clientSecret) {
     const data = await response.json();
     if (!data.access_token) return { success: false, error: "Token d'accès non reçu" };
 
-    console.info("✅ Token récupéré (début):", data.access_token.substring(0, 10));
     return { success: true, token: data.access_token };
 
   } catch (error) {
@@ -106,7 +107,7 @@ async function searchJobs(token, candidateProfile) {
   try {
     const searchParams = new URLSearchParams({
       motsCles: buildKeywords(candidateProfile),
-      commune: extractLocation(candidateProfile.location) || '75056', // ✅ INSEE Paris par défaut
+      commune: extractLocation(candidateProfile.location) || '75056',
       distance: '50',
       sort: '0',
       range: '0-19'
@@ -119,7 +120,7 @@ async function searchJobs(token, candidateProfile) {
     }
 
     const url = `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`;
-    console.info("🌐 URL appelée:", url);
+    console.log("🌐 URL appelée:", url);
 
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
@@ -148,35 +149,21 @@ function buildKeywords(candidateProfile) {
   return keywords.slice(0, 5).join(' ');
 }
 
-// ✅ Correctif : on renvoie un code INSEE
 function extractLocation(location) {
   if (!location) return '75056'; // Paris par défaut
 
-  const cityToInsee = {
-    paris: '75056',
-    lyon: '69123',
-    marseille: '13055',
-    toulouse: '31555',
-    lille: '59350',
-    bordeaux: '33063',
-    nantes: '44109',
-    strasbourg: '67482',
-    montpellier: '34172',
-    rennes: '35238'
-  };
+  const loc = location
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
-  const locationLower = location.toLowerCase();
+  if (communes[loc]) return communes[loc];
 
-  // Si code INSEE direct
-  const inseeMatch = location.match(/\b(\d{5})\b/);
-  if (inseeMatch) return inseeMatch[1];
+  // si l'utilisateur met directement un code postal ou INSEE
+  const match = location.match(/\b(\d{5})\b/);
+  if (match) return match[1];
 
-  // Si nom de ville
-  for (const [city, insee] of Object.entries(cityToInsee)) {
-    if (locationLower.includes(city)) return insee;
-  }
-
-  return '75056'; // fallback = Paris
+  return '75056'; // fallback
 }
 
 function transformJobsForAssignme(jobs, candidateProfile) {
