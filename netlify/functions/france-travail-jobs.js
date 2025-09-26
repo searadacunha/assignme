@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Version avec analyse psychologique et dédoublonnage
+// Version avec analyse psychologique, dédoublonnage et DEBUG complet
 
 const communeMapping = {
   // Région parisienne
@@ -33,24 +33,41 @@ exports.handler = async (event, context) => {
     const CLIENT_ID = 'PAR_assignme_706e20eb9f90ae0ed2dfd8e9feec3048f8612e02f616083c21c028a9f8a769f8';
     const CLIENT_SECRET = process.env.FRANCE_TRAVAIL_SECRET;
 
-    console.log('=== DEBUT FRANCE TRAVAIL ===');
+    console.log('=== DEBUT FRANCE TRAVAIL JOBS ===');
     if (!CLIENT_SECRET) return { statusCode: 500, headers, body: JSON.stringify({ error: 'Secret API manquant', fallback: true }) };
 
     const { candidateProfile } = JSON.parse(event.body || '{}');
     if (!candidateProfile) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Profil candidat requis' }) };
 
-    console.log('Profil candidat recu:', JSON.stringify(candidateProfile, null, 2));
+    console.log('=== PROFIL CANDIDAT RECU ===');
+    console.log('Location:', candidateProfile.location);
+    console.log('Education:', candidateProfile.education_level);
+    console.log('Position:', candidateProfile.current_position);
+    console.log('Aspirations:', candidateProfile.career_aspirations);
+    console.log('Psychological profile:', candidateProfile.psychological_profile);
 
     // Authentification
     const tokenResponse = await getAccessToken(CLIENT_ID, CLIENT_SECRET);
-    if (!tokenResponse.success) return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification', fallback: true }) };
+    if (!tokenResponse.success) {
+      console.log('ERREUR AUTHENTIFICATION');
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification', fallback: true }) };
+    }
 
     // Recherche des offres
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
-    if (!searchResults.success) return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: searchResults.error, fallback: true, jobs: mockJobs(candidateProfile) }) };
+    if (!searchResults.success) {
+      console.log('ERREUR RECHERCHE OFFRES');
+      return { statusCode: 200, headers, body: JSON.stringify({ 
+        success: false, error: searchResults.error, fallback: true, jobs: mockJobs(candidateProfile) 
+      }) };
+    }
 
-    // Transformation des résultats avec dédoublonnage et filtrage psychologique
+    console.log(`=== RESULTATS BRUTS: ${searchResults.jobs.length} offres trouvees ===`);
+
+    // Transformation des résultats avec logs détaillés
     const transformedJobs = transformJobsForAssignme(searchResults.jobs, candidateProfile);
+
+    console.log(`=== RESULTATS FINAUX: ${transformedJobs.length} offres apres filtrage ===`);
 
     return {
       statusCode: 200,
@@ -58,12 +75,17 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         jobs: transformedJobs,
-        metadata: { source: 'France Travail', total_found: searchResults.total, timestamp: new Date().toISOString() }
+        metadata: { 
+          source: 'France Travail', 
+          total_found: searchResults.total, 
+          final_count: transformedJobs.length,
+          timestamp: new Date().toISOString() 
+        }
       })
     };
 
   } catch (error) {
-    console.error('Erreur fonction France Travail:', error);
+    console.error('ERREUR FONCTION FRANCE TRAVAIL:', error);
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', fallback: true, jobs: mockJobs({}) }) };
   }
 };
@@ -71,18 +93,23 @@ exports.handler = async (event, context) => {
 async function getAccessToken(clientId, clientSecret) {
   try {
     const params = new URLSearchParams({
-      grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret, scope: 'api_offresdemploiv2 o2dsoffre'
+      grant_type: 'client_credentials', 
+      client_id: clientId, 
+      client_secret: clientSecret, 
+      scope: 'api_offresdemploiv2 o2dsoffre'
     });
 
     const response = await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
-      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: params.toString()
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, 
+      body: params.toString()
     });
 
     if (!response.ok) return { success: false, error: `Auth failed: ${response.status}` };
     const data = await response.json();
     if (!data.access_token) return { success: false, error: 'No token' };
 
-    console.log('Authentification reussie');
+    console.log('AUTH: Token obtenu avec succes');
     return { success: true, token: data.access_token };
   } catch (error) {
     return { success: false, error: error.message };
@@ -94,37 +121,53 @@ async function searchJobs(token, candidateProfile) {
     const keywords = buildKeywords(candidateProfile);
     const location = extractLocation(candidateProfile.location);
     
-    console.log('Mots-cles construits:', keywords);
-    console.log('Localisation extraite:', location);
+    console.log('=== PARAMETRES RECHERCHE ===');
+    console.log('Mots-cles:', keywords);
+    console.log('Code postal:', location);
 
     const searchParams = new URLSearchParams({
-      motsCles: keywords || "emploi", codePostal: location || '75001', distance: getSearchDistance(candidateProfile.location),
-      sort: '0', range: '0-19'
+      motsCles: keywords || "emploi", 
+      codePostal: location || '75001', 
+      distance: getSearchDistance(candidateProfile.location),
+      sort: '0', 
+      range: '0-19'
     });
 
     if (candidateProfile.total_experience_years >= 5) searchParams.append('experience', '2');
     else if (candidateProfile.total_experience_years >= 2) searchParams.append('experience', '1');
 
+    console.log('URL recherche:', `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`);
+
     const response = await fetch(`https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json', 'User-Agent': 'ASSIGNME/1.0' }
     });
 
-    console.log('Statut reponse recherche:', response.status);
+    console.log('RECHERCHE: Statut reponse', response.status);
     if (!response.ok) return { success: false, error: `Search failed: ${response.status}` };
 
     const responseText = await response.text();
     if (!responseText.trim()) return { success: true, jobs: [], total: 0 };
 
     const data = JSON.parse(responseText);
-    console.log(`${data.resultats?.length || 0} offres trouvees`);
-    return { success: true, jobs: data.resultats || [], total: data.resultats?.length || 0 };
+    const jobCount = data.resultats?.length || 0;
+    console.log(`RECHERCHE: ${jobCount} offres trouvees sur France Travail`);
+    
+    // Log des titres d'offres pour debug
+    if (data.resultats && data.resultats.length > 0) {
+      console.log('TITRES OFFRES:');
+      data.resultats.slice(0, 5).forEach((job, i) => {
+        console.log(`  ${i+1}. ${job.intitule} - ${job.lieuTravail?.libelle}`);
+      });
+    }
+
+    return { success: true, jobs: data.resultats || [], total: jobCount };
 
   } catch (error) {
+    console.error('ERREUR RECHERCHE:', error);
     return { success: false, error: error.message };
   }
 }
 
-// Construction des mots-clés avec analyse psychologique
 function buildKeywords(candidateProfile) {
   const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
   const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
@@ -132,29 +175,33 @@ function buildKeywords(candidateProfile) {
   const psychProfile = candidateProfile.psychological_profile?.toLowerCase() || '';
   const aspirations = candidateProfile.career_aspirations?.toLowerCase() || '';
   
-  console.log('Analyse psychologique:', psychProfile);
+  console.log('=== ANALYSE MOTS-CLES ===');
+  console.log('Education:', educationLevel);
+  console.log('Position:', currentPosition);
   console.log('Aspirations:', aspirations);
+  console.log('Profil psy:', psychProfile);
   
-  // PROFILS FAIBLES AVEC MOTIVATION FINANCIÈRE
+  // PROFILS FAIBLES AVEC MOTIVATION FINANCIÈRE - PRIORITÉ ABSOLUE
   if ((educationLevel === 'aucune qualification' || currentPosition === 'sans emploi') && 
       (aspirations.includes('fric') || aspirations.includes('argent') || psychProfile.includes('financière'))) {
     
-    const lowSkillJobs = ['plongeur', 'nettoyage', 'manutention', 'agent propreté'];
-    const keyword = lowSkillJobs[Math.floor(Math.random() * lowSkillJobs.length)];
-    console.log('Profil motivation financière + faible niveau -> ', keyword);
+    // Utiliser des termes larges qui donnent des résultats
+    const broadKeywords = ['emploi', 'agent', 'ouvrier', 'manutention'];
+    const keyword = broadKeywords[Math.floor(Math.random() * broadKeywords.length)];
+    console.log('PROFIL MOTIVATION FINANCIÈRE + FAIBLE NIVEAU -> LARGE:', keyword);
     return keyword;
   }
   
-  // PROFILS TECHNIQUES - Priorité absolue
+  // PROFILS TECHNIQUES
   if (educationLevel.includes('electrotechnique') || educationLevel.includes('électrotechnique') || 
       currentPosition.includes('technicien') || currentPosition.includes('maintenance') ||
       technicalSkills.includes('maintenance') || technicalSkills.includes('dépannage')) {
     
     if (educationLevel.includes('electrotechnique') || technicalSkills.includes('installation')) {
-      console.log('Profil electrotechnique detecte -> electricien');
+      console.log('PROFIL ELECTROTECHNIQUE -> electricien');
       return 'electricien';
     } else if (currentPosition.includes('maintenance') || technicalSkills.includes('maintenance')) {
-      console.log('Profil maintenance detecte -> technicien');
+      console.log('PROFIL MAINTENANCE -> technicien');
       return 'technicien';
     }
   }
@@ -162,53 +209,48 @@ function buildKeywords(candidateProfile) {
   // PROFILS CRÉATIFS/CULTURELS
   if (currentPosition.includes('communication') || technicalSkills.includes('création vidéo') || 
       technicalSkills.includes('coordination de projets') || aspirations.includes('culture')) {
-    console.log('Profil créatif/culturel detecte -> communication');
+    console.log('PROFIL CRÉATIF/CULTUREL -> communication');
     return 'communication';
   }
   
   // PROFILS SOCIAUX
   if (educationLevel.includes('service social') || educationLevel.includes('deass') || currentPosition.includes('social')) {
-    const socialKeywords = ['educateur', 'accompagnement', 'mediation', 'social'];
-    const keyword = socialKeywords[Math.floor(Math.random() * socialKeywords.length)];
-    console.log('Profil social detecte -> secteur social');
-    return keyword;
+    console.log('PROFIL SOCIAL -> educateur');
+    return 'educateur';
   }
   
   // PROFILS TERTIAIRES
   if (educationLevel.includes('comptab') || educationLevel.includes('gestion') || educationLevel.includes('finance')) {
-    console.log('Formation comptabilite detecte -> comptable');
+    console.log('FORMATION COMPTABILITÉ -> comptable');
     return 'comptable';
   }
   
   if (educationLevel.includes('informatique') || educationLevel.includes('développ') || technicalSkills.includes('python')) {
-    console.log('Formation informatique detecte -> informatique');
+    console.log('FORMATION INFORMATIQUE -> informatique');
     return 'informatique';
   }
   
   if (educationLevel.includes('commercial') || currentPosition.includes('commercial') || currentPosition.includes('adv')) {
-    console.log('Profil commercial detecte -> commercial');
+    console.log('PROFIL COMMERCIAL -> commercial');
     return 'commercial';
   }
   
   if (educationLevel.includes('droit')) {
-    console.log('Formation droit detecte -> administratif');
+    console.log('FORMATION DROIT -> administratif');
     return 'administratif';
   }
   
-  // Profil débutant générique
+  // Profil débutant générique - utiliser terme large
   if (candidateProfile.total_experience_years === 0 || educationLevel === 'aucune qualification' || currentPosition === 'sans emploi') {
-    const entryLevelKeywords = ['agent', 'employe', 'vente', 'caissier', 'preparateur'];
-    const keyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
-    console.log('Profil debutant detecte -> ', keyword);
-    return keyword;
+    console.log('PROFIL DÉBUTANT -> emploi (terme large)');
+    return 'emploi';
   }
   
-  // Fallback générique
-  console.log('Mapping generique applique -> assistant');
+  // Fallback 
+  console.log('FALLBACK -> assistant');
   return 'assistant';
 }
 
-// Distance de recherche adaptée à la localisation
 function getSearchDistance(location) {
   if (!location) return '10';
   
@@ -217,251 +259,75 @@ function getSearchDistance(location) {
   // Grandes métropoles : recherche restreinte
   const majorCities = ['paris', 'lyon', 'marseille', 'toulouse', 'lille', 'bordeaux', 'nantes', 'strasbourg', 'montpellier'];
   if (majorCities.some(city => locationLower.includes(city))) {
-    console.log('Grande metropole detectee - distance 10km');
+    console.log('DISTANCE: Grande metropole - 10km');
     return '10';
   }
   
-  // Villes moyennes : recherche élargie mais limitée
+  // Villes moyennes : recherche élargie
   const mediumCities = ['annecy', 'seynod', 'chambery', 'grenoble', 'clermont', 'saint-etienne', 'nancy', 'metz', 'dijon', 'besancon'];
   if (mediumCities.some(city => locationLower.includes(city))) {
-    console.log('Ville moyenne detectee - distance 50km');
+    console.log('DISTANCE: Ville moyenne - 50km');
     return '50';
   }
   
-  console.log('Localisation inconnue - distance 25km');
+  console.log('DISTANCE: Inconnue - 25km');
   return '25';
 }
 
-// Extraction de localisation étendue
 function extractLocation(location) {
   if (!location) return '75001';
   
-  console.log('Localisation a analyser:', location);
+  console.log('=== EXTRACTION LOCALISATION ===');
+  console.log('Input:', location);
   const locationLower = location.toLowerCase().trim();
   
   // Code INSEE direct
   const inseeMatch = location.match(/\b(\d{5})\b/);
   if (inseeMatch) {
-    console.log('Code INSEE detecte:', inseeMatch[1]);
+    console.log('CODE INSEE detecte:', inseeMatch[1]);
     return inseeMatch[1];
   }
   
-  // Recherche par ville étendue
+  // Recherche par ville
   for (const [city, inseeCode] of Object.entries(communeMapping)) {
     if (locationLower.includes(city)) {
-      console.log(`Ville "${city}" trouvee, code INSEE: ${inseeCode}`);
+      console.log(`VILLE "${city}" trouvee -> INSEE: ${inseeCode}`);
       return inseeCode;
     }
   }
   
-  console.log('Ville non reconnue - Paris par defaut');
+  console.log('VILLE NON RECONNUE -> Paris par defaut (75001)');
   return '75001';
 }
 
-// Filtrage géographique par régions avec restrictions strictes pour villes moyennes
-function filterJobsByLocation(jobs, candidateLocation) {
-  if (!candidateLocation) return jobs;
-  
-  const locationLower = candidateLocation.toLowerCase();
-  
-  // Définition des bassins d'emploi locaux pour villes moyennes
-  const localBasins = {
-    'annecy-chambery': ['73', '74', '01'], 'seynod-annecy': ['73', '74', '01'],   
-    'grenoble': ['38', '73', '26', '05'], 'lyon': ['69', '01', '42', '71'],      
-    'clermont-ferrand': ['63', '03', '15', '43'], 'saint-etienne': ['42', '69', '43', '07'],
-    'nancy': ['54', '55', '57', '88'], 'metz': ['57', '54', '55', '67'],
-    'dijon': ['21', '71', '89', '70'], 'besancon': ['25', '70', '39', '90']
-  };
-  
-  // Régions métropolitaines (périmètre élargi autorisé)
-  const metropolitanRegions = {
-    'ile-de-france': ['75', '77', '78', '91', '92', '93', '94', '95'],
-    'provence-alpes-cote-azur': ['04', '05', '06', '13', '83', '84'],
-    'occitanie': ['09', '11', '12', '30', '31', '32', '34', '46', '48', '65', '66', '81', '82'],
-    'nouvelle-aquitaine': ['16', '17', '19', '23', '24', '33', '40', '47', '64', '79', '86', '87'],
-    'grand-est': ['08', '10', '51', '52', '54', '55', '57', '67', '68', '88'],
-    'hauts-de-france': ['02', '59', '60', '62', '80'],
-    'pays-de-la-loire': ['44', '49', '53', '72', '85'],
-    'bretagne': ['22', '29', '35', '56'],
-    'bourgogne-franche-comte': ['21', '25', '39', '58', '70', '71', '89', '90'],
-    'centre-val-de-loire': ['18', '28', '36', '37', '41', '45'],
-    'normandie': ['14', '27', '50', '61', '76']
-  };
-  
-  // Exclusions strictes (DOM-TOM, Corse pour certains cas)
-  const excludedDepartments = ['20', '2A', '2B', '971', '972', '973', '974', '976', '975', '984', '986', '987', '988'];
-  
-  let allowedDepartments = [];
-  let isStrictLocal = false;
-  
-  // DÉTECTION TYPE DE LOCALISATION
-  for (const [basin, departments] of Object.entries(localBasins)) {
-    const basinCities = basin.split('-');
-    if (basinCities.some(city => locationLower.includes(city))) {
-      allowedDepartments = departments;
-      isStrictLocal = true;
-      console.log(`Bassin local detecte (${basin}) - departements autorises:`, allowedDepartments);
-      break;
-    }
-  }
-  
-  if (!isStrictLocal) {
-    const cityToRegion = {
-      'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
-      'marseille': 'provence-alpes-cote-azur', 'nice': 'provence-alpes-cote-azur',
-      'toulouse': 'occitanie', 'montpellier': 'occitanie',
-      'bordeaux': 'nouvelle-aquitaine', 'nantes': 'pays-de-la-loire', 'lille': 'hauts-de-france',
-      'strasbourg': 'grand-est', 'rennes': 'bretagne'
-    };
-    
-    for (const [city, region] of Object.entries(cityToRegion)) {
-      if (locationLower.includes(city)) {
-        allowedDepartments = metropolitanRegions[region];
-        console.log(`Metropole detectee (${city}) - region ${region} autorisee:`, allowedDepartments);
-        break;
-      }
-    }
-  }
-  
-  if (allowedDepartments.length === 0) {
-    console.log('Localisation non reconnue - pas de filtrage geographique');
-    return jobs;
-  }
-  
-  // FILTRAGE DES OFFRES
-  const filteredJobs = jobs.filter(job => {
-    const jobLocation = job.lieuTravail?.libelle || '';
-    
-    // Exclusions strictes universelles
-    if (excludedDepartments.some(dept => jobLocation.includes(dept)) || 
-        jobLocation.toLowerCase().includes('corse') ||
-        jobLocation.includes('Guadeloupe') || jobLocation.includes('Martinique') ||
-        jobLocation.includes('Guyane') || jobLocation.includes('Réunion')) {
-      console.log(`Offre exclue (DOM-TOM/Corse): ${jobLocation}`);
-      return false;
-    }
-    
-    // Pour les bassins locaux stricts : filtrage très restrictif
-    if (isStrictLocal) {
-      const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
-      if (departmentMatch) {
-        const jobDepartment = departmentMatch[1];
-        const isAllowed = allowedDepartments.includes(jobDepartment);
-        
-        if (!isAllowed) {
-          console.log(`Offre filtree (hors bassin local): ${job.intitule} a ${jobLocation} (dept ${jobDepartment})`);
-        }
-        return isAllowed;
-      }
-      
-      console.log(`Offre filtree (format lieu incorrect): ${jobLocation}`);
-      return false;
-    }
-    
-    // Pour les métropoles : filtrage régional plus souple
-    const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
-    if (departmentMatch) {
-      const jobDepartment = departmentMatch[1];
-      const isAllowed = allowedDepartments.includes(jobDepartment);
-      
-      if (!isAllowed) {
-        console.log(`Offre filtree (hors region): ${job.intitule} a ${jobLocation} (dept ${jobDepartment})`);
-      }
-      return isAllowed;
-    }
-    
-    return true;
-  });
-  
-  console.log(`Filtrage ${isStrictLocal ? 'strict (bassin local)' : 'regional'}: ${jobs.length} offres -> ${filteredJobs.length} conservees`);
-  return filteredJobs;
-}
-
-// Filtrage psychologique des offres inadaptées
-function filterJobsByPsychology(jobs, candidateProfile) {
-  const psychProfile = candidateProfile.psychological_profile?.toLowerCase() || '';
-  const aspirations = candidateProfile.career_aspirations?.toLowerCase() || '';
-  const supervisionNeeds = candidateProfile.supervision_needs || '';
-  
-  // Métiers interdits selon le profil psychologique
-  const incompatibleJobs = [];
-  
-  // Si motivation purement financière + profil faible
-  if ((aspirations.includes('fric') || aspirations.includes('argent')) && 
-      candidateProfile.education_level === 'aucune qualification') {
-    // Exclure SEULEMENT les métiers de vocation, PAS les métiers manuels recherchés
-    incompatibleJobs.push('pharmacie', 'petite enfance', 'enseignement', 'social', 'accueil');
-    console.log('Profil motivation financière - exclusion métiers de vocation uniquement');
-  }
-  
-  // Si besoin encadrement strict
-  if (supervisionNeeds === 'encadrement_strict') {
-    incompatibleJobs.push('responsable', 'manager', 'chef', 'coordinateur');
-    console.log('Besoin encadrement strict - exclusion postes autonomes');
-  }
-  
-  // Si problèmes relationnels détectés
-  if (psychProfile.includes('peu relationnel') || psychProfile.includes('introverti')) {
-    incompatibleJobs.push('accueil', 'commercial', 'vente', 'relation client');
-    console.log('Profil peu relationnel - exclusion métiers contact');
-  }
-  
-  if (incompatibleJobs.length === 0) {
-    return jobs; // Pas de filtrage nécessaire
-  }
-  
-  const filteredJobs = jobs.filter(job => {
-    const jobTitle = job.intitule?.toLowerCase() || '';
-    const jobDescription = job.description?.toLowerCase() || '';
-    const jobText = `${jobTitle} ${jobDescription}`;
-    
-    const isIncompatible = incompatibleJobs.some(excluded => jobText.includes(excluded));
-    
-    if (isIncompatible) {
-      console.log(`Offre psychologiquement inadaptée filtrée: ${job.intitule}`);
-      return false;
-    }
-    
-    return true;
-  });
-  
-  console.log(`Filtrage psychologique: ${jobs.length} offres -> ${filteredJobs.length} conservées`);
-  return filteredJobs;
-}
-
-// Dédoublonnage des offres
-function deduplicateJobs(jobs) {
-  const uniqueJobs = jobs.filter((job, index, self) => 
-    index === self.findIndex(j => 
-      j.intitule === job.intitule && 
-      j.entreprise?.nom === job.entreprise?.nom &&
-      j.lieuTravail?.libelle === job.lieuTravail?.libelle
-    )
-  );
-  
-  if (jobs.length !== uniqueJobs.length) {
-    console.log(`Dédoublonnage: ${jobs.length} offres -> ${uniqueJobs.length} uniques`);
-  }
-  
-  return uniqueJobs;
-}
-
 function transformJobsForAssignme(jobs, candidateProfile) {
+  console.log('=== TRANSFORMATION OFFRES ===');
+  console.log(`Offres initiales: ${jobs.length}`);
+  
   // 1. Filtrage géographique
   let filteredJobs = filterJobsByLocation(jobs, candidateProfile.location);
+  console.log(`Après filtrage géographique: ${filteredJobs.length}`);
   
   // 2. Filtrage psychologique
   filteredJobs = filterJobsByPsychology(filteredJobs, candidateProfile);
+  console.log(`Après filtrage psychologique: ${filteredJobs.length}`);
   
   // 3. Dédoublonnage
   filteredJobs = deduplicateJobs(filteredJobs);
+  console.log(`Après dédoublonnage: ${filteredJobs.length}`);
   
-  // 4. Transformation
-  return filteredJobs.map(job => {
+  // 4. Limitation à 8 offres max
+  const finalJobs = filteredJobs.slice(0, 8);
+  console.log(`Après limitation: ${finalJobs.length}`);
+  
+  // 5. Transformation
+  return finalJobs.map(job => {
     const matchScore = calculateMatchScore(job, candidateProfile);
     
     return {
-      id: job.id, source: 'France Travail', is_real_offer: true,
+      id: job.id, 
+      source: 'France Travail', 
+      is_real_offer: true,
       job_title: job.intitule || 'Poste non specifie',
       company: job.entreprise?.nom || 'Entreprise non communiquee',
       location: formatLocation(job.lieuTravail),
@@ -473,7 +339,8 @@ function transformJobsForAssignme(jobs, candidateProfile) {
       salary_max: extractSalaryMax(job.salaire?.libelle),
       experience_required: formatExperience(job.experienceExige),
       qualification_required: job.qualificationLibelle || 'Non specifie',
-      date_creation: job.dateCreation, date_actualisation: job.dateActualisation,
+      date_creation: job.dateCreation, 
+      date_actualisation: job.dateActualisation,
       match_score: matchScore,
       match_justification: generateMatchJustification(job, candidateProfile, matchScore),
       france_travail_url: `https://candidat.pole-emploi.fr/offres/recherche/detail/${job.id}`,
@@ -482,6 +349,158 @@ function transformJobsForAssignme(jobs, candidateProfile) {
       evolution_potential: 'A definir avec employeur'
     };
   });
+}
+
+function filterJobsByLocation(jobs, candidateLocation) {
+  if (!jobs || jobs.length === 0) return [];
+  
+  console.log('=== FILTRAGE GÉOGRAPHIQUE ===');
+  console.log(`Candidat localisation: ${candidateLocation}`);
+  
+  if (!candidateLocation) {
+    console.log('Pas de localisation candidat - pas de filtrage');
+    return jobs;
+  }
+  
+  const locationLower = candidateLocation.toLowerCase();
+  
+  // Exclusions strictes universelles
+  const excludedDepartments = ['20', '2A', '2B', '971', '972', '973', '974', '976', '975', '984', '986', '987', '988'];
+  
+  // Région Île-de-France élargie pour Paris
+  const idfDepartments = ['75', '77', '78', '91', '92', '93', '94', '95'];
+  
+  let allowedDepartments = [];
+  
+  // Si Paris ou région parisienne
+  if (locationLower.includes('paris') || locationLower.includes('pantin') || locationLower.includes('montreuil')) {
+    allowedDepartments = idfDepartments;
+    console.log('REGION PARISIENNE détectée - départements autorisés:', allowedDepartments);
+  } else {
+    console.log('Localisation non-parisienne - pas de filtrage strict');
+    return jobs.filter(job => {
+      const jobLocation = job.lieuTravail?.libelle || '';
+      // Juste exclure DOM-TOM
+      if (excludedDepartments.some(dept => jobLocation.includes(dept))) {
+        console.log(`Offre exclue (DOM-TOM): ${jobLocation}`);
+        return false;
+      }
+      return true;
+    });
+  }
+  
+  // Filtrage pour région parisienne
+  const filteredJobs = jobs.filter(job => {
+    const jobLocation = job.lieuTravail?.libelle || '';
+    
+    // Exclusions DOM-TOM/Corse
+    if (excludedDepartments.some(dept => jobLocation.includes(dept)) || 
+        jobLocation.toLowerCase().includes('corse')) {
+      console.log(`Offre exclue (DOM-TOM/Corse): ${jobLocation}`);
+      return false;
+    }
+    
+    // Extraction département de l'offre
+    const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
+    if (departmentMatch) {
+      const jobDepartment = departmentMatch[1];
+      const isAllowed = allowedDepartments.includes(jobDepartment);
+      
+      if (!isAllowed) {
+        console.log(`Offre filtrée (hors IDF): ${job.intitule} à ${jobLocation} (dept ${jobDepartment})`);
+      } else {
+        console.log(`Offre conservée: ${job.intitule} à ${jobLocation} (dept ${jobDepartment})`);
+      }
+      return isAllowed;
+    }
+    
+    console.log(`Offre conservée (format lieu atypique): ${jobLocation}`);
+    return true;
+  });
+  
+  console.log(`FILTRAGE GEO: ${jobs.length} -> ${filteredJobs.length} offres`);
+  return filteredJobs;
+}
+
+function filterJobsByPsychology(jobs, candidateProfile) {
+  if (!jobs || jobs.length === 0) return [];
+  
+  console.log('=== FILTRAGE PSYCHOLOGIQUE ===');
+  
+  const psychProfile = candidateProfile.psychological_profile?.toLowerCase() || '';
+  const aspirations = candidateProfile.career_aspirations?.toLowerCase() || '';
+  const supervisionNeeds = candidateProfile.supervision_needs || '';
+  const educationLevel = candidateProfile.education_level || '';
+  
+  console.log('Profil psychologique:', psychProfile);
+  console.log('Aspirations:', aspirations);
+  console.log('Niveau éducation:', educationLevel);
+  
+  // Pour Mohammed (motivation financière + aucune qualification)
+  if ((aspirations.includes('fric') || aspirations.includes('argent')) && 
+      educationLevel === 'aucune qualification') {
+    
+    console.log('PROFIL MOHAMMED détecté: pas de filtrage psychologique strict');
+    // Pour ce profil, on garde TOUTES les offres (y compris manutention, agent, etc.)
+    console.log(`FILTRAGE PSY: ${jobs.length} -> ${jobs.length} offres (aucun filtrage)`);
+    return jobs;
+  }
+  
+  // Métiers interdits pour autres profils
+  const incompatibleJobs = [];
+  
+  // Si besoin encadrement strict
+  if (supervisionNeeds === 'encadrement_strict') {
+    incompatibleJobs.push('responsable', 'manager', 'chef', 'coordinateur');
+    console.log('Encadrement strict - exclusion postes autonomes');
+  }
+  
+  // Si problèmes relationnels
+  if (psychProfile.includes('peu relationnel') || psychProfile.includes('introverti')) {
+    incompatibleJobs.push('accueil', 'commercial', 'vente', 'relation client');
+    console.log('Profil peu relationnel - exclusion métiers contact');
+  }
+  
+  if (incompatibleJobs.length === 0) {
+    console.log(`FILTRAGE PSY: ${jobs.length} -> ${jobs.length} offres (aucun filtrage nécessaire)`);
+    return jobs;
+  }
+  
+  const filteredJobs = jobs.filter(job => {
+    const jobTitle = job.intitule?.toLowerCase() || '';
+    const jobDescription = job.description?.toLowerCase() || '';
+    const jobText = `${jobTitle} ${jobDescription}`;
+    
+    const isIncompatible = incompatibleJobs.some(excluded => jobText.includes(excluded));
+    
+    if (isIncompatible) {
+      console.log(`Offre filtrée (incompatible): ${job.intitule}`);
+      return false;
+    }
+    
+    return true;
+  });
+  
+  console.log(`FILTRAGE PSY: ${jobs.length} -> ${filteredJobs.length} offres`);
+  return filteredJobs;
+}
+
+function deduplicateJobs(jobs) {
+  if (!jobs || jobs.length === 0) return [];
+  
+  const uniqueJobs = jobs.filter((job, index, self) => 
+    index === self.findIndex(j => 
+      j.intitule === job.intitule && 
+      j.entreprise?.nom === job.entreprise?.nom &&
+      j.lieuTravail?.libelle === job.lieuTravail?.libelle
+    )
+  );
+  
+  if (jobs.length !== uniqueJobs.length) {
+    console.log(`DEDOUBLONNAGE: ${jobs.length} -> ${uniqueJobs.length} offres uniques`);
+  }
+  
+  return uniqueJobs;
 }
 
 function calculateMatchScore(job, candidateProfile) {
@@ -526,12 +545,36 @@ function generateMatchJustification(job, candidateProfile, score) {
 
 // Fonctions utilitaires
 function formatLocation(lieuTravail) { return lieuTravail?.libelle || 'Lieu non specifie'; }
-function formatContractType(typeContrat) { const c = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission interim' }; return c[typeContrat] || typeContrat || 'Type non specifie'; }
-function formatExperience(experienceExige) { const e = { D: 'Debutant accepte', S: 'Experience souhaitee', E: 'Experience exigee' }; return e[experienceExige] || 'Non specifie'; }
-function cleanDescription(description) { return description ? description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : '') : 'Description non disponible'; }
-function extractSalaryMin(salaireText) { if (!salaireText) return null; const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); return match ? parseInt(match[1].replace(/\s/g, '')) : null; }
-function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMin(salaireText); }
-function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['maintenance','electricite','technicien','installation','depannage','social','education','comptabilite']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
+function formatContractType(typeContrat) { 
+  const contracts = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission interim' }; 
+  return contracts[typeContrat] || typeContrat || 'Type non specifie'; 
+}
+function formatExperience(experienceExige) { 
+  const experiences = { D: 'Debutant accepte', S: 'Experience souhaitee', E: 'Experience exigee' }; 
+  return experiences[experienceExige] || 'Non specifie'; 
+}
+function cleanDescription(description) { 
+  return description ? description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : '') : 'Description non disponible'; 
+}
+function extractSalaryMin(salaireText) { 
+  if (!salaireText) return null; 
+  const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); 
+  return match ? parseInt(match[1].replace(/\s/g, '')) : null; 
+}
+function extractSalaryMax(salaireText) { 
+  if (!salaireText) return null; 
+  const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); 
+  return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : null; 
+}
+function extractSkillsFromJob(job) { 
+  const skills = []; 
+  const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); 
+  const commonSkills = ['maintenance','electricite','technicien','installation','depannage','social','education','comptabilite'];
+  commonSkills.forEach(skill => { 
+    if (text.includes(skill)) skills.push(skill.charAt(0).toUpperCase() + skill.slice(1)); 
+  }); 
+  return skills.slice(0, 5); 
+}
 
 function mockJobs(candidateProfile) {
   const location = candidateProfile.location || "France";
@@ -545,12 +588,17 @@ function mockJobs(candidateProfile) {
       description: isElectrotechnique ? "Maintenance equipements industriels, depannage electrique" : "Gestion administrative et support",
       contract_type: "CDI", sector: isElectrotechnique ? "Industrie" : "Administratif",
       salary_display: isElectrotechnique ? "30k-35k €" : "25k-30k €",
-      salary_min: isElectrotechnique ? 30000 : 25000, salary_max: isElectrotechnique ? 35000 : 30000,
-      experience_required: "Experience souhaitee", qualification_required: isElectrotechnique ? "Bac Pro Electrotechnique" : "Bac",
-      date_creation: new Date().toISOString(), match_score: 65,
-      match_justification: "Fallback adapte au profil", france_travail_url: "#",
+      salary_min: isElectrotechnique ? 30000 : 25000, 
+      salary_max: isElectrotechnique ? 35000 : 30000,
+      experience_required: "Experience souhaitee", 
+      qualification_required: isElectrotechnique ? "Bac Pro Electrotechnique" : "Bac",
+      date_creation: new Date().toISOString(), 
+      match_score: 65,
+      match_justification: "Fallback adapte au profil", 
+      france_travail_url: "#",
       required_skills: isElectrotechnique ? ["Maintenance", "Electricite"] : ["Communication", "Gestion"],
-      company_types: ["Standard"], evolution_potential: "Evolution possible"
+      company_types: ["Standard"], 
+      evolution_potential: "Evolution possible"
     }
   ];
 }
