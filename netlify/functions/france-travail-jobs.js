@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Version finale avec support profils techniques + géolocalisation étendue
+// Version finale avec géolocalisation stricte pour villes moyennes
 
 const communeMapping = {
   // Région parisienne
@@ -200,7 +200,7 @@ function getSearchDistance(location) {
     return '10';
   }
   
-  // Villes moyennes : recherche élargie
+  // Villes moyennes : recherche élargie mais limitée
   const mediumCities = ['annecy', 'seynod', 'chambery', 'grenoble', 'clermont', 'saint-etienne', 'nancy', 'metz', 'dijon', 'besancon'];
   if (mediumCities.some(city => locationLower.includes(city))) {
     console.log('Ville moyenne detectee - distance 50km');
@@ -237,16 +237,36 @@ function extractLocation(location) {
   return '75001';
 }
 
-// Filtrage géographique par régions
+// Filtrage géographique par régions avec restrictions strictes pour villes moyennes
 function filterJobsByLocation(jobs, candidateLocation) {
   if (!candidateLocation) return jobs;
   
   const locationLower = candidateLocation.toLowerCase();
   
-  // Définition des régions étendues
-  const regions = {
+  // Définition des bassins d'emploi locaux pour villes moyennes
+  const localBasins = {
+    // Haute-Savoie/Savoie (Annecy, Chambéry) - Bassin alpin
+    'annecy-chambery': ['73', '74', '01'], // Savoie, Haute-Savoie, Ain proche
+    'seynod-annecy': ['73', '74', '01'],   // Même bassin qu'Annecy
+    
+    // Isère (Grenoble) - Bassin grenoblois  
+    'grenoble': ['38', '73', '26', '05'],  // Isère + départements limitrophes montagnards
+    
+    // Rhône (Lyon) - Métropole lyonnaise
+    'lyon': ['69', '01', '42', '71'],      // Rhône + départements limitrophes
+    
+    // Autres bassins régionaux
+    'clermont-ferrand': ['63', '03', '15', '43'],
+    'saint-etienne': ['42', '69', '43', '07'],
+    'nancy': ['54', '55', '57', '88'],
+    'metz': ['57', '54', '55', '67'],
+    'dijon': ['21', '71', '89', '70'],
+    'besancon': ['25', '70', '39', '90']
+  };
+  
+  // Régions métropolitaines (périmètre élargi autorisé)
+  const metropolitanRegions = {
     'ile-de-france': ['75', '77', '78', '91', '92', '93', '94', '95'],
-    'auvergne-rhone-alpes': ['01', '03', '07', '15', '26', '38', '42', '43', '63', '69', '73', '74'],
     'provence-alpes-cote-azur': ['04', '05', '06', '13', '83', '84'],
     'occitanie': ['09', '11', '12', '30', '31', '32', '34', '46', '48', '65', '66', '81', '82'],
     'nouvelle-aquitaine': ['16', '17', '19', '23', '24', '33', '40', '47', '64', '79', '86', '87'],
@@ -259,53 +279,89 @@ function filterJobsByLocation(jobs, candidateLocation) {
     'normandie': ['14', '27', '50', '61', '76']
   };
   
-  // Exclusions strictes
+  // Exclusions strictes (DOM-TOM, Corse pour certains cas)
   const excludedDepartments = ['20', '2A', '2B', '971', '972', '973', '974', '976', '975', '984', '986', '987', '988'];
   
   let allowedDepartments = [];
+  let isStrictLocal = false;
   
-  // Détection de région
-  const cityToRegion = {
-    'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
-    'lyon': 'auvergne-rhone-alpes', 'annecy': 'auvergne-rhone-alpes', 'seynod': 'auvergne-rhone-alpes', 'grenoble': 'auvergne-rhone-alpes',
-    'marseille': 'provence-alpes-cote-azur', 'nice': 'provence-alpes-cote-azur',
-    'toulouse': 'occitanie', 'montpellier': 'occitanie',
-    'bordeaux': 'nouvelle-aquitaine', 'nantes': 'pays-de-la-loire', 'lille': 'hauts-de-france',
-    'strasbourg': 'grand-est', 'nancy': 'grand-est', 'metz': 'grand-est'
-  };
+  // DÉTECTION TYPE DE LOCALISATION
   
-  let candidateRegion = null;
-  for (const [city, region] of Object.entries(cityToRegion)) {
-    if (locationLower.includes(city)) {
-      candidateRegion = region;
-      allowedDepartments = regions[region];
-      console.log(`Candidat region ${region} detecte - departements autorises:`, allowedDepartments);
+  // 1. Villes moyennes avec bassin local strict
+  for (const [basin, departments] of Object.entries(localBasins)) {
+    const basinCities = basin.split('-');
+    if (basinCities.some(city => locationLower.includes(city))) {
+      allowedDepartments = departments;
+      isStrictLocal = true;
+      console.log(`Bassin local detecte (${basin}) - departements autorises:`, allowedDepartments);
       break;
     }
   }
   
-  if (!candidateRegion) {
-    console.log('Region non detectee - pas de filtrage geographique');
+  // 2. Grandes métropoles avec région élargie
+  if (!isStrictLocal) {
+    const cityToRegion = {
+      'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
+      'marseille': 'provence-alpes-cote-azur', 'nice': 'provence-alpes-cote-azur',
+      'toulouse': 'occitanie', 'montpellier': 'occitanie',
+      'bordeaux': 'nouvelle-aquitaine', 'nantes': 'pays-de-la-loire', 'lille': 'hauts-de-france',
+      'strasbourg': 'grand-est', 'rennes': 'bretagne'
+    };
+    
+    for (const [city, region] of Object.entries(cityToRegion)) {
+      if (locationLower.includes(city)) {
+        allowedDepartments = metropolitanRegions[region];
+        console.log(`Metropole detectee (${city}) - region ${region} autorisee:`, allowedDepartments);
+        break;
+      }
+    }
+  }
+  
+  // 3. Si aucune détection : pas de filtrage géographique
+  if (allowedDepartments.length === 0) {
+    console.log('Localisation non reconnue - pas de filtrage geographique');
     return jobs;
   }
   
-  // Filtrage des offres
+  // FILTRAGE DES OFFRES
   const filteredJobs = jobs.filter(job => {
     const jobLocation = job.lieuTravail?.libelle || '';
     
-    // Exclusions strictes
-    if (excludedDepartments.some(dept => jobLocation.includes(dept)) || jobLocation.toLowerCase().includes('corse')) {
-      console.log(`Offre exclue: ${jobLocation}`);
+    // Exclusions strictes universelles
+    if (excludedDepartments.some(dept => jobLocation.includes(dept)) || 
+        jobLocation.toLowerCase().includes('corse') ||
+        jobLocation.includes('Guadeloupe') || jobLocation.includes('Martinique') ||
+        jobLocation.includes('Guyane') || jobLocation.includes('Réunion')) {
+      console.log(`Offre exclue (DOM-TOM/Corse): ${jobLocation}`);
       return false;
     }
     
+    // Pour les bassins locaux stricts : filtrage très restrictif
+    if (isStrictLocal) {
+      const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
+      if (departmentMatch) {
+        const jobDepartment = departmentMatch[1];
+        const isAllowed = allowedDepartments.includes(jobDepartment);
+        
+        if (!isAllowed) {
+          console.log(`Offre filtree (hors bassin local): ${job.intitule} a ${jobLocation} (dept ${jobDepartment})`);
+        }
+        return isAllowed;
+      }
+      
+      // Si lieu bizarre sans département détecté, on filtre aussi pour les bassins stricts
+      console.log(`Offre filtree (format lieu incorrect): ${jobLocation}`);
+      return false;
+    }
+    
+    // Pour les métropoles : filtrage régional plus souple
     const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
     if (departmentMatch) {
       const jobDepartment = departmentMatch[1];
       const isAllowed = allowedDepartments.includes(jobDepartment);
       
       if (!isAllowed) {
-        console.log(`Offre filtree: ${job.intitule} a ${jobLocation} (dept ${jobDepartment})`);
+        console.log(`Offre filtree (hors region): ${job.intitule} a ${jobLocation} (dept ${jobDepartment})`);
       }
       return isAllowed;
     }
@@ -313,7 +369,7 @@ function filterJobsByLocation(jobs, candidateLocation) {
     return true;
   });
   
-  console.log(`Filtrage: ${jobs.length} offres -> ${filteredJobs.length} conservees`);
+  console.log(`Filtrage ${isStrictLocal ? 'strict (bassin local)' : 'regional'}: ${jobs.length} offres -> ${filteredJobs.length} conservees`);
   return filteredJobs;
 }
 
