@@ -20,6 +20,115 @@ const communeMapping = {
 
 // Base de données des formations par secteur et région
 const formationsDatabase = {
+  // Formations créatives/audiovisuelles
+  creatif: {
+    audiovisuel: [
+      {
+        title: "BTS Métiers de l'audiovisuel - Option montage",
+        organisme: "Lycées techniques/Écoles spécialisées",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Formation initiale, apprentissage, CPF",
+        prerequis: "Bac (toutes filières)",
+        debouches: "Monteur vidéo, assistant réalisateur, technicien post-production",
+        salaire_apres: "2000-3500€",
+        lieux: {
+          "ile-de-france": ["Paris", "Saint-Denis", "Boulogne"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"],
+          "provence-alpes-cote-azur": ["Nice", "Marseille"],
+          "occitanie": ["Toulouse", "Montpellier"]
+        }
+      },
+      {
+        title: "Titre professionnel Monteur audiovisuel",
+        organisme: "EICAR/Écoles audiovisuelles",
+        duree: "8 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, financement personnel",
+        prerequis: "Bases informatiques, sensibilité audiovisuelle",
+        debouches: "Monteur freelance, technicien broadcast, créateur contenu",
+        salaire_apres: "1800-3000€",
+        lieux: {
+          "ile-de-france": ["Paris", "Montreuil", "Saint-Denis"],
+          "auvergne-rhone-alpes": ["Lyon"],
+          "national": ["Formation à distance possible"]
+        }
+      },
+      {
+        title: "Formation Adobe Premiere Pro - Certificat",
+        organisme: "Centres de formation agréés",
+        duree: "5 jours intensifs",
+        niveau: "Certification",
+        financement: "CPF, employeur, financement personnel",
+        prerequis: "Bases informatiques",
+        debouches: "Complément de compétences pour audiovisuel",
+        salaire_apres: "Évolution +300-600€/mois",
+        lieux: {
+          "national": ["Toutes grandes villes", "Formation en ligne"]
+        }
+      },
+      {
+        title: "Licence professionnelle Techniques du son et de l'image",
+        organisme: "IUT/Universités",
+        duree: "1 an",
+        niveau: "BAC+3",
+        financement: "Formation continue, apprentissage, CPF",
+        prerequis: "BAC+2 ou expérience professionnelle",
+        debouches: "Responsable production, chef opérateur son",
+        salaire_apres: "2500-4000€",
+        lieux: {
+          "ile-de-france": ["Paris", "Créteil"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"],
+          "hauts-de-france": ["Lille"]
+        }
+      }
+    ],
+    communication: [
+      {
+        title: "BTS Communication",
+        organisme: "Lycées/Écoles privées",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Formation initiale, apprentissage, CPF",
+        prerequis: "Bac (de préférence général ou STMG)",
+        debouches: "Chargé de communication, assistant marketing",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles", "Créteil"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"],
+          "provence-alpes-cote-azur": ["Marseille", "Nice"]
+        }
+      },
+      {
+        title: "Titre professionnel Infographiste metteur en page",
+        organisme: "AFPA/GRETA",
+        duree: "6 mois",
+        niveau: "BAC",
+        financement: "CPF, Pôle emploi, Région",
+        prerequis: "Créativité, bases informatiques",
+        debouches: "Graphiste, maquettiste, chargé de création",
+        salaire_apres: "1800-2600€",
+        lieux: {
+          "ile-de-france": ["Paris", "Montreuil"],
+          "auvergne-rhone-alpes": ["Lyon", "Annecy"]
+        }
+      },
+      {
+        title: "Formation Community Manager - Réseaux sociaux",
+        organisme: "Écoles digitales/Organismes spécialisés",
+        duree: "3 mois",
+        niveau: "Certification",
+        financement: "CPF, employeur",
+        prerequis: "Connaissance réseaux sociaux",
+        debouches: "Community manager, gestionnaire réseaux sociaux",
+        salaire_apres: "1700-2500€",
+        lieux: {
+          "national": ["Formation en ligne", "Toutes grandes villes"]
+        }
+      }
+    ]
+  },
+  
   // Formations techniques/industrielles
   technique: {
     electricien: [
@@ -33,7 +142,202 @@ const formationsDatabase = {
         debouches: "Électricien bâtiment, installateur électrique",
         salaire_apres: "1800-2500€",
         lieux: {
-          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Grenoble", "Chambéry"],
+          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Saint-Étienne"],
+          "ile-de-france": ["Paris", "Argenteuil", "Meaux"],
+          "hauts-de-france": ["Lille", "Amiens", "Valenciennes"]
+        }
+      },
+      {
+        title: "Habilitation électrique B1V B2V BR BC",
+        organisme: "Organismes agréés",
+        duree: "3-5 jours",
+        niveau: "Certification",
+        financement: "CPF, employeur",
+        prerequis: "Notions électricité de base",
+        debouches: "Complément obligatoire pour électriciens",
+        salaire_apres: "Évolution +200-400€/mois",
+        lieux: {
+          "national": ["Toutes grandes villes", "Centres de formation agréés"]
+        }
+      }
+    ],
+    technicien: [
+      {
+        title: "BTS Maintenance des systèmes industriels",
+        organisme: "Lycées techniques/IUT",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Apprentissage, CPF, financement personnel",
+        prerequis: "Bac (Pro/Techno/Général)",
+        debouches: "Technicien maintenance, responsable équipe",
+        salaire_apres: "2200-3000€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble", "Annecy"],
+          "ile-de-france": ["Paris", "Versailles", "Évry"],
+          "hauts-de-france": ["Lille", "Valenciennes"]
+        }
+      },
+      {
+        title: "Titre professionnel Technicien de maintenance industrielle",
+        organisme: "AFPA/GRETA",
+        duree: "8-12 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, Région",
+        prerequis: "Expérience technique ou BAC",
+        debouches: "Technicien maintenance, contrôleur qualité",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Chambéry", "Lyon"],
+          "ile-de-france": ["Montreuil", "Argenteuil"]
+        }
+      }
+    ]
+  },
+  
+  // Formations sociales/éducatives
+  social: {
+    educateur: [
+      {
+        title: "DEAES - Diplôme d'État d'Accompagnant Éducatif et Social",
+        organisme: "IRTS/Écoles spécialisées",
+        duree: "12-24 mois",
+        niveau: "Niveau 3 (CAP)",
+        financement: "Région, CPF, employeur, Pôle emploi",
+        prerequis: "Aucun diplôme requis",
+        debouches: "Accompagnant personnes âgées/handicapées",
+        salaire_apres: "1600-1900€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble", "Chambéry"],
+          "ile-de-france": ["Paris", "Créteil", "Versailles"],
+          "provence-alpes-cote-azur": ["Marseille", "Nice"]
+        }
+      },
+      {
+        title: "DEEJE - Diplôme d'État d'Éducateur de Jeunes Enfants",
+        organisme: "IRTS",
+        duree: "3 ans",
+        niveau: "BAC+3",
+        financement: "Région, employeur, CPF",
+        prerequis: "Bac ou équivalent",
+        debouches: "Éducateur petite enfance, crèches",
+        salaire_apres: "1800-2400€",
+        lieux: {
+          "ile-de-france": ["Paris", "Saint-Denis"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      }
+    ],
+    accompagnement: [
+      {
+        title: "CQP Animateur de loisir sportif",
+        organisme: "Fédérations sportives",
+        duree: "6 mois",
+        niveau: "CQP",
+        financement: "CPF, Région",
+        prerequis: "18 ans minimum",
+        debouches: "Animateur sportif, centres de loisirs",
+        salaire_apres: "1500-2000€",
+        lieux: {
+          "national": ["Toutes régions", "Centres de formation agréés"]
+        }
+      }
+    ]
+  },
+  
+  // Formations tertiaires
+  tertiaire: {
+    comptable: [
+      {
+        title: "DCG - Diplôme de Comptabilité et Gestion",
+        organisme: "Lycées/IUT/Écoles privées",
+        duree: "3 ans",
+        niveau: "BAC+3",
+        financement: "Formation initiale, apprentissage, CPF",
+        prerequis: "Bac",
+        debouches: "Comptable, gestionnaire paie, contrôleur",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles", "Créteil"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      },
+      {
+        title: "Titre professionnel Comptable assistant",
+        organisme: "AFPA/GRETA",
+        duree: "7 mois",
+        niveau: "BAC",
+        financement: "CPF, Pôle emploi",
+        prerequis: "Niveau BAC ou expérience",
+        debouches: "Assistant comptable, aide comptable",
+        salaire_apres: "1700-2300€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Chambéry"],
+          "ile-de-france": ["Paris", "Montreuil"]
+        }
+      }
+    ],
+    commercial: [
+      {
+        title: "BTS Commerce international",
+        organisme: "Lycées techniques",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Apprentissage, financement personnel",
+        prerequis: "Bac",
+        debouches: "Commercial export, assistant commercial",
+        salaire_apres: "2000-3500€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles"],
+          "auvergne-rhone-alpes": ["Lyon"]
+        }
+      }
+    ],
+    informatique: [
+      {
+        title: "Titre professionnel Développeur web et web mobile",
+        organisme: "AFPA/Écoles spécialisées",
+        duree: "6-8 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, bootcamp",
+        prerequis: "Logique, bases informatiques",
+        debouches: "Développeur web, intégrateur",
+        salaire_apres: "2200-3500€",
+        lieux: {
+          "national": ["Toutes grandes villes", "Formation à distance possible"]
+        }
+      }
+    ],
+    management: [
+      {
+        title: "Licence professionnelle Management de projets",
+        organisme: "IUT/Universités",
+        duree: "1 an",
+        niveau: "BAC+3",
+        financement: "Formation continue, CPF, apprentissage",
+        prerequis: "BAC+2 + expérience professionnelle",
+        debouches: "Chef de projet, coordinateur, responsable équipe",
+        salaire_apres: "2800-4000€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      },
+      {
+        title: "Formation Gestion de projet - Certification PMP",
+        organisme: "Centres de formation agréés",
+        duree: "5 jours + certification",
+        niveau: "Certification",
+        financement: "CPF, employeur",
+        prerequis: "Expérience gestion de projet",
+        debouches: "Chef de projet certifié, consultant",
+        salaire_apres: "Évolution +400-800€/mois",
+        lieux: {
+          "national": ["Toutes grandes villes", "Formation en ligne"]
+        }
+      }
+    ]
+  }
+};one-alpes": ["Annecy", "Lyon", "Grenoble", "Chambéry"],
           "ile-de-france": ["Paris", "Nanterre", "Créteil", "Saint-Denis"],
           "provence-alpes-cote-azur": ["Marseille", "Nice", "Toulon"]
         }
@@ -49,6 +353,201 @@ const formationsDatabase = {
         salaire_apres: "1600-2200€",
         lieux: {
           "auvergne-rhone-alpes": ["Annecy", "Lyon", "Saint-Étienne"],
+          "ile-de-france": ["Paris", "Argenteuil", "Meaux"],
+          "hauts-de-france": ["Lille", "Amiens", "Valenciennes"]
+        }
+      },
+      {
+        title: "Habilitation électrique B1V B2V BR BC",
+        organisme: "Organismes agréés",
+        duree: "3-5 jours",
+        niveau: "Certification",
+        financement: "CPF, employeur",
+        prerequis: "Notions électricité de base",
+        debouches: "Complément obligatoire pour électriciens",
+        salaire_apres: "Évolution +200-400€/mois",
+        lieux: {
+          "national": ["Toutes grandes villes", "Centres de formation agréés"]
+        }
+      }
+    ],
+    technicien: [
+      {
+        title: "BTS Maintenance des systèmes industriels",
+        organisme: "Lycées techniques/IUT",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Apprentissage, CPF, financement personnel",
+        prerequis: "Bac (Pro/Techno/Général)",
+        debouches: "Technicien maintenance, responsable équipe",
+        salaire_apres: "2200-3000€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble", "Annecy"],
+          "ile-de-france": ["Paris", "Versailles", "Évry"],
+          "hauts-de-france": ["Lille", "Valenciennes"]
+        }
+      },
+      {
+        title: "Titre professionnel Technicien de maintenance industrielle",
+        organisme: "AFPA/GRETA",
+        duree: "8-12 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, Région",
+        prerequis: "Expérience technique ou BAC",
+        debouches: "Technicien maintenance, contrôleur qualité",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Chambéry", "Lyon"],
+          "ile-de-france": ["Montreuil", "Argenteuil"]
+        }
+      }
+    ]
+  },
+  
+  // Formations sociales/éducatives
+  social: {
+    educateur: [
+      {
+        title: "DEAES - Diplôme d'État d'Accompagnant Éducatif et Social",
+        organisme: "IRTS/Écoles spécialisées",
+        duree: "12-24 mois",
+        niveau: "Niveau 3 (CAP)",
+        financement: "Région, CPF, employeur, Pôle emploi",
+        prerequis: "Aucun diplôme requis",
+        debouches: "Accompagnant personnes âgées/handicapées",
+        salaire_apres: "1600-1900€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble", "Chambéry"],
+          "ile-de-france": ["Paris", "Créteil", "Versailles"],
+          "provence-alpes-cote-azur": ["Marseille", "Nice"]
+        }
+      },
+      {
+        title: "DEEJE - Diplôme d'État d'Éducateur de Jeunes Enfants",
+        organisme: "IRTS",
+        duree: "3 ans",
+        niveau: "BAC+3",
+        financement: "Région, employeur, CPF",
+        prerequis: "Bac ou équivalent",
+        debouches: "Éducateur petite enfance, crèches",
+        salaire_apres: "1800-2400€",
+        lieux: {
+          "ile-de-france": ["Paris", "Saint-Denis"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      }
+    ],
+    accompagnement: [
+      {
+        title: "CQP Animateur de loisir sportif",
+        organisme: "Fédérations sportives",
+        duree: "6 mois",
+        niveau: "CQP",
+        financement: "CPF, Région",
+        prerequis: "18 ans minimum",
+        debouches: "Animateur sportif, centres de loisirs",
+        salaire_apres: "1500-2000€",
+        lieux: {
+          "national": ["Toutes régions", "Centres de formation agréés"]
+        }
+      }
+    ]
+  },
+  
+  // Formations tertiaires
+  tertiaire: {
+    comptable: [
+      {
+        title: "DCG - Diplôme de Comptabilité et Gestion",
+        organisme: "Lycées/IUT/Écoles privées",
+        duree: "3 ans",
+        niveau: "BAC+3",
+        financement: "Formation initiale, apprentissage, CPF",
+        prerequis: "Bac",
+        debouches: "Comptable, gestionnaire paie, contrôleur",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles", "Créteil"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      },
+      {
+        title: "Titre professionnel Comptable assistant",
+        organisme: "AFPA/GRETA",
+        duree: "7 mois",
+        niveau: "BAC",
+        financement: "CPF, Pôle emploi",
+        prerequis: "Niveau BAC ou expérience",
+        debouches: "Assistant comptable, aide comptable",
+        salaire_apres: "1700-2300€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Chambéry"],
+          "ile-de-france": ["Paris", "Montreuil"]
+        }
+      }
+    ],
+    commercial: [
+      {
+        title: "BTS Commerce international",
+        organisme: "Lycées techniques",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Apprentissage, financement personnel",
+        prerequis: "Bac",
+        debouches: "Commercial export, assistant commercial",
+        salaire_apres: "2000-3500€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles"],
+          "auvergne-rhone-alpes": ["Lyon"]
+        }
+      }
+    ],
+    informatique: [
+      {
+        title: "Titre professionnel Développeur web et web mobile",
+        organisme: "AFPA/Écoles spécialisées",
+        duree: "6-8 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, bootcamp",
+        prerequis: "Logique, bases informatiques",
+        debouches: "Développeur web, intégrateur",
+        salaire_apres: "2200-3500€",
+        lieux: {
+          "national": ["Toutes grandes villes", "Formation à distance possible"]
+        }
+      }
+    ],
+    management: [
+      {
+        title: "Licence professionnelle Management de projets",
+        organisme: "IUT/Universités",
+        duree: "1 an",
+        niveau: "BAC+3",
+        financement: "Formation continue, CPF, apprentissage",
+        prerequis: "BAC+2 + expérience professionnelle",
+        debouches: "Chef de projet, coordinateur, responsable équipe",
+        salaire_apres: "2800-4000€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      },
+      {
+        title: "Formation Gestion de projet - Certification PMP",
+        organisme: "Centres de formation agréés",
+        duree: "5 jours + certification",
+        niveau: "Certification",
+        financement: "CPF, employeur",
+        prerequis: "Expérience gestion de projet",
+        debouches: "Chef de projet certifié, consultant",
+        salaire_apres: "Évolution +400-800€/mois",
+        lieux: {
+          "national": ["Toutes grandes villes", "Formation en ligne"]
+        }
+      }
+    ]
+  }
+};one-alpes": ["Annecy", "Lyon", "Saint-Étienne"],
           "ile-de-france": ["Paris", "Argenteuil", "Meaux"],
           "hauts-de-france": ["Lille", "Amiens", "Valenciennes"]
         }
@@ -289,8 +788,24 @@ function generateFormationRecommendations(candidateProfile) {
   
   console.log(`Analyse formation pour: niveau=${educationLevel}, poste=${currentPosition}, experience=${experienceYears}ans`);
   
+  // DÉTECTION DES PASSIONS À PARTIR DU PROFIL COMPLET
+  const passions = detectPassionsFromProfile(candidateProfile);
+  console.log('Passions detectees:', passions);
+  
+  // PROFILS CRÉATIFS/AUDIOVISUELS (priorité aux passions détectées)
+  if (passions.includes('cinema') || passions.includes('audiovisuel') || passions.includes('creation')) {
+    addFormationsForProfile(formations, 'creatif', 'audiovisuel', candidateRegion, {
+      priority: 'passion',
+      current_level: experienceYears >= 2 ? 'confirme' : 'debutant'
+    });
+    
+    addFormationsForProfile(formations, 'creatif', 'communication', candidateRegion, {
+      priority: 'complement'
+    });
+  }
+  
   // PROFILS TECHNIQUES
-  if (educationLevel.includes('electrotechnique') || currentPosition.includes('technicien') || 
+  else if (educationLevel.includes('electrotechnique') || currentPosition.includes('technicien') || 
       currentPosition.includes('maintenance') || technicalSkills.includes('maintenance')) {
     
     // Formations d'évolution pour électrotechniciens expérimentés
@@ -349,20 +864,95 @@ function generateFormationRecommendations(candidateProfile) {
   else if (experienceYears === 0 || educationLevel === 'aucune qualification' || 
            currentPosition === 'sans emploi') {
     
-    // Formations courtes d'insertion
-    addFormationsForProfile(formations, 'social', 'accompagnement', candidateRegion, {
-      priority: 'insertion'
-    });
-    
-    // Formations techniques accessibles
-    addFormationsForProfile(formations, 'technique', 'electricien', candidateRegion, {
-      priority: 'insertion',
-      filter: 'courtes'
+    // Si passions détectées même chez débutants
+    if (passions.length > 0) {
+      passions.forEach(passion => {
+        if (passion === 'cinema' || passion === 'audiovisuel') {
+          addFormationsForProfile(formations, 'creatif', 'audiovisuel', candidateRegion, {
+            priority: 'passion-insertion',
+            filter: 'courtes'
+          });
+        } else if (passion === 'art' || passion === 'design') {
+          addFormationsForProfile(formations, 'creatif', 'communication', candidateRegion, {
+            priority: 'passion-insertion'
+          });
+        }
+      });
+    } else {
+      // Formations courtes d'insertion classiques
+      addFormationsForProfile(formations, 'social', 'accompagnement', candidateRegion, {
+        priority: 'insertion'
+      });
+      
+      addFormationsForProfile(formations, 'technique', 'electricien', candidateRegion, {
+        priority: 'insertion',
+        filter: 'courtes'
+      });
+    }
+  }
+  
+  // FORMATIONS COMPLÉMENTAIRES basées sur les passions même pour profils expérimentés
+  if (passions.includes('management') && experienceYears >= 3) {
+    addFormationsForProfile(formations, 'tertiaire', 'management', candidateRegion, {
+      priority: 'evolution'
     });
   }
   
   console.log(`${formations.length} formations recommandees pour ${candidateRegion}`);
-  return formations.slice(0, 6); // Limiter à 6 formations max
+  return formations.slice(0, 8); // Augmenté à 8 formations max
+}
+
+// Nouvelle fonction de détection des passions
+function detectPassionsFromProfile(candidateProfile) {
+  const passions = [];
+  
+  // Analyse du poste actuel et de l'expérience
+  const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
+  const technicalSkills = (candidateProfile.technical_skills || []).join(' ').toLowerCase();
+  const personalQualities = (candidateProfile.personal_qualities || []).join(' ').toLowerCase();
+  const careerAspirations = candidateProfile.career_aspirations?.toLowerCase() || '';
+  
+  // Mots-clés révélateurs de passions
+  const passionKeywords = {
+    cinema: ['cinema', 'cinéma', 'film', 'montage', 'réalisation', 'production', 'audiovisuel', 'vidéo', 'festival'],
+    audiovisuel: ['video', 'montage', 'premiere', 'after effects', 'captation', 'postproduction', 'streaming', 'youtube'],
+    creation: ['création', 'creative', 'design', 'graphique', 'visuel', 'artistique', 'canva', 'adobe'],
+    communication: ['communication', 'marketing', 'réseaux sociaux', 'content', 'campagne', 'branding'],
+    art: ['art', 'artistique', 'tatouage', 'design', 'esthétique', 'créatif'],
+    management: ['coordination', 'gestion', 'organisation', 'équipe', 'projet', 'leadership'],
+    social: ['communautaire', 'social', 'culturel', 'francophone', 'accompagnement'],
+    technologie: ['digital', 'numérique', 'innovation', 'tech', 'développement']
+  };
+  
+  // Analyser toutes les sections du profil
+  const fullProfile = `${currentPosition} ${technicalSkills} ${personalQualities} ${careerAspirations}`;
+  
+  // Détection spéciale pour les profils créatifs
+  Object.entries(passionKeywords).forEach(([passion, keywords]) => {
+    if (keywords.some(keyword => fullProfile.includes(keyword))) {
+      if (!passions.includes(passion)) {
+        passions.push(passion);
+        console.log(`Passion "${passion}" detectee via: ${keywords.filter(k => fullProfile.includes(k)).join(', ')}`);
+      }
+    }
+  });
+  
+  // Détection contextuelle avancée
+  if (currentPosition.includes('agent') && fullProfile.includes('communication')) {
+    passions.push('communication');
+  }
+  
+  if (fullProfile.includes('festival') || fullProfile.includes('programmation')) {
+    passions.push('cinema');
+    passions.push('creation');
+  }
+  
+  if (fullProfile.includes('francophone') && fullProfile.includes('culturel')) {
+    passions.push('communication');
+    passions.push('social');
+  }
+  
+  return [...new Set(passions)]; // Supprimer les doublons
 }
 
 function detectCandidateRegion(location) {
