@@ -267,7 +267,7 @@ async function searchJobs(token, candidateProfile) {
 
     const searchParams = new URLSearchParams({
       motsCles: keywords || "developpeur",
-      commune: location || '75001', // Code INSEE Paris 1er
+      codePostal: location || '75001', // Utiliser codePostal au lieu de commune
       distance: '50',
       sort: '0',
       range: '0-19'
