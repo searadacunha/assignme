@@ -360,14 +360,17 @@ function buildKeywords(candidateProfile) {
     'livraison'
   ];
   
-  // Mots-clés techniques pour profils qualifiés
+  // Mots-clés techniques génériques qui marchent sur France Travail
   const technicalKeywords = [
-    'developpeur',
-    'informatique',
-    'comptable',
     'commercial',
-    'marketing',
-    'secretaire'
+    'comptable', 
+    'assistant',
+    'secretaire',
+    'administratif',
+    'finance',
+    'gestion',
+    'vente',
+    'marketing'
   ];
   
   let selectedKeyword;
@@ -380,23 +383,60 @@ function buildKeywords(candidateProfile) {
     selectedKeyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
     console.log('Profil debutant detecte, mot-cle generique utilise');
     
-  } else if (candidateProfile.technical_skills?.length) {
-    // Pour profils techniques expérimentés
-    const cleanSkills = candidateProfile.technical_skills
-      .filter(skill => !skill.toLowerCase().includes('français') && 
-                      !skill.toLowerCase().includes('darija') &&
-                      !skill.toLowerCase().includes('anglais'))
-      .slice(0, 1);
+  } else if (candidateProfile.total_experience_years >= 2) {
+    // Pour profils expérimentés, utiliser mots-clés génériques qui fonctionnent
     
-    if (cleanSkills.length > 0) {
-      selectedKeyword = cleanSkills[0];
-    } else {
-      selectedKeyword = technicalKeywords[Math.floor(Math.random() * technicalKeywords.length)];
+    // Mapper les compétences spécialisées vers des termes génériques
+    const skillMapping = {
+      'order-to-cash': 'commercial',
+      'facturation': 'comptable',
+      'recouvrement': 'finance',
+      'adv': 'administratif',
+      'pilotage': 'gestion',
+      'saas': 'commercial',
+      'salesforce': 'commercial',
+      'javascript': 'informatique',
+      'python': 'informatique',
+      'java': 'informatique',
+      'marketing': 'marketing',
+      'vente': 'commercial'
+    };
+    
+    let mappedKeyword = null;
+    
+    // Chercher une correspondance dans les compétences techniques
+    if (candidateProfile.technical_skills?.length) {
+      for (const skill of candidateProfile.technical_skills) {
+        const skillLower = skill.toLowerCase();
+        for (const [specializedTerm, genericTerm] of Object.entries(skillMapping)) {
+          if (skillLower.includes(specializedTerm)) {
+            mappedKeyword = genericTerm;
+            console.log(`Competence "${skill}" mappee vers "${genericTerm}"`);
+            break;
+          }
+        }
+        if (mappedKeyword) break;
+      }
     }
+    
+    // Chercher dans le poste actuel
+    if (!mappedKeyword && candidateProfile.current_position) {
+      const positionLower = candidateProfile.current_position.toLowerCase();
+      for (const [specializedTerm, genericTerm] of Object.entries(skillMapping)) {
+        if (positionLower.includes(specializedTerm)) {
+          mappedKeyword = genericTerm;
+          console.log(`Poste "${candidateProfile.current_position}" mappe vers "${genericTerm}"`);
+          break;
+        }
+      }
+    }
+    
+    selectedKeyword = mappedKeyword || technicalKeywords[Math.floor(Math.random() * technicalKeywords.length)];
+    console.log('Profil experimente detecte');
     
   } else {
     // Fallback générique
-    selectedKeyword = entryLevelKeywords[0]; // 'agent'
+    selectedKeyword = technicalKeywords[0]; // 'commercial'
   }
   
   console.log('Mots-cles generes:', selectedKeyword);
