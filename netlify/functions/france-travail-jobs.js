@@ -1,7 +1,6 @@
 // netlify/functions/france-travail-jobs.js
-// Version finale avec matching formation + géolocalisation corrigée
+// Version corrigée pour le secteur social + géolocalisation stricte
 
-// Mapping des villes vers codes INSEE
 const communeMapping = {
   "paris": "75001",
   "pantin": "93055",
@@ -51,7 +50,6 @@ exports.handler = async (event, context) => {
     const CLIENT_SECRET = process.env.FRANCE_TRAVAIL_SECRET;
 
     console.log('=== DEBUT FRANCE TRAVAIL ===');
-    console.log('CLIENT_ID:', CLIENT_ID);
     console.log('CLIENT_SECRET present:', !!CLIENT_SECRET);
 
     if (!CLIENT_SECRET) {
@@ -140,7 +138,7 @@ async function searchJobs(token, candidateProfile) {
     console.log('Localisation extraite:', location);
 
     const searchParams = new URLSearchParams({
-      motsCles: keywords || "agent",
+      motsCles: keywords || "emploi",
       codePostal: location || '75001',
       distance: '10',
       sort: '0',
@@ -179,27 +177,27 @@ async function searchJobs(token, candidateProfile) {
   }
 }
 
-// Construction des mots-clés avec prise en compte de la formation
+// Construction des mots-clés avec focus secteur social
 function buildKeywords(candidateProfile) {
-  // Mots-clés pour profils sans qualification
   const entryLevelKeywords = ['agent', 'employe', 'accueil', 'vente', 'magasin', 'caissier', 'preparateur', 'manutention', 'nettoyage', 'restauration'];
   
   let selectedKeyword;
   
-  // Si profil débutant (0 expérience ou sans qualification)
+  // Si profil débutant
   if (candidateProfile.total_experience_years === 0 || candidateProfile.education_level === 'Aucune qualification' || candidateProfile.current_position === 'Sans emploi') {
     selectedKeyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
     console.log('Profil debutant detecte');
     
   } else {
-    // Mapping basé sur le diplôme ET l'expérience
     const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
     const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
     
-    // Mapping spécialisé par secteur de formation
+    // Mapping spécialisé par secteur avec mots-clés plus précis
     if (educationLevel.includes('service social') || educationLevel.includes('deass') || currentPosition.includes('social')) {
-      selectedKeyword = 'assistant'; // Assistant social, médico-social, etc.
-      console.log('Profil social detecte -> assistant');
+      // Mots-clés spécifiques au secteur social/éducatif
+      const socialKeywords = ['educateur', 'accompagnement', 'mediation', 'social'];
+      selectedKeyword = socialKeywords[Math.floor(Math.random() * socialKeywords.length)];
+      console.log('Profil social detecte -> secteur social/educatif');
       
     } else if (educationLevel.includes('comptab') || educationLevel.includes('gestion') || educationLevel.includes('finance')) {
       selectedKeyword = 'comptable';
@@ -218,13 +216,13 @@ function buildKeywords(candidateProfile) {
       console.log('Formation droit detecte -> administratif');
       
     } else {
-      // Mapping générique basé sur l'expérience professionnelle
+      // Mapping générique basé sur l'expérience
       if (currentPosition.includes('adv') || currentPosition.includes('gestion')) {
         selectedKeyword = 'administratif';
       } else if (currentPosition.includes('responsable') || currentPosition.includes('manager')) {
         selectedKeyword = 'commercial';
       } else {
-        selectedKeyword = 'assistant'; // Fallback pour profils expérimentés
+        selectedKeyword = 'assistant';
       }
       console.log('Mapping generique applique');
     }
@@ -234,7 +232,7 @@ function buildKeywords(candidateProfile) {
   return selectedKeyword;
 }
 
-// Extraction de localisation avec détection banlieue parisienne
+// Extraction de localisation avec banlieue parisienne
 function extractLocation(location) {
   if (!location) return '75001';
   
@@ -248,7 +246,7 @@ function extractLocation(location) {
     return inseeMatch[1];
   }
   
-  // Recherche par nom de ville (y compris banlieue parisienne)
+  // Recherche par nom de ville
   for (const [city, inseeCode] of Object.entries(communeMapping)) {
     if (locationLower.includes(city)) {
       console.log(`Ville "${city}" trouvee, code INSEE: ${inseeCode}`);
@@ -260,16 +258,19 @@ function extractLocation(location) {
   return '75001';
 }
 
-// Filtrage géographique avec banlieue parisienne
+// Filtrage géographique strict avec exclusion DOM-TOM et Corse
 function filterJobsByLocation(jobs, candidateLocation) {
   if (!candidateLocation) return jobs;
   
   const locationLower = candidateLocation.toLowerCase();
   
-  // Départements de la région parisienne (élargie)
+  // Départements région parisienne
   const parisianDepartments = ['75', '77', '78', '91', '92', '93', '94', '95'];
   
-  // Départements des grandes villes françaises
+  // Départements à exclure complètement
+  const excludedDepartments = ['20', '2A', '2B', '971', '972', '973', '974', '976', '975', '984', '986', '987', '988'];
+  
+  // Départements grandes villes
   const majorCityDepartments = {
     'lyon': ['69'], 'marseille': ['13'], 'toulouse': ['31'], 'lille': ['59'],
     'bordeaux': ['33'], 'nantes': ['44'], 'strasbourg': ['67'], 'montpellier': ['34'],
@@ -278,7 +279,7 @@ function filterJobsByLocation(jobs, candidateLocation) {
   
   let allowedDepartments = [];
   
-  // Détection candidat parisien (incluant banlieue)
+  // Détection candidat parisien (incluant toute la banlieue)
   const parisianCities = ['paris', 'pantin', 'montreuil', 'saint-denis', 'aubervilliers', 'bobigny', 'noisy-le-sec', 'romainville', 'les lilas', 'bagnolet', 'vincennes', 'neuilly', 'levallois', 'boulogne', 'issy'];
   
   const isParisian = parisianCities.some(city => locationLower.includes(city));
@@ -302,9 +303,22 @@ function filterJobsByLocation(jobs, candidateLocation) {
     return jobs;
   }
   
-  // Filtrage des offres
+  // Filtrage strict des offres
   const filteredJobs = jobs.filter(job => {
     const jobLocation = job.lieuTravail?.libelle || '';
+    
+    // Exclure explicitement DOM-TOM et Corse
+    if (excludedDepartments.some(dept => jobLocation.includes(dept))) {
+      console.log(`Offre DOM-TOM/Corse exclue: ${job.intitule} a ${jobLocation}`);
+      return false;
+    }
+    
+    // Exclure si contient "Corse" dans le libellé
+    if (jobLocation.toLowerCase().includes('corse')) {
+      console.log(`Offre Corse exclue: ${job.intitule} a ${jobLocation}`);
+      return false;
+    }
+    
     const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
     
     if (departmentMatch) {
@@ -363,9 +377,14 @@ function calculateMatchScore(job, candidateProfile) {
   
   const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
   
-  // Correspondance formation/secteur
+  // Bonus forte correspondance formation/secteur
   const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
-  if (educationLevel.includes('service social') && jobText.includes('social')) score += 20;
+  if (educationLevel.includes('service social') || educationLevel.includes('deass')) {
+    if (jobText.includes('social') || jobText.includes('educateur') || jobText.includes('accompagnement') || jobText.includes('mediation')) {
+      score += 25; // Bonus important pour secteur social
+    }
+  }
+  
   if (educationLevel.includes('comptab') && jobText.includes('comptab')) score += 20;
   if (educationLevel.includes('droit') && (jobText.includes('juridique') || jobText.includes('administratif'))) score += 15;
   
@@ -387,8 +406,10 @@ function generateMatchJustification(job, candidateProfile, score) {
   const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
   const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
   
-  if (educationLevel.includes('service social') && jobText.includes('social')) {
-    reasons.push('Correspond a votre formation en service social');
+  if (educationLevel.includes('service social') || educationLevel.includes('deass')) {
+    if (jobText.includes('social') || jobText.includes('education') || jobText.includes('accompagnement')) {
+      reasons.push('Correspond a votre formation en service social');
+    }
   }
   
   if (job.experienceExige === 'D') reasons.push('Ouvert aux debutants');
@@ -404,19 +425,19 @@ function formatExperience(experienceExige) { const e = { D: 'Debutant accepte', 
 function cleanDescription(description) { return description ? description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : '') : 'Description non disponible'; }
 function extractSalaryMin(salaireText) { if (!salaireText) return null; const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); return match ? parseInt(match[1].replace(/\s/g, '')) : null; }
 function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMin(salaireText); }
-function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['excel','word','communication','gestion','finance','vente','marketing']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
+function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['communication','gestion','mediation','accompagnement','social','education']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
 
 function mockJobs(candidateProfile) {
   return [
     {
       id: "fallback-1", source: "Mock", is_real_offer: false,
-      job_title: "Assistant administratif (exemple)", company: "Entreprise locale",
-      location: candidateProfile.location || "Paris", description: "Poste de fallback quand France Travail est indisponible",
-      contract_type: "CDI", sector: "Administratif", salary_display: "25k-30k €",
-      salary_min: 25000, salary_max: 30000, experience_required: "Debutant accepte",
-      qualification_required: "Bac minimum", date_creation: new Date().toISOString(),
-      match_score: 60, match_justification: "Fallback automatique", france_travail_url: "#",
-      required_skills: ["Communication", "Office"], company_types: ["Standard"], evolution_potential: "Evolution possible"
+      job_title: "Assistant social (exemple)", company: "Service public local",
+      location: candidateProfile.location || "Paris", description: "Poste de fallback - accompagnement social et mediation familiale",
+      contract_type: "CDI", sector: "Social", salary_display: "28k-32k €",
+      salary_min: 28000, salary_max: 32000, experience_required: "Experience souhaitee",
+      qualification_required: "DEASS requis", date_creation: new Date().toISOString(),
+      match_score: 75, match_justification: "Fallback adapte au profil social", france_travail_url: "#",
+      required_skills: ["Accompagnement", "Mediation", "Social"], company_types: ["Public"], evolution_potential: "Evolution vers coordinateur"
     }
   ];
 }
