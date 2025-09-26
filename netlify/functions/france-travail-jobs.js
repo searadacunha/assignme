@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Version finale avec géolocalisation stricte pour villes moyennes
+// Version finale avec formations recommandées intégrées
 
 const communeMapping = {
   // Région parisienne
@@ -16,6 +16,204 @@ const communeMapping = {
   "marseille": "13055", "toulouse": "31555", "lille": "59350", "bordeaux": "33063", "nantes": "44109",
   "strasbourg": "67482", "montpellier": "34172", "rennes": "35238", "nice": "06088", "nancy": "54395",
   "metz": "57463", "dijon": "21231", "besancon": "25056", "mulhouse": "68224"
+};
+
+// Base de données des formations par secteur et région
+const formationsDatabase = {
+  // Formations techniques/industrielles
+  technique: {
+    electricien: [
+      {
+        title: "Titre professionnel Électricien d'équipement du bâtiment",
+        organisme: "AFPA",
+        duree: "7 mois",
+        niveau: "CAP/BEP",
+        financement: "CPF, Pôle emploi, Région",
+        prerequis: "Niveau 3ème, aptitudes physiques",
+        debouches: "Électricien bâtiment, installateur électrique",
+        salaire_apres: "1800-2500€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Grenoble", "Chambéry"],
+          "ile-de-france": ["Paris", "Nanterre", "Créteil", "Saint-Denis"],
+          "provence-alpes-cote-azur": ["Marseille", "Nice", "Toulon"]
+        }
+      },
+      {
+        title: "CAP Électricien",
+        organisme: "CFA/Lycées professionnels",
+        duree: "2 ans (possible 1 an si reconversion)",
+        niveau: "CAP",
+        financement: "Apprentissage, CPF, Transition Pro",
+        prerequis: "Niveau 3ème minimum",
+        debouches: "Électricien, technicien maintenance",
+        salaire_apres: "1600-2200€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Saint-Étienne"],
+          "ile-de-france": ["Paris", "Argenteuil", "Meaux"],
+          "hauts-de-france": ["Lille", "Amiens", "Valenciennes"]
+        }
+      },
+      {
+        title: "Habilitation électrique B1V B2V BR BC",
+        organisme: "Organismes agréés",
+        duree: "3-5 jours",
+        niveau: "Certification",
+        financement: "CPF, employeur",
+        prerequis: "Notions électricité de base",
+        debouches: "Complément obligatoire pour électriciens",
+        salaire_apres: "Évolution +200-400€/mois",
+        lieux: {
+          "national": ["Toutes grandes villes", "Centres de formation agréés"]
+        }
+      }
+    ],
+    technicien: [
+      {
+        title: "BTS Maintenance des systèmes industriels",
+        organisme: "Lycées techniques/IUT",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Apprentissage, CPF, financement personnel",
+        prerequis: "Bac (Pro/Techno/Général)",
+        debouches: "Technicien maintenance, responsable équipe",
+        salaire_apres: "2200-3000€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble", "Annecy"],
+          "ile-de-france": ["Paris", "Versailles", "Évry"],
+          "hauts-de-france": ["Lille", "Valenciennes"]
+        }
+      },
+      {
+        title: "Titre professionnel Technicien de maintenance industrielle",
+        organisme: "AFPA/GRETA",
+        duree: "8-12 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, Région",
+        prerequis: "Expérience technique ou BAC",
+        debouches: "Technicien maintenance, contrôleur qualité",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Chambéry", "Lyon"],
+          "ile-de-france": ["Montreuil", "Argenteuil"]
+        }
+      }
+    ]
+  },
+  
+  // Formations sociales/éducatives
+  social: {
+    educateur: [
+      {
+        title: "DEAES - Diplôme d'État d'Accompagnant Éducatif et Social",
+        organisme: "IRTS/Écoles spécialisées",
+        duree: "12-24 mois",
+        niveau: "Niveau 3 (CAP)",
+        financement: "Région, CPF, employeur, Pôle emploi",
+        prerequis: "Aucun diplôme requis",
+        debouches: "Accompagnant personnes âgées/handicapées",
+        salaire_apres: "1600-1900€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble", "Chambéry"],
+          "ile-de-france": ["Paris", "Créteil", "Versailles"],
+          "provence-alpes-cote-azur": ["Marseille", "Nice"]
+        }
+      },
+      {
+        title: "DEEJE - Diplôme d'État d'Éducateur de Jeunes Enfants",
+        organisme: "IRTS",
+        duree: "3 ans",
+        niveau: "BAC+3",
+        financement: "Région, employeur, CPF",
+        prerequis: "Bac ou équivalent",
+        debouches: "Éducateur petite enfance, crèches",
+        salaire_apres: "1800-2400€",
+        lieux: {
+          "ile-de-france": ["Paris", "Saint-Denis"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      }
+    ],
+    accompagnement: [
+      {
+        title: "CQP Animateur de loisir sportif",
+        organisme: "Fédérations sportives",
+        duree: "6 mois",
+        niveau: "CQP",
+        financement: "CPF, Région",
+        prerequis: "18 ans minimum",
+        debouches: "Animateur sportif, centres de loisirs",
+        salaire_apres: "1500-2000€",
+        lieux: {
+          "national": ["Toutes régions", "Centres de formation agréés"]
+        }
+      }
+    ]
+  },
+  
+  // Formations tertiaires
+  tertiaire: {
+    comptable: [
+      {
+        title: "DCG - Diplôme de Comptabilité et Gestion",
+        organisme: "Lycées/IUT/Écoles privées",
+        duree: "3 ans",
+        niveau: "BAC+3",
+        financement: "Formation initiale, apprentissage, CPF",
+        prerequis: "Bac",
+        debouches: "Comptable, gestionnaire paie, contrôleur",
+        salaire_apres: "2000-2800€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles", "Créteil"],
+          "auvergne-rhone-alpes": ["Lyon", "Grenoble"]
+        }
+      },
+      {
+        title: "Titre professionnel Comptable assistant",
+        organisme: "AFPA/GRETA",
+        duree: "7 mois",
+        niveau: "BAC",
+        financement: "CPF, Pôle emploi",
+        prerequis: "Niveau BAC ou expérience",
+        debouches: "Assistant comptable, aide comptable",
+        salaire_apres: "1700-2300€",
+        lieux: {
+          "auvergne-rhone-alpes": ["Annecy", "Lyon", "Chambéry"],
+          "ile-de-france": ["Paris", "Montreuil"]
+        }
+      }
+    ],
+    commercial: [
+      {
+        title: "BTS Commerce international",
+        organisme: "Lycées techniques",
+        duree: "2 ans",
+        niveau: "BTS",
+        financement: "Apprentissage, financement personnel",
+        prerequis: "Bac",
+        debouches: "Commercial export, assistant commercial",
+        salaire_apres: "2000-3500€",
+        lieux: {
+          "ile-de-france": ["Paris", "Versailles"],
+          "auvergne-rhone-alpes": ["Lyon"]
+        }
+      }
+    ],
+    informatique: [
+      {
+        title: "Titre professionnel Développeur web et web mobile",
+        organisme: "AFPA/Écoles spécialisées",
+        duree: "6-8 mois",
+        niveau: "BAC+2",
+        financement: "CPF, Pôle emploi, bootcamp",
+        prerequis: "Logique, bases informatiques",
+        debouches: "Développeur web, intégrateur",
+        salaire_apres: "2200-3500€",
+        lieux: {
+          "national": ["Toutes grandes villes", "Formation à distance possible"]
+        }
+      }
+    ]
+  }
 };
 
 exports.handler = async (event, context) => {
@@ -51,6 +249,9 @@ exports.handler = async (event, context) => {
 
     // Transformation des résultats
     const transformedJobs = transformJobsForAssignme(searchResults.jobs, candidateProfile);
+    
+    // Génération des formations recommandées
+    const recommendedFormations = generateFormationRecommendations(candidateProfile);
 
     return {
       statusCode: 200,
@@ -58,15 +259,221 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         jobs: transformedJobs,
-        metadata: { source: 'France Travail', total_found: searchResults.total, timestamp: new Date().toISOString() }
+        formations: recommendedFormations,
+        metadata: { 
+          source: 'France Travail', 
+          total_found: searchResults.total, 
+          formations_count: recommendedFormations.length,
+          timestamp: new Date().toISOString() 
+        }
       })
     };
 
   } catch (error) {
     console.error('Erreur fonction France Travail:', error);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', fallback: true, jobs: mockJobs({}) }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', fallback: true, jobs: mockJobs({}), formations: [] }) };
   }
 };
+
+// Génération des recommandations de formation basées sur le profil
+function generateFormationRecommendations(candidateProfile) {
+  const formations = [];
+  const location = candidateProfile.location || '';
+  const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
+  const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
+  const experienceYears = candidateProfile.total_experience_years || 0;
+  const technicalSkills = (candidateProfile.technical_skills || []).join(' ').toLowerCase();
+  
+  // Déterminer la région du candidat
+  const candidateRegion = detectCandidateRegion(location);
+  
+  console.log(`Analyse formation pour: niveau=${educationLevel}, poste=${currentPosition}, experience=${experienceYears}ans`);
+  
+  // PROFILS TECHNIQUES
+  if (educationLevel.includes('electrotechnique') || currentPosition.includes('technicien') || 
+      currentPosition.includes('maintenance') || technicalSkills.includes('maintenance')) {
+    
+    // Formations d'évolution pour électrotechniciens expérimentés
+    if (experienceYears >= 3 && educationLevel.includes('electrotechnique')) {
+      addFormationsForProfile(formations, 'technique', 'technicien', candidateRegion, {
+        priority: 'evolution',
+        current_level: 'bac_pro'
+      });
+    }
+    
+    // Formations électricien de base
+    addFormationsForProfile(formations, 'technique', 'electricien', candidateRegion, {
+      priority: 'reconversion',
+      current_level: educationLevel.includes('bac') ? 'bac' : 'cap'
+    });
+  }
+  
+  // PROFILS SOCIAUX
+  else if (educationLevel.includes('service social') || educationLevel.includes('deass') || 
+           currentPosition.includes('social') || currentPosition.includes('assistant')) {
+    
+    addFormationsForProfile(formations, 'social', 'educateur', candidateRegion, {
+      priority: 'specialisation',
+      current_level: educationLevel.includes('deass') ? 'deass' : 'debutant'
+    });
+    
+    addFormationsForProfile(formations, 'social', 'accompagnement', candidateRegion, {
+      priority: 'complement'
+    });
+  }
+  
+  // PROFILS TERTIAIRES
+  else if (educationLevel.includes('comptab') || educationLevel.includes('gestion') || 
+           currentPosition.includes('administratif') || currentPosition.includes('comptab')) {
+    
+    addFormationsForProfile(formations, 'tertiaire', 'comptable', candidateRegion, {
+      priority: experienceYears >= 2 ? 'evolution' : 'reconversion',
+      current_level: educationLevel.includes('bac') ? 'bac' : 'debutant'
+    });
+  }
+  
+  else if (educationLevel.includes('commercial') || currentPosition.includes('commercial')) {
+    addFormationsForProfile(formations, 'tertiaire', 'commercial', candidateRegion, {
+      priority: 'specialisation'
+    });
+  }
+  
+  else if (educationLevel.includes('informatique') || technicalSkills.includes('python') || 
+           technicalSkills.includes('web')) {
+    addFormationsForProfile(formations, 'tertiaire', 'informatique', candidateRegion, {
+      priority: 'reconversion'
+    });
+  }
+  
+  // PROFILS DEBUTANTS - formations d'insertion
+  else if (experienceYears === 0 || educationLevel === 'aucune qualification' || 
+           currentPosition === 'sans emploi') {
+    
+    // Formations courtes d'insertion
+    addFormationsForProfile(formations, 'social', 'accompagnement', candidateRegion, {
+      priority: 'insertion'
+    });
+    
+    // Formations techniques accessibles
+    addFormationsForProfile(formations, 'technique', 'electricien', candidateRegion, {
+      priority: 'insertion',
+      filter: 'courtes'
+    });
+  }
+  
+  console.log(`${formations.length} formations recommandees pour ${candidateRegion}`);
+  return formations.slice(0, 6); // Limiter à 6 formations max
+}
+
+function detectCandidateRegion(location) {
+  if (!location) return 'ile-de-france';
+  
+  const locationLower = location.toLowerCase();
+  
+  // Mapping ville -> région
+  const cityToRegion = {
+    'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
+    'lyon': 'auvergne-rhone-alpes', 'annecy': 'auvergne-rhone-alpes', 'seynod': 'auvergne-rhone-alpes',
+    'chambery': 'auvergne-rhone-alpes', 'grenoble': 'auvergne-rhone-alpes',
+    'marseille': 'provence-alpes-cote-azur', 'nice': 'provence-alpes-cote-azur',
+    'toulouse': 'occitanie', 'montpellier': 'occitanie',
+    'bordeaux': 'nouvelle-aquitaine', 'nantes': 'pays-de-la-loire',
+    'lille': 'hauts-de-france', 'strasbourg': 'grand-est', 'nancy': 'grand-est'
+  };
+  
+  for (const [city, region] of Object.entries(cityToRegion)) {
+    if (locationLower.includes(city)) {
+      return region;
+    }
+  }
+  
+  return 'national'; // Fallback
+}
+
+function addFormationsForProfile(formations, secteur, type, region, options = {}) {
+  const formationsOfType = formationsDatabase[secteur]?.[type] || [];
+  
+  formationsOfType.forEach(formation => {
+    // Vérifier si la formation est disponible dans la région
+    const lieux = formation.lieux[region] || formation.lieux['national'] || [];
+    if (lieux.length === 0) return;
+    
+    // Filtrer selon les options
+    if (options.filter === 'courtes' && !formation.duree.includes('mois')) return;
+    if (options.current_level === 'bac_pro' && formation.niveau === 'CAP') return;
+    
+    // Calculer la pertinence
+    let pertinence = 70;
+    if (options.priority === 'evolution') pertinence += 20;
+    else if (options.priority === 'specialisation') pertinence += 15;
+    else if (options.priority === 'reconversion') pertinence += 10;
+    else if (options.priority === 'insertion') pertinence += 5;
+    
+    // Ajouter bonus géographique
+    if (region !== 'national') pertinence += 10;
+    
+    formations.push({
+      ...formation,
+      secteur,
+      type,
+      pertinence,
+      lieux_proches: lieux.slice(0, 3), // Max 3 lieux les plus proches
+      region: region,
+      justification: generateFormationJustification(formation, options),
+      url_info: generateFormationURL(formation, region),
+      contact: generateFormationContact(formation, region)
+    });
+  });
+}
+
+function generateFormationJustification(formation, options) {
+  const reasons = [];
+  
+  if (options.priority === 'evolution') {
+    reasons.push('Formation d\'évolution professionnelle adaptée à votre expérience');
+  } else if (options.priority === 'reconversion') {
+    reasons.push('Formation de reconversion dans un secteur porteur');
+  } else if (options.priority === 'specialisation') {
+    reasons.push('Spécialisation pour renforcer vos compétences actuelles');
+  } else if (options.priority === 'insertion') {
+    reasons.push('Formation d\'insertion pour accéder rapidement à l\'emploi');
+  }
+  
+  if (formation.financement.includes('CPF')) {
+    reasons.push('Éligible au financement CPF');
+  }
+  
+  if (formation.financement.includes('Pôle emploi')) {
+    reasons.push('Financement Pôle emploi possible');
+  }
+  
+  return reasons.join(' • ');
+}
+
+function generateFormationURL(formation, region) {
+  // URLs génériques vers les organismes principaux
+  if (formation.organisme.includes('AFPA')) {
+    return 'https://www.afpa.fr/formation-qualifiante';
+  } else if (formation.organisme.includes('GRETA')) {
+    return 'https://www.education.gouv.fr/formation-continue-des-adultes-greta-42452';
+  } else if (formation.organisme.includes('CFA')) {
+    return 'https://www.alternance.emploi.gouv.fr/';
+  } else {
+    return 'https://www.moncompteformation.gouv.fr/';
+  }
+}
+
+function generateFormationContact(formation, region) {
+  return {
+    type: 'Orientation conseillée',
+    contact: 'Conseiller Pôle emploi ou CEP (Conseil en Évolution Professionnelle)',
+    phone: '3949 (Pôle emploi)',
+    online: 'https://candidat.pole-emploi.fr/'
+  };
+}
+
+// Le reste du code (authentification, recherche emplois, etc.) reste identique...
+// [Code précédent pour getAccessToken, searchJobs, buildKeywords, etc.]
 
 async function getAccessToken(clientId, clientSecret) {
   try {
@@ -124,11 +531,9 @@ async function searchJobs(token, candidateProfile) {
   }
 }
 
-// Construction des mots-clés avec support profils techniques
 function buildKeywords(candidateProfile) {
   const entryLevelKeywords = ['agent', 'employe', 'accueil', 'vente', 'caissier', 'preparateur', 'nettoyage'];
   
-  // Profil débutant
   if (candidateProfile.total_experience_years === 0 || candidateProfile.education_level === 'Aucune qualification' || candidateProfile.current_position === 'Sans emploi') {
     const keyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
     console.log('Profil debutant detecte');
@@ -139,7 +544,6 @@ function buildKeywords(candidateProfile) {
   const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
   const technicalSkills = (candidateProfile.technical_skills || []).join(' ').toLowerCase();
   
-  // PROFILS TECHNIQUES - Priorité absolue
   if (educationLevel.includes('electrotechnique') || educationLevel.includes('électrotechnique') || 
       currentPosition.includes('technicien') || currentPosition.includes('maintenance') ||
       technicalSkills.includes('maintenance') || technicalSkills.includes('dépannage')) {
@@ -153,7 +557,6 @@ function buildKeywords(candidateProfile) {
     }
   }
   
-  // PROFILS SOCIAUX
   if (educationLevel.includes('service social') || educationLevel.includes('deass') || currentPosition.includes('social')) {
     const socialKeywords = ['educateur', 'accompagnement', 'mediation', 'social'];
     const keyword = socialKeywords[Math.floor(Math.random() * socialKeywords.length)];
@@ -161,7 +564,6 @@ function buildKeywords(candidateProfile) {
     return keyword;
   }
   
-  // PROFILS TERTIAIRES
   if (educationLevel.includes('comptab') || educationLevel.includes('gestion') || educationLevel.includes('finance')) {
     console.log('Formation comptabilite detecte -> comptable');
     return 'comptable';
@@ -182,25 +584,20 @@ function buildKeywords(candidateProfile) {
     return 'administratif';
   }
   
-  // Fallback générique
   console.log('Mapping generique applique -> assistant');
   return 'assistant';
 }
 
-// Distance de recherche adaptée à la localisation
 function getSearchDistance(location) {
   if (!location) return '10';
   
   const locationLower = location.toLowerCase();
-  
-  // Grandes métropoles : recherche restreinte
   const majorCities = ['paris', 'lyon', 'marseille', 'toulouse', 'lille', 'bordeaux', 'nantes', 'strasbourg', 'montpellier'];
   if (majorCities.some(city => locationLower.includes(city))) {
     console.log('Grande metropole detectee - distance 10km');
     return '10';
   }
   
-  // Villes moyennes : recherche élargie mais limitée
   const mediumCities = ['annecy', 'seynod', 'chambery', 'grenoble', 'clermont', 'saint-etienne', 'nancy', 'metz', 'dijon', 'besancon'];
   if (mediumCities.some(city => locationLower.includes(city))) {
     console.log('Ville moyenne detectee - distance 50km');
@@ -211,21 +608,18 @@ function getSearchDistance(location) {
   return '25';
 }
 
-// Extraction de localisation étendue
 function extractLocation(location) {
   if (!location) return '75001';
   
   console.log('Localisation a analyser:', location);
   const locationLower = location.toLowerCase().trim();
   
-  // Code INSEE direct
   const inseeMatch = location.match(/\b(\d{5})\b/);
   if (inseeMatch) {
     console.log('Code INSEE detecte:', inseeMatch[1]);
     return inseeMatch[1];
   }
   
-  // Recherche par ville étendue
   for (const [city, inseeCode] of Object.entries(communeMapping)) {
     if (locationLower.includes(city)) {
       console.log(`Ville "${city}" trouvee, code INSEE: ${inseeCode}`);
@@ -237,25 +631,16 @@ function extractLocation(location) {
   return '75001';
 }
 
-// Filtrage géographique par régions avec restrictions strictes pour villes moyennes
 function filterJobsByLocation(jobs, candidateLocation) {
   if (!candidateLocation) return jobs;
   
   const locationLower = candidateLocation.toLowerCase();
   
-  // Définition des bassins d'emploi locaux pour villes moyennes
   const localBasins = {
-    // Haute-Savoie/Savoie (Annecy, Chambéry) - Bassin alpin
-    'annecy-chambery': ['73', '74', '01'], // Savoie, Haute-Savoie, Ain proche
-    'seynod-annecy': ['73', '74', '01'],   // Même bassin qu'Annecy
-    
-    // Isère (Grenoble) - Bassin grenoblois  
-    'grenoble': ['38', '73', '26', '05'],  // Isère + départements limitrophes montagnards
-    
-    // Rhône (Lyon) - Métropole lyonnaise
-    'lyon': ['69', '01', '42', '71'],      // Rhône + départements limitrophes
-    
-    // Autres bassins régionaux
+    'annecy-chambery': ['73', '74', '01'],
+    'seynod-annecy': ['73', '74', '01'],
+    'grenoble': ['38', '73', '26', '05'],
+    'lyon': ['69', '01', '42', '71'],
     'clermont-ferrand': ['63', '03', '15', '43'],
     'saint-etienne': ['42', '69', '43', '07'],
     'nancy': ['54', '55', '57', '88'],
@@ -264,7 +649,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
     'besancon': ['25', '70', '39', '90']
   };
   
-  // Régions métropolitaines (périmètre élargi autorisé)
   const metropolitanRegions = {
     'ile-de-france': ['75', '77', '78', '91', '92', '93', '94', '95'],
     'provence-alpes-cote-azur': ['04', '05', '06', '13', '83', '84'],
@@ -279,15 +663,11 @@ function filterJobsByLocation(jobs, candidateLocation) {
     'normandie': ['14', '27', '50', '61', '76']
   };
   
-  // Exclusions strictes (DOM-TOM, Corse pour certains cas)
   const excludedDepartments = ['20', '2A', '2B', '971', '972', '973', '974', '976', '975', '984', '986', '987', '988'];
   
   let allowedDepartments = [];
   let isStrictLocal = false;
   
-  // DÉTECTION TYPE DE LOCALISATION
-  
-  // 1. Villes moyennes avec bassin local strict
   for (const [basin, departments] of Object.entries(localBasins)) {
     const basinCities = basin.split('-');
     if (basinCities.some(city => locationLower.includes(city))) {
@@ -298,7 +678,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
     }
   }
   
-  // 2. Grandes métropoles avec région élargie
   if (!isStrictLocal) {
     const cityToRegion = {
       'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
@@ -317,17 +696,14 @@ function filterJobsByLocation(jobs, candidateLocation) {
     }
   }
   
-  // 3. Si aucune détection : pas de filtrage géographique
   if (allowedDepartments.length === 0) {
     console.log('Localisation non reconnue - pas de filtrage geographique');
     return jobs;
   }
   
-  // FILTRAGE DES OFFRES
   const filteredJobs = jobs.filter(job => {
     const jobLocation = job.lieuTravail?.libelle || '';
     
-    // Exclusions strictes universelles
     if (excludedDepartments.some(dept => jobLocation.includes(dept)) || 
         jobLocation.toLowerCase().includes('corse') ||
         jobLocation.includes('Guadeloupe') || jobLocation.includes('Martinique') ||
@@ -336,7 +712,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
       return false;
     }
     
-    // Pour les bassins locaux stricts : filtrage très restrictif
     if (isStrictLocal) {
       const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
       if (departmentMatch) {
@@ -349,12 +724,10 @@ function filterJobsByLocation(jobs, candidateLocation) {
         return isAllowed;
       }
       
-      // Si lieu bizarre sans département détecté, on filtre aussi pour les bassins stricts
       console.log(`Offre filtree (format lieu incorrect): ${jobLocation}`);
       return false;
     }
     
-    // Pour les métropoles : filtrage régional plus souple
     const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
     if (departmentMatch) {
       const jobDepartment = departmentMatch[1];
@@ -409,16 +782,13 @@ function calculateMatchScore(job, candidateProfile) {
   const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
   const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
   
-  // Bonus formations techniques
   if (educationLevel.includes('electrotechnique') && (jobText.includes('electr') || jobText.includes('technicien'))) score += 25;
   if (currentPosition.includes('technicien') && jobText.includes('technicien')) score += 20;
   if (currentPosition.includes('maintenance') && jobText.includes('maintenance')) score += 25;
   
-  // Bonus formations tertiaires
   if (educationLevel.includes('service social') && (jobText.includes('social') || jobText.includes('education'))) score += 25;
   if (educationLevel.includes('comptab') && jobText.includes('comptab')) score += 20;
   
-  // Correspondance d'expérience
   if (job.experienceExige === 'D') score += 15;
   else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) score += 15;
   else if (job.experienceExige === 'E' && candidateProfile.total_experience_years >= 5) score += 15;
@@ -443,7 +813,6 @@ function generateMatchJustification(job, candidateProfile, score) {
   return reasons.join(' • ');
 }
 
-// Fonctions utilitaires
 function formatLocation(lieuTravail) { return lieuTravail?.libelle || 'Lieu non specifie'; }
 function formatContractType(typeContrat) { const c = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission interim' }; return c[typeContrat] || typeContrat || 'Type non specifie'; }
 function formatExperience(experienceExige) { const e = { D: 'Debutant accepte', S: 'Experience souhaitee', E: 'Experience exigee' }; return e[experienceExige] || 'Non specifie'; }
