@@ -3,7 +3,7 @@
 
 // Mapping des villes vers codes INSEE (intégré directement)
 const communeMapping = {
-  "paris": "75056",
+  "paris": "75001",
   "paris 1": "75101",
   "paris 2": "75102",
   "paris 3": "75103",
@@ -267,7 +267,7 @@ async function searchJobs(token, candidateProfile) {
 
     const searchParams = new URLSearchParams({
       motsCles: keywords || "developpeur",
-      commune: location || '75056', // Code INSEE Paris
+      commune: location || '75001', // Code INSEE Paris 1er
       distance: '50',
       sort: '0',
       range: '0-19'
@@ -372,7 +372,7 @@ function buildKeywords(candidateProfile) {
 function extractLocation(location) {
   if (!location) {
     console.log('Pas de localisation fournie, utilisation Paris par defaut');
-    return '75056';
+    return '75001';
   }
   
   console.log('Localisation a analyser:', location);
@@ -395,7 +395,7 @@ function extractLocation(location) {
   }
   
   console.log('Aucune correspondance trouvee, utilisation Paris par defaut');
-  return '75056'; // Paris par défaut
+  return '75001'; // Paris 1er arrondissement par défaut
 }
 
 // Transformation des offres pour ASSIGNME
