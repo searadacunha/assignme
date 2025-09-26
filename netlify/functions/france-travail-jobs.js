@@ -389,8 +389,9 @@ function filterJobsByPsychology(jobs, candidateProfile) {
   // Si motivation purement financière + profil faible
   if ((aspirations.includes('fric') || aspirations.includes('argent')) && 
       candidateProfile.education_level === 'aucune qualification') {
-    incompatibleJobs.push('pharmacie', 'petite enfance', 'enseignement', 'social', 'accueil', 'formation');
-    console.log('Profil motivation financière - exclusion métiers de vocation');
+    // Exclure SEULEMENT les métiers de vocation, PAS les métiers manuels recherchés
+    incompatibleJobs.push('pharmacie', 'petite enfance', 'enseignement', 'social', 'accueil');
+    console.log('Profil motivation financière - exclusion métiers de vocation uniquement');
   }
   
   // Si besoin encadrement strict
