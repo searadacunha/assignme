@@ -1,4 +1,4 @@
-// netlify/functions/analyze-cv.js - Version sans simulations
+// netlify/functions/analyze-cv.js - Version avec analyse psychologique approfondie
 exports.handler = async (event, context) => {
   // Configuration CORS
   const headers = {
@@ -48,79 +48,130 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Prompt système
-    const systemPrompt = `Tu es un expert en recrutement et orientation professionnelle français. Tu vas analyser un CV et extraire les informations du candidat UNIQUEMENT.
+    // Prompt système amélioré avec la structure fournie
+    const systemPrompt = `
+Tu es un expert en recrutement, orientation professionnelle et psychologie du travail en France. 
+Ta mission est d'analyser un CV (même partiel ou informel) ET de proposer des pistes réalistes 
+d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contraintes personnelles et 
+à la localisation du candidat.
 
-IMPORTANT : RÉPONDS UNIQUEMENT EN FRANÇAIS. Toutes tes réponses doivent être dans un français parfait et professionnel.
+⚠️ IMPORTANT : 
+- RÉPONDS UNIQUEMENT EN FRANÇAIS, dans un style professionnel et clair.
+- RESPECT STRICT DU FORMAT JSON VALIDE ci-dessous.
+- NE JAMAIS INVENTER de compétences, diplômes ou expériences non mentionnés.
 
-RÈGLES D'ANALYSE STRICTES :
-• Si le candidat dit clairement "rien", "naze", "j'ai raté", "aucune expérience" → NE PAS INVENTER de compétences ou qualités
-• Si formation = "j'ai raté le brevet" ou équivalent → education_level = "Aucune qualification"
-• Si expérience = "rien" ou "naze" → current_position = "Sans emploi" et total_experience_years = 0
-• Si aspirations = "argent facile" → career_aspirations = "Recherche d'emploi rémunérateur"
-• ÊTRE HONNÊTE sur le niveau réel du candidat, ne pas embellir
-• TOUJOURS proposer des formations adaptées au niveau réel, surtout pour les candidats sans qualification
-• Privilégier les formations courtes, pratiques et débouchant sur un emploi rapide
+────────────────────────────
+1. ANALYSE PSYCHOLOGIQUE OBLIGATOIRE
+────────────────────────────
+- Détecter la motivation réelle (au-delà des formules polies).
+- Évaluer les capacités relationnelles et communicationnelles.
+- Identifier autonomie / besoin d'encadrement.
+- Déterminer résistance au stress, persévérance et stabilité.
+- Repérer traits de personnalité compatibles ou incompatibles avec certains métiers.
 
-ANALYSE APPROFONDIE REQUISE :
-• Localisation actuelle et mobilités possibles du candidat
-• Diplômes et formations (niveau, spécialisation, date d'obtention) - RÉELS UNIQUEMENT
-• Expériences professionnelles (intitulés exacts, missions détaillées, durée) - RÉELLES UNIQUEMENT
-• Compétences techniques et comportementales - RÉELLES UNIQUEMENT
-• Aspirations et contraintes (type de contrat, secteur préféré, rythme, reconversion...)
+────────────────────────────
+2. CONTRÔLES DE COHÉRENCE MÉTIER
+────────────────────────────
+- Interdiction : jamais orienter vers métiers d'accueil/enfants/clients si profil non adapté.
+- Si motivation = purement financière → éviter métiers de vocation (social, éducation).
+- Si niveau scolaire bas → formations courtes, pratiques, débouchant rapidement.
+- Si expériences instables → privilégier missions courtes ou encadrées.
 
-RÉPONDS UNIQUEMENT EN JSON VALIDE AVEC TOUT LE CONTENU EN FRANÇAIS :
+────────────────────────────
+3. PRISE EN COMPTE DES CONTRAINTES
+────────────────────────────
+- Localisation (ville, région) → proposer uniquement métiers/secteurs/formations plausibles dans ce périmètre.
+- Mobilité : locale / nationale / internationale selon ce qui est mentionné.
+- Contraintes personnelles explicites (famille, santé, permis, horaires).
 
+────────────────────────────
+4. FORMATIONS À PROPOSER
+────────────────────────────
+- Toujours 3 à 5 formations adaptées au niveau réel.
+- Pour profils faibles : CQP cuisine, permis cariste, sécurité, nettoyage industriel, etc.
+- Pour profils diplômés : formations complémentaires réalistes (BTS, BUT, titres RNCP).
+- Lier les formations aux volontés exprimées par le candidat (ex. "aime travailler manuel" → proposer formation pratique).
+- Indiquer durée, débouchés, financement possible, et si emploi immédiat envisageable.
+
+────────────────────────────
+5. RECONVERSION & PROJECTION
+────────────────────────────
+- Proposer au moins 1 à 2 pistes de reconversion possibles.
+- Indiquer faisabilité (facile/modérée/difficile).
+- Détailler étapes concrètes et timeline réaliste.
+- Justifier compatibilité psychologique.
+
+────────────────────────────
+6. FORMAT DE SORTIE JSON STRICT
+────────────────────────────
 {
   "candidate_analysis": {
     "name": "nom_complet",
     "location": "ville_pays", 
     "mobility": "locale|nationale|internationale",
-    "education_level": "niveau_diplome_plus_haut_EN_FRANCAIS_OU_AUCUNE_QUALIFICATION",
-    "education_details": "formation_exacte_et_date_EN_FRANCAIS_OU_AUCUNE",
+    "education_level": "niveau_diplôme_ou_aucune_qualification",
+    "education_details": "détails_diplôme_et_date_ou_aucune",
     "total_experience_years": nombre_années_total_REEL,
-    "current_position": "poste_actuel_EN_FRANCAIS_OU_SANS_EMPLOI",
-    "key_sectors": ["secteur1_EN_FRANCAIS", "secteur2_EN_FRANCAIS"],
-    "technical_skills": ["compétence1_EN_FRANCAIS_REELLE", "compétence2_EN_FRANCAIS_REELLE"],
-    "soft_skills": ["qualité1_EN_FRANCAIS_REELLE", "qualité2_EN_FRANCAIS_REELLE"],
-    "career_aspirations": "objectifs_détectés_EN_FRANCAIS_REELS",
-    "constraints": "contraintes_mentionnées_EN_FRANCAIS"
+    "current_position": "poste_actuel_ou_sans_emploi",
+    "key_sectors": ["secteur1_compatible", "secteur2_compatible"],
+    "technical_skills": ["compétence1", "compétence2"],
+    "soft_skills": ["qualité1", "qualité2"],
+    "career_aspirations": "objectifs_reels_détectés",
+    "constraints": "contraintes_personnelles_exprimées",
+    "psychological_profile": "analyse_personnalité_et_motivation",
+    "recommended_work_environment": "type_environnement_travail_adapté",
+    "supervision_needs": "autonome|supervision_légère|supervision_directe|encadrement_strict"
   },
   "training_suggestions": [
     {
-      "title": "Formation recommandée EN FRANÇAIS PRIORITAIRE",
-      "description": "Description et objectif EN FRANÇAIS",
-      "duration": "durée_estimée_EN_FRANCAIS",
-      "relevance": "pourquoi_utile_EN_FRANCAIS"
+      "title": "Formation courte adaptée",
+      "description": "Description précise et débouchés",
+      "duration": "durée réaliste",
+      "relevance": "pourquoi adaptée au profil",
+      "funding": "financement possible",
+      "immediate_employment": "true|false"
     }
   ],
   "reconversion_paths": [
     {
-      "target_field": "Domaine de reconversion EN FRANÇAIS",
+      "target_field": "secteur réaliste",
       "feasibility": "facile|modérée|difficile",
-      "required_steps": ["étape1_EN_FRANCAIS", "étape2_EN_FRANCAIS"],
-      "timeline": "durée_estimée_EN_FRANCAIS"
+      "required_steps": ["étape1", "étape2"],
+      "timeline": "durée réaliste",
+      "psychological_compatibility": "justification_personnalité"
     }
   ]
-}`;
+}
+`;
 
     // Préparation de la requête vers OpenAI
     const requestData = {
       model: "gpt-4o-mini",
       messages: [
         {
-          role: "system",
+          role: "system", 
           content: systemPrompt
         },
         {
           role: "user",
-          content: `IMPORTANT: RÉPONDS UNIQUEMENT EN FRANÇAIS. Analyse ce CV et extrait UNIQUEMENT les informations du candidat (pas de recommandations d'emploi) :
+          content: `ANALYSE PSYCHOLOGIQUE APPROFONDIE REQUISE. Sois honnête et réaliste sur ce profil.
 
-${cvText}`
+Analyse ce CV en respectant les 6 points obligatoires :
+1. Psychologie du candidat (motivation réelle, capacités relationnelles)
+2. Cohérence métier-personnalité (éviter accueil/enfants si inadapté)
+3. Contraintes géographiques et personnelles
+4. Formations adaptées au niveau réel (3-5 propositions)
+5. Reconversion possible (1-2 pistes)
+6. Format JSON strict
+
+CV à analyser :
+${cvText}
+
+RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse psychologique brutalement honnête.`
         }
       ],
-      max_tokens: 2000,
-      temperature: 0.3
+      max_tokens: 3000,
+      temperature: 0.2
     };
 
     // Appel à l'API OpenAI
@@ -172,14 +223,20 @@ ${cvText}`
     try {
       console.log('Recherche offres France Travail...');
       
-      // Appel à la fonction france-travail-jobs
+      // Appel à la fonction france-travail-jobs avec profil psychologique enrichi
       const jobsResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/france-travail-jobs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          candidateProfile: analysisResult.candidate_analysis
+          candidateProfile: {
+            ...analysisResult.candidate_analysis,
+            // Ajout des informations psychologiques pour améliorer le matching
+            psychological_profile: analysisResult.candidate_analysis.psychological_profile,
+            supervision_needs: analysisResult.candidate_analysis.supervision_needs,
+            recommended_work_environment: analysisResult.candidate_analysis.recommended_work_environment
+          }
         })
       });
 
@@ -218,7 +275,8 @@ ${cvText}`
         cost: ((data.usage?.total_tokens || 1500) * 0.0000015).toFixed(4),
         confidence: 'Élevée',
         real_jobs_count: realJobs.length,
-        france_travail_error: franceTravailError
+        france_travail_error: franceTravailError,
+        psychological_analysis: true
       }
     };
 
