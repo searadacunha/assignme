@@ -347,23 +347,28 @@ async function searchJobs(token, candidateProfile) {
 function buildKeywords(candidateProfile) {
   const keywords = [];
   
+  // Si le candidat a des compétences techniques, les utiliser
   if (candidateProfile.technical_skills?.length) {
     keywords.push(...candidateProfile.technical_skills.slice(0, 3));
   }
   
+  // Si le candidat a un poste actuel, l'utiliser
   if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') {
     keywords.push(candidateProfile.current_position);
   }
   
-  if (candidateProfile.career_aspirations) {
-    keywords.push(candidateProfile.career_aspirations);
-  }
-  
+  // Ajouter secteurs d'activité
   if (candidateProfile.key_sectors?.length) {
     keywords.push(...candidateProfile.key_sectors.slice(0, 2));
   }
   
-  const result = keywords.slice(0, 5).join(' ');
+  // Si aucun mot-clé spécifique, utiliser des termes génériques
+  if (keywords.length === 0) {
+    // Mots-clés génériques pour profils sans compétences spécifiques
+    keywords.push('emploi', 'travail', 'poste');
+  }
+  
+  const result = keywords.slice(0, 3).join(' ') || 'emploi';
   console.log('Mots-cles generes:', result);
   return result;
 }
