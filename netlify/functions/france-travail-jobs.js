@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Version finale avec géolocalisation stricte pour villes moyennes
+// Version avec analyse psychologique et dédoublonnage
 
 const communeMapping = {
   // Région parisienne
@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
     if (!searchResults.success) return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: searchResults.error, fallback: true, jobs: mockJobs(candidateProfile) }) };
 
-    // Transformation des résultats
+    // Transformation des résultats avec dédoublonnage et filtrage psychologique
     const transformedJobs = transformJobsForAssignme(searchResults.jobs, candidateProfile);
 
     return {
@@ -124,20 +124,26 @@ async function searchJobs(token, candidateProfile) {
   }
 }
 
-// Construction des mots-clés avec support profils techniques
+// Construction des mots-clés avec analyse psychologique
 function buildKeywords(candidateProfile) {
-  const entryLevelKeywords = ['agent', 'employe', 'accueil', 'vente', 'caissier', 'preparateur', 'nettoyage'];
-  
-  // Profil débutant
-  if (candidateProfile.total_experience_years === 0 || candidateProfile.education_level === 'Aucune qualification' || candidateProfile.current_position === 'Sans emploi') {
-    const keyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
-    console.log('Profil debutant detecte');
-    return keyword;
-  }
-
   const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
   const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
   const technicalSkills = (candidateProfile.technical_skills || []).join(' ').toLowerCase();
+  const psychProfile = candidateProfile.psychological_profile?.toLowerCase() || '';
+  const aspirations = candidateProfile.career_aspirations?.toLowerCase() || '';
+  
+  console.log('Analyse psychologique:', psychProfile);
+  console.log('Aspirations:', aspirations);
+  
+  // PROFILS FAIBLES AVEC MOTIVATION FINANCIÈRE
+  if ((educationLevel === 'aucune qualification' || currentPosition === 'sans emploi') && 
+      (aspirations.includes('fric') || aspirations.includes('argent') || psychProfile.includes('financière'))) {
+    
+    const lowSkillJobs = ['plongeur', 'nettoyage', 'manutention', 'agent propreté'];
+    const keyword = lowSkillJobs[Math.floor(Math.random() * lowSkillJobs.length)];
+    console.log('Profil motivation financière + faible niveau -> ', keyword);
+    return keyword;
+  }
   
   // PROFILS TECHNIQUES - Priorité absolue
   if (educationLevel.includes('electrotechnique') || educationLevel.includes('électrotechnique') || 
@@ -151,6 +157,13 @@ function buildKeywords(candidateProfile) {
       console.log('Profil maintenance detecte -> technicien');
       return 'technicien';
     }
+  }
+  
+  // PROFILS CRÉATIFS/CULTURELS
+  if (currentPosition.includes('communication') || technicalSkills.includes('création vidéo') || 
+      technicalSkills.includes('coordination de projets') || aspirations.includes('culture')) {
+    console.log('Profil créatif/culturel detecte -> communication');
+    return 'communication';
   }
   
   // PROFILS SOCIAUX
@@ -180,6 +193,14 @@ function buildKeywords(candidateProfile) {
   if (educationLevel.includes('droit')) {
     console.log('Formation droit detecte -> administratif');
     return 'administratif';
+  }
+  
+  // Profil débutant générique
+  if (candidateProfile.total_experience_years === 0 || educationLevel === 'aucune qualification' || currentPosition === 'sans emploi') {
+    const entryLevelKeywords = ['agent', 'employe', 'vente', 'caissier', 'preparateur'];
+    const keyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
+    console.log('Profil debutant detecte -> ', keyword);
+    return keyword;
   }
   
   // Fallback générique
@@ -245,23 +266,11 @@ function filterJobsByLocation(jobs, candidateLocation) {
   
   // Définition des bassins d'emploi locaux pour villes moyennes
   const localBasins = {
-    // Haute-Savoie/Savoie (Annecy, Chambéry) - Bassin alpin
-    'annecy-chambery': ['73', '74', '01'], // Savoie, Haute-Savoie, Ain proche
-    'seynod-annecy': ['73', '74', '01'],   // Même bassin qu'Annecy
-    
-    // Isère (Grenoble) - Bassin grenoblois  
-    'grenoble': ['38', '73', '26', '05'],  // Isère + départements limitrophes montagnards
-    
-    // Rhône (Lyon) - Métropole lyonnaise
-    'lyon': ['69', '01', '42', '71'],      // Rhône + départements limitrophes
-    
-    // Autres bassins régionaux
-    'clermont-ferrand': ['63', '03', '15', '43'],
-    'saint-etienne': ['42', '69', '43', '07'],
-    'nancy': ['54', '55', '57', '88'],
-    'metz': ['57', '54', '55', '67'],
-    'dijon': ['21', '71', '89', '70'],
-    'besancon': ['25', '70', '39', '90']
+    'annecy-chambery': ['73', '74', '01'], 'seynod-annecy': ['73', '74', '01'],   
+    'grenoble': ['38', '73', '26', '05'], 'lyon': ['69', '01', '42', '71'],      
+    'clermont-ferrand': ['63', '03', '15', '43'], 'saint-etienne': ['42', '69', '43', '07'],
+    'nancy': ['54', '55', '57', '88'], 'metz': ['57', '54', '55', '67'],
+    'dijon': ['21', '71', '89', '70'], 'besancon': ['25', '70', '39', '90']
   };
   
   // Régions métropolitaines (périmètre élargi autorisé)
@@ -286,8 +295,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
   let isStrictLocal = false;
   
   // DÉTECTION TYPE DE LOCALISATION
-  
-  // 1. Villes moyennes avec bassin local strict
   for (const [basin, departments] of Object.entries(localBasins)) {
     const basinCities = basin.split('-');
     if (basinCities.some(city => locationLower.includes(city))) {
@@ -298,7 +305,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
     }
   }
   
-  // 2. Grandes métropoles avec région élargie
   if (!isStrictLocal) {
     const cityToRegion = {
       'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
@@ -317,7 +323,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
     }
   }
   
-  // 3. Si aucune détection : pas de filtrage géographique
   if (allowedDepartments.length === 0) {
     console.log('Localisation non reconnue - pas de filtrage geographique');
     return jobs;
@@ -349,7 +354,6 @@ function filterJobsByLocation(jobs, candidateLocation) {
         return isAllowed;
       }
       
-      // Si lieu bizarre sans département détecté, on filtre aussi pour les bassins stricts
       console.log(`Offre filtree (format lieu incorrect): ${jobLocation}`);
       return false;
     }
@@ -373,9 +377,85 @@ function filterJobsByLocation(jobs, candidateLocation) {
   return filteredJobs;
 }
 
-function transformJobsForAssignme(jobs, candidateProfile) {
-  const filteredJobs = filterJobsByLocation(jobs, candidateProfile.location);
+// Filtrage psychologique des offres inadaptées
+function filterJobsByPsychology(jobs, candidateProfile) {
+  const psychProfile = candidateProfile.psychological_profile?.toLowerCase() || '';
+  const aspirations = candidateProfile.career_aspirations?.toLowerCase() || '';
+  const supervisionNeeds = candidateProfile.supervision_needs || '';
   
+  // Métiers interdits selon le profil psychologique
+  const incompatibleJobs = [];
+  
+  // Si motivation purement financière + profil faible
+  if ((aspirations.includes('fric') || aspirations.includes('argent')) && 
+      candidateProfile.education_level === 'aucune qualification') {
+    incompatibleJobs.push('pharmacie', 'petite enfance', 'enseignement', 'social', 'accueil', 'formation');
+    console.log('Profil motivation financière - exclusion métiers de vocation');
+  }
+  
+  // Si besoin encadrement strict
+  if (supervisionNeeds === 'encadrement_strict') {
+    incompatibleJobs.push('responsable', 'manager', 'chef', 'coordinateur');
+    console.log('Besoin encadrement strict - exclusion postes autonomes');
+  }
+  
+  // Si problèmes relationnels détectés
+  if (psychProfile.includes('peu relationnel') || psychProfile.includes('introverti')) {
+    incompatibleJobs.push('accueil', 'commercial', 'vente', 'relation client');
+    console.log('Profil peu relationnel - exclusion métiers contact');
+  }
+  
+  if (incompatibleJobs.length === 0) {
+    return jobs; // Pas de filtrage nécessaire
+  }
+  
+  const filteredJobs = jobs.filter(job => {
+    const jobTitle = job.intitule?.toLowerCase() || '';
+    const jobDescription = job.description?.toLowerCase() || '';
+    const jobText = `${jobTitle} ${jobDescription}`;
+    
+    const isIncompatible = incompatibleJobs.some(excluded => jobText.includes(excluded));
+    
+    if (isIncompatible) {
+      console.log(`Offre psychologiquement inadaptée filtrée: ${job.intitule}`);
+      return false;
+    }
+    
+    return true;
+  });
+  
+  console.log(`Filtrage psychologique: ${jobs.length} offres -> ${filteredJobs.length} conservées`);
+  return filteredJobs;
+}
+
+// Dédoublonnage des offres
+function deduplicateJobs(jobs) {
+  const uniqueJobs = jobs.filter((job, index, self) => 
+    index === self.findIndex(j => 
+      j.intitule === job.intitule && 
+      j.entreprise?.nom === job.entreprise?.nom &&
+      j.lieuTravail?.libelle === job.lieuTravail?.libelle
+    )
+  );
+  
+  if (jobs.length !== uniqueJobs.length) {
+    console.log(`Dédoublonnage: ${jobs.length} offres -> ${uniqueJobs.length} uniques`);
+  }
+  
+  return uniqueJobs;
+}
+
+function transformJobsForAssignme(jobs, candidateProfile) {
+  // 1. Filtrage géographique
+  let filteredJobs = filterJobsByLocation(jobs, candidateProfile.location);
+  
+  // 2. Filtrage psychologique
+  filteredJobs = filterJobsByPsychology(filteredJobs, candidateProfile);
+  
+  // 3. Dédoublonnage
+  filteredJobs = deduplicateJobs(filteredJobs);
+  
+  // 4. Transformation
   return filteredJobs.map(job => {
     const matchScore = calculateMatchScore(job, candidateProfile);
     
