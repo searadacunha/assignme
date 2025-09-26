@@ -1,4 +1,4 @@
-// netlify/functions/analyze-cv.js modifié pour intégrer les vraies offres
+// netlify/functions/analyze-cv.js - Version sans simulations
 exports.handler = async (event, context) => {
   // Configuration CORS
   const headers = {
@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Votre prompt système existant (gardé identique)
+    // Prompt système
     const systemPrompt = `Tu es un expert en recrutement et orientation professionnelle français. Tu vas analyser un CV et extraire les informations du candidat UNIQUEMENT.
 
 IMPORTANT : RÉPONDS UNIQUEMENT EN FRANÇAIS. Toutes tes réponses doivent être dans un français parfait et professionnel.
@@ -165,7 +165,7 @@ ${cvText}`
     // Parse du JSON
     const analysisResult = JSON.parse(aiResponse);
 
-    // NOUVEAU: Récupération des vraies offres France Travail
+    // Récupération des vraies offres France Travail UNIQUEMENT
     let realJobs = [];
     let franceTravailError = null;
 
@@ -189,6 +189,8 @@ ${cvText}`
         if (jobsData.success && jobsData.jobs) {
           realJobs = jobsData.jobs;
           console.log(`${realJobs.length} offres réelles trouvées`);
+        } else {
+          console.log('Aucune offre trouvée via France Travail');
         }
       } else {
         const errorData = await jobsResponse.json();
@@ -201,20 +203,12 @@ ${cvText}`
       console.error('Erreur connexion France Travail:', error);
     }
 
-    // Fallback avec recommandations génériques si pas d'offres réelles
-    let recommendations = realJobs;
-
-    if (recommendations.length === 0) {
-      console.log('Génération recommandations fallback...');
-      recommendations = generateFallbackRecommendations(analysisResult.candidate_analysis);
-    }
-
-    // Construction de la réponse finale
+    // Construction de la réponse finale - SANS FALLBACK
     const finalResult = {
       candidate_analysis: {
         ...analysisResult.candidate_analysis
       },
-      recommendations: recommendations.slice(0, 8), // Max 8 recommandations
+      recommendations: realJobs.slice(0, 8), // Seulement les vraies offres ou liste vide
       training_suggestions: analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
@@ -247,113 +241,3 @@ ${cvText}`
     };
   }
 };
-
-// Génération de recommandations fallback si France Travail ne fonctionne pas
-function generateFallbackRecommendations(candidateProfile) {
-  const fallbackJobs = [];
-  
-  // Recommandations basées sur les compétences techniques
-  if (candidateProfile.technical_skills && candidateProfile.technical_skills.length > 0) {
-    const mainSkill = candidateProfile.technical_skills[0];
-    
-    if (['JavaScript', 'Python', 'Java', 'PHP'].some(tech => mainSkill.toLowerCase().includes(tech.toLowerCase()))) {
-      fallbackJobs.push({
-        job_title: 'Développeur ' + mainSkill,
-        company: 'Entreprises Tech Paris',
-        location: candidateProfile.location || 'Paris',
-        contract_type: 'CDI',
-        sector: 'Informatique',
-        salary_min: 35000 + (candidateProfile.total_experience_years * 5000),
-        salary_max: 50000 + (candidateProfile.total_experience_years * 8000),
-        match_score: 85,
-        match_justification: `Votre expérience en ${mainSkill} correspond parfaitement aux besoins du marché`,
-        source: 'ASSIGNME Fallback',
-        is_real_offer: false
-      });
-    }
-  }
-  
-  // Recommandation généraliste selon le niveau
-  if (candidateProfile.education_level && candidateProfile.education_level !== 'Aucune qualification') {
-    fallbackJobs.push({
-      job_title: 'Assistant ' + (candidateProfile.key_sectors[0] || 'Administratif'),
-      company: 'PME Locales',
-      location: candidateProfile.location || 'Paris',
-      contract_type: 'CDI',
-      sector: candidateProfile.key_sectors[0] || 'Services',
-      salary_min: 25000 + (candidateProfile.total_experience_years * 2000),
-      salary_max: 35000 + (candidateProfile.total_experience_years * 3000),
-      match_score: 70,
-      match_justification: `Votre formation et expérience vous permettent d'accéder à ce type de poste`,
-      source: 'ASSIGNME Fallback',
-      is_real_offer: false
-    });
-  }
-  
-  // Recommandation formation/reconversion pour profils sans qualification
-  if (candidateProfile.education_level === 'Aucune qualification' || candidateProfile.total_experience_years === 0) {
-    fallbackJobs.push({
-      job_title: 'Agent d\'accueil',
-      company: 'Secteur Services',
-      location: candidateProfile.location || 'Paris',
-      contract_type: 'CDD',
-      sector: 'Services',
-      salary_min: 20000,
-      salary_max: 25000,
-      match_score: 60,
-      match_justification: `Poste accessible sans qualification préalable, formation possible en interne`,
-      source: 'ASSIGNME Fallback',
-      is_real_offer: false
-    });
-    
-    fallbackJobs.push({
-      job_title: 'Préparateur de commandes',
-      company: 'Logistique & Transport',
-      location: candidateProfile.location || 'Paris',
-      contract_type: 'CDI',
-      sector: 'Logistique',
-      salary_min: 22000,
-      salary_max: 28000,
-      match_score: 65,
-      match_justification: `Secteur qui recrute, formation rapide possible, évolution vers responsabilité d'équipe`,
-      source: 'ASSIGNME Fallback',
-      is_real_offer: false
-    });
-  }
-  
-  // Recommandation basée sur l'expérience professionnelle
-  if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') {
-    fallbackJobs.push({
-      job_title: candidateProfile.current_position + ' Confirmé',
-      company: 'Secteur ' + (candidateProfile.key_sectors[0] || 'Privé'),
-      location: candidateProfile.location || 'Paris',
-      contract_type: 'CDI',
-      sector: candidateProfile.key_sectors[0] || 'Services',
-      salary_min: 30000 + (candidateProfile.total_experience_years * 3000),
-      salary_max: 45000 + (candidateProfile.total_experience_years * 4000),
-      match_score: 80,
-      match_justification: `Évolution naturelle de votre poste actuel avec ${candidateProfile.total_experience_years} ans d'expérience`,
-      source: 'ASSIGNME Fallback',
-      is_real_offer: false
-    });
-  }
-  
-  // Assure au moins 3 recommandations
-  while (fallbackJobs.length < 3) {
-    fallbackJobs.push({
-      job_title: 'Employé Polyvalent',
-      company: 'Entreprises Locales',
-      location: candidateProfile.location || 'Paris',
-      contract_type: 'CDI',
-      sector: 'Services',
-      salary_min: 24000,
-      salary_max: 32000,
-      match_score: 55,
-      match_justification: `Poste polyvalent adapté à votre profil, possibilité d'évolution`,
-      source: 'ASSIGNME Fallback',
-      is_real_offer: false
-    });
-  }
-  
-  return fallbackJobs;
-}
