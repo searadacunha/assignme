@@ -266,9 +266,9 @@ async function searchJobs(token, candidateProfile) {
     console.log('Localisation extraite:', location);
 
     const searchParams = new URLSearchParams({
-      motsCles: keywords || "developpeur",
+      motsCles: keywords || "agent",
       codePostal: location || '75001', // Utiliser codePostal au lieu de commune
-      distance: '50',
+      distance: '10', // Réduire à 10km au lieu de 50km
       sort: '0',
       range: '0-19'
     });
