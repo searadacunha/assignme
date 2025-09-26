@@ -228,8 +228,19 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
     
     // Détection automatique si candidat à l'étranger
     const candidateProfile = analysisResult.candidate_analysis;
-    const isAbroad = candidateProfile.location_message && candidateProfile.location_message.length > 0;
-    const jobsAvailable = candidateProfile.jobs_available_in_france !== false;
+    
+    // Logique corrigée : vérifier la localisation réelle
+    const location = candidateProfile.location || "";
+    const isAbroad = location.includes('Canada') || 
+                     location.includes('USA') || 
+                     location.includes('Australie') || 
+                     location.includes('Toronto') || 
+                     location.includes('New York') || 
+                     location.includes('Sydney') ||
+                     candidateProfile.jobs_available_in_france === false;
+    
+    console.log(`Localisation détectée: ${location}`);
+    console.log(`Candidat à l'étranger: ${isAbroad}`);
 
     // Ne chercher des offres que si le candidat est disponible en France
     if (jobsAvailable && !isAbroad) {
