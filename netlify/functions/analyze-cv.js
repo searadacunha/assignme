@@ -1,4 +1,4 @@
-// netlify/functions/analyze-cv.js - Version avec analyse psychologique approfondie
+// netlify/functions/analyze-cv.js - Version avec analyse psychologique et gestion géographique
 exports.handler = async (event, context) => {
   // Configuration CORS
   const headers = {
@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Prompt système amélioré avec la structure fournie
+    // Prompt système avec analyse psychologique et gestion géographique
     const systemPrompt = `
 Tu es un expert en recrutement, orientation professionnelle et psychologie du travail en France. 
 Ta mission est d'analyser un CV (même partiel ou informel) ET de proposer des pistes réalistes 
@@ -78,11 +78,12 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
 - Si expériences instables → privilégier missions courtes ou encadrées.
 
 ────────────────────────────
-3. PRISE EN COMPTE DES CONTRAINTES
+3. PRISE EN COMPTE DES CONTRAINTES GÉOGRAPHIQUES
 ────────────────────────────
-- Localisation (ville, région) → proposer uniquement métiers/secteurs/formations plausibles dans ce périmètre.
-- Mobilité : locale / nationale / internationale selon ce qui est mentionné.
-- Contraintes personnelles explicites (famille, santé, permis, horaires).
+- Si localisation = Canada, USA, Australie ou autre pays → NE PAS proposer d'emplois en France
+- Dans ce cas, expliquer pourquoi dans "location_message"
+- Proposer UNIQUEMENT des formations pour préparer un éventuel retour ou développement de compétences
+- Si en France → proposer emplois ET formations selon le niveau
 
 ────────────────────────────
 4. FORMATIONS À PROPOSER
@@ -90,7 +91,8 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
 - Toujours 3 à 5 formations adaptées au niveau réel.
 - Pour profils faibles : CQP cuisine, permis cariste, sécurité, nettoyage industriel, etc.
 - Pour profils diplômés : formations complémentaires réalistes (BTS, BUT, titres RNCP).
-- Lier les formations aux volontés exprimées par le candidat (ex. "aime travailler manuel" → proposer formation pratique).
+- Pour profils à l'étranger : formations de perfectionnement ou préparation au retour
+- Lier les formations aux volontés exprimées par le candidat.
 - Indiquer durée, débouchés, financement possible, et si emploi immédiat envisageable.
 
 ────────────────────────────
@@ -120,7 +122,9 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
     "constraints": "contraintes_personnelles_exprimées",
     "psychological_profile": "analyse_personnalité_et_motivation",
     "recommended_work_environment": "type_environnement_travail_adapté",
-    "supervision_needs": "autonome|supervision_légère|supervision_directe|encadrement_strict"
+    "supervision_needs": "autonome|supervision_légère|supervision_directe|encadrement_strict",
+    "location_message": "message_explicatif_si_pas_en_france_ou_vide",
+    "jobs_available_in_france": true_ou_false
   },
   "training_suggestions": [
     {
@@ -154,20 +158,22 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
         },
         {
           role: "user",
-          content: `ANALYSE PSYCHOLOGIQUE APPROFONDIE REQUISE. Sois honnête et réaliste sur ce profil.
+          content: `ANALYSE PSYCHOLOGIQUE ET GÉOGRAPHIQUE APPROFONDIE REQUISE. 
+
+IMPORTANT : Si le candidat réside à l'étranger (Canada, USA, etc.), NE PAS proposer d'emplois en France mais EXPLIQUER pourquoi dans "location_message" et proposer des formations pour un éventuel retour.
 
 Analyse ce CV en respectant les 6 points obligatoires :
 1. Psychologie du candidat (motivation réelle, capacités relationnelles)
 2. Cohérence métier-personnalité (éviter accueil/enfants si inadapté)
-3. Contraintes géographiques et personnelles
+3. Contraintes géographiques (si à l'étranger → pas d'emplois France)
 4. Formations adaptées au niveau réel (3-5 propositions)
 5. Reconversion possible (1-2 pistes)
-6. Format JSON strict
+6. Format JSON strict avec location_message
 
 CV à analyser :
 ${cvText}
 
-RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse psychologique brutalement honnête.`
+RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
         }
       ],
       max_tokens: 3000,
@@ -216,56 +222,66 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse psychologique brutalement hon
     // Parse du JSON
     const analysisResult = JSON.parse(aiResponse);
 
-    // Récupération des vraies offres France Travail UNIQUEMENT
+    // Vérification géographique pour les offres d'emploi
     let realJobs = [];
     let franceTravailError = null;
+    
+    // Détection automatique si candidat à l'étranger
+    const candidateProfile = analysisResult.candidate_analysis;
+    const isAbroad = candidateProfile.location_message && candidateProfile.location_message.length > 0;
+    const jobsAvailable = candidateProfile.jobs_available_in_france !== false;
 
-    try {
-      console.log('Recherche offres France Travail...');
-      
-      // Appel à la fonction france-travail-jobs avec profil psychologique enrichi
-      const jobsResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/france-travail-jobs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          candidateProfile: {
-            ...analysisResult.candidate_analysis,
-            // Ajout des informations psychologiques pour améliorer le matching
-            psychological_profile: analysisResult.candidate_analysis.psychological_profile,
-            supervision_needs: analysisResult.candidate_analysis.supervision_needs,
-            recommended_work_environment: analysisResult.candidate_analysis.recommended_work_environment
-          }
-        })
-      });
-
-      if (jobsResponse.ok) {
-        const jobsData = await jobsResponse.json();
+    // Ne chercher des offres que si le candidat est disponible en France
+    if (jobsAvailable && !isAbroad) {
+      try {
+        console.log('Recherche offres France Travail...');
         
-        if (jobsData.success && jobsData.jobs) {
-          realJobs = jobsData.jobs;
-          console.log(`${realJobs.length} offres réelles trouvées`);
-        } else {
-          console.log('Aucune offre trouvée via France Travail');
-        }
-      } else {
-        const errorData = await jobsResponse.json();
-        franceTravailError = errorData.error || 'Erreur API France Travail';
-        console.error('Erreur France Travail:', franceTravailError);
-      }
+        // Appel à la fonction france-travail-jobs avec profil psychologique enrichi
+        const jobsResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/france-travail-jobs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            candidateProfile: {
+              ...candidateProfile,
+              // Ajout des informations psychologiques pour améliorer le matching
+              psychological_profile: candidateProfile.psychological_profile,
+              supervision_needs: candidateProfile.supervision_needs,
+              recommended_work_environment: candidateProfile.recommended_work_environment
+            }
+          })
+        });
 
-    } catch (error) {
-      franceTravailError = error.message;
-      console.error('Erreur connexion France Travail:', error);
+        if (jobsResponse.ok) {
+          const jobsData = await jobsResponse.json();
+          
+          if (jobsData.success && jobsData.jobs) {
+            realJobs = jobsData.jobs;
+            console.log(`${realJobs.length} offres réelles trouvées`);
+          } else {
+            console.log('Aucune offre trouvée via France Travail');
+          }
+        } else {
+          const errorData = await jobsResponse.json();
+          franceTravailError = errorData.error || 'Erreur API France Travail';
+          console.error('Erreur France Travail:', franceTravailError);
+        }
+
+      } catch (error) {
+        franceTravailError = error.message;
+        console.error('Erreur connexion France Travail:', error);
+      }
+    } else {
+      console.log('Candidat à l\'étranger - Pas de recherche d\'offres d\'emploi en France');
     }
 
-    // Construction de la réponse finale - SANS FALLBACK
+    // Construction de la réponse finale
     const finalResult = {
       candidate_analysis: {
-        ...analysisResult.candidate_analysis
+        ...candidateProfile
       },
-      recommendations: realJobs.slice(0, 8), // Seulement les vraies offres ou liste vide
+      recommendations: realJobs.slice(0, 8), // Offres réelles ou liste vide
       training_suggestions: analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
@@ -276,7 +292,9 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse psychologique brutalement hon
         confidence: 'Élevée',
         real_jobs_count: realJobs.length,
         france_travail_error: franceTravailError,
-        psychological_analysis: true
+        psychological_analysis: true,
+        geographic_filtering: true,
+        candidate_abroad: isAbroad
       }
     };
 
