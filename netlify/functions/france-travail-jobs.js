@@ -345,32 +345,62 @@ async function searchJobs(token, candidateProfile) {
 
 // Construction des mots-clés
 function buildKeywords(candidateProfile) {
-  const keywords = [];
+  // Mots-clés pour profils sans qualification/expérience
+  const entryLevelKeywords = [
+    'agent',
+    'employe', 
+    'accueil',
+    'vente',
+    'magasin',
+    'caissier',
+    'preparateur',
+    'manutention',
+    'nettoyage',
+    'restauration',
+    'livraison'
+  ];
   
-  // Si le candidat a des compétences techniques, les utiliser
-  if (candidateProfile.technical_skills?.length) {
-    keywords.push(...candidateProfile.technical_skills.slice(0, 3));
+  // Mots-clés techniques pour profils qualifiés
+  const technicalKeywords = [
+    'developpeur',
+    'informatique',
+    'comptable',
+    'commercial',
+    'marketing',
+    'secretaire'
+  ];
+  
+  let selectedKeyword;
+  
+  // Si profil sans expérience OU sans qualification, utiliser mots-clés accessibles
+  if (candidateProfile.total_experience_years === 0 || 
+      candidateProfile.education_level === 'Aucune qualification' ||
+      candidateProfile.current_position === 'Sans emploi') {
+    
+    selectedKeyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
+    console.log('Profil debutant detecte, mot-cle generique utilise');
+    
+  } else if (candidateProfile.technical_skills?.length) {
+    // Pour profils techniques expérimentés
+    const cleanSkills = candidateProfile.technical_skills
+      .filter(skill => !skill.toLowerCase().includes('français') && 
+                      !skill.toLowerCase().includes('darija') &&
+                      !skill.toLowerCase().includes('anglais'))
+      .slice(0, 1);
+    
+    if (cleanSkills.length > 0) {
+      selectedKeyword = cleanSkills[0];
+    } else {
+      selectedKeyword = technicalKeywords[Math.floor(Math.random() * technicalKeywords.length)];
+    }
+    
+  } else {
+    // Fallback générique
+    selectedKeyword = entryLevelKeywords[0]; // 'agent'
   }
   
-  // Si le candidat a un poste actuel, l'utiliser
-  if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') {
-    keywords.push(candidateProfile.current_position);
-  }
-  
-  // Ajouter secteurs d'activité
-  if (candidateProfile.key_sectors?.length) {
-    keywords.push(...candidateProfile.key_sectors.slice(0, 2));
-  }
-  
-  // Si aucun mot-clé spécifique, utiliser des termes génériques
-  if (keywords.length === 0) {
-    // Mots-clés génériques pour profils sans compétences spécifiques
-    keywords.push('emploi', 'travail', 'poste');
-  }
-  
-  const result = keywords.slice(0, 3).join(' ') || 'emploi';
-  console.log('Mots-cles generes:', result);
-  return result;
+  console.log('Mots-cles generes:', selectedKeyword);
+  return selectedKeyword;
 }
 
 // Extraction de localisation avec codes INSEE
