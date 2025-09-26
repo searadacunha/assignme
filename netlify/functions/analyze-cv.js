@@ -1,4 +1,4 @@
-// netlify/functions/analyze-cv.js modifié pour intégrer les formations
+// netlify/functions/analyze-cv.js modifié pour intégrer les vraies offres
 exports.handler = async (event, context) => {
   // Configuration CORS
   const headers = {
@@ -82,7 +82,7 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE AVEC TOUT LE CONTENU EN FRANÇAIS :
     "current_position": "poste_actuel_EN_FRANCAIS_OU_SANS_EMPLOI",
     "key_sectors": ["secteur1_EN_FRANCAIS", "secteur2_EN_FRANCAIS"],
     "technical_skills": ["compétence1_EN_FRANCAIS_REELLE", "compétence2_EN_FRANCAIS_REELLE"],
-    "personal_qualities": ["qualité1_EN_FRANCAIS_REELLE", "qualité2_EN_FRANCAIS_REELLE"],
+    "soft_skills": ["qualité1_EN_FRANCAIS_REELLE", "qualité2_EN_FRANCAIS_REELLE"],
     "career_aspirations": "objectifs_détectés_EN_FRANCAIS_REELS",
     "constraints": "contraintes_mentionnées_EN_FRANCAIS"
   },
@@ -165,9 +165,8 @@ ${cvText}`
     // Parse du JSON
     const analysisResult = JSON.parse(aiResponse);
 
-    // NOUVEAU: Récupération des vraies offres France Travail + formations
+    // NOUVEAU: Récupération des vraies offres France Travail
     let realJobs = [];
-    let realFormations = [];
     let franceTravailError = null;
 
     try {
@@ -191,13 +190,6 @@ ${cvText}`
           realJobs = jobsData.jobs;
           console.log(`${realJobs.length} offres réelles trouvées`);
         }
-        
-        // NOUVEAU: Récupération des formations
-        if (jobsData.formations) {
-          realFormations = jobsData.formations;
-          console.log(`${realFormations.length} formations trouvées`);
-        }
-        
       } else {
         const errorData = await jobsResponse.json();
         franceTravailError = errorData.error || 'Erreur API France Travail';
@@ -223,7 +215,6 @@ ${cvText}`
         ...analysisResult.candidate_analysis
       },
       recommendations: recommendations.slice(0, 8), // Max 8 recommandations
-      formations: realFormations.slice(0, 6), // NOUVEAU: Max 6 formations
       training_suggestions: analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
@@ -233,7 +224,6 @@ ${cvText}`
         cost: ((data.usage?.total_tokens || 1500) * 0.0000015).toFixed(4),
         confidence: 'Élevée',
         real_jobs_count: realJobs.length,
-        real_formations_count: realFormations.length, // NOUVEAU
         france_travail_error: franceTravailError
       }
     };
