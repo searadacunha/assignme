@@ -435,7 +435,10 @@ function extractLocation(location) {
 
 // Transformation des offres pour ASSIGNME
 function transformJobsForAssignme(jobs, candidateProfile) {
-  return jobs.map(job => {
+  // Filtrer les offres par localisation avant transformation
+  const filteredJobs = filterJobsByLocation(jobs, candidateProfile.location);
+  
+  return filteredJobs.map(job => {
     const matchScore = calculateMatchScore(job, candidateProfile);
     
     return {
@@ -463,6 +466,76 @@ function transformJobsForAssignme(jobs, candidateProfile) {
       evolution_potential: 'A definir avec employeur'
     };
   });
+}
+
+// Nouvelle fonction de filtrage par localisation
+function filterJobsByLocation(jobs, candidateLocation) {
+  if (!candidateLocation) return jobs;
+  
+  const locationLower = candidateLocation.toLowerCase();
+  
+  // Départements de la région parisienne
+  const parisianDepartments = ['75', '77', '78', '91', '92', '93', '94', '95'];
+  
+  // Départements des grandes villes françaises
+  const majorCityDepartments = {
+    'lyon': ['69'],
+    'marseille': ['13'],
+    'toulouse': ['31'],
+    'lille': ['59'],
+    'bordeaux': ['33'],
+    'nantes': ['44'],
+    'strasbourg': ['67'],
+    'montpellier': ['34'],
+    'rennes': ['35'],
+    'nice': ['06']
+  };
+  
+  let allowedDepartments = [];
+  
+  // Si candidat parisien, ne garder que la région parisienne
+  if (locationLower.includes('paris')) {
+    allowedDepartments = parisianDepartments;
+    console.log('Filtrage pour candidat parisien - departements autorises:', allowedDepartments);
+  } else {
+    // Pour autres villes, chercher le département correspondant
+    for (const [city, departments] of Object.entries(majorCityDepartments)) {
+      if (locationLower.includes(city)) {
+        allowedDepartments = departments;
+        console.log(`Filtrage pour candidat ${city} - departements autorises:`, allowedDepartments);
+        break;
+      }
+    }
+  }
+  
+  // Si pas de filtrage spécifique, garder toutes les offres
+  if (allowedDepartments.length === 0) {
+    console.log('Pas de filtrage geographique applique');
+    return jobs;
+  }
+  
+  // Filtrer les offres selon les départements autorisés
+  const filteredJobs = jobs.filter(job => {
+    const jobLocation = job.lieuTravail?.libelle || '';
+    const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
+    
+    if (departmentMatch) {
+      const jobDepartment = departmentMatch[1];
+      const isAllowed = allowedDepartments.includes(jobDepartment);
+      
+      if (!isAllowed) {
+        console.log(`Offre filtrée - ${job.intitule} à ${jobLocation} (dept ${jobDepartment} non autorisé)`);
+      }
+      
+      return isAllowed;
+    }
+    
+    // Garder les offres sans département détectable
+    return true;
+  });
+  
+  console.log(`Filtrage terminé: ${jobs.length} offres initiales -> ${filteredJobs.length} offres conservées`);
+  return filteredJobs;
 }
 
 // Calcul du score de correspondance
