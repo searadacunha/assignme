@@ -243,7 +243,7 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
     console.log(`Candidat à l'étranger: ${isAbroad}`);
 
     // Ne chercher des offres que si le candidat est disponible en France
-    if (jobsAvailable && !isAbroad) {
+    if (!isAbroad) {
       try {
         console.log('Recherche offres France Travail...');
         
