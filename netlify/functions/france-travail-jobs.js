@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Version stable avec géolocalisation stricte (qui fonctionnait)
+// Version finale avec géolocalisation stricte pour villes moyennes
 
 const communeMapping = {
   // Région parisienne
@@ -124,9 +124,11 @@ async function searchJobs(token, candidateProfile) {
   }
 }
 
+// Construction des mots-clés avec support profils techniques
 function buildKeywords(candidateProfile) {
   const entryLevelKeywords = ['agent', 'employe', 'accueil', 'vente', 'caissier', 'preparateur', 'nettoyage'];
   
+  // Profil débutant
   if (candidateProfile.total_experience_years === 0 || candidateProfile.education_level === 'Aucune qualification' || candidateProfile.current_position === 'Sans emploi') {
     const keyword = entryLevelKeywords[Math.floor(Math.random() * entryLevelKeywords.length)];
     console.log('Profil debutant detecte');
@@ -137,6 +139,7 @@ function buildKeywords(candidateProfile) {
   const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
   const technicalSkills = (candidateProfile.technical_skills || []).join(' ').toLowerCase();
   
+  // PROFILS TECHNIQUES - Priorité absolue
   if (educationLevel.includes('electrotechnique') || educationLevel.includes('électrotechnique') || 
       currentPosition.includes('technicien') || currentPosition.includes('maintenance') ||
       technicalSkills.includes('maintenance') || technicalSkills.includes('dépannage')) {
@@ -150,6 +153,7 @@ function buildKeywords(candidateProfile) {
     }
   }
   
+  // PROFILS SOCIAUX
   if (educationLevel.includes('service social') || educationLevel.includes('deass') || currentPosition.includes('social')) {
     const socialKeywords = ['educateur', 'accompagnement', 'mediation', 'social'];
     const keyword = socialKeywords[Math.floor(Math.random() * socialKeywords.length)];
@@ -157,6 +161,7 @@ function buildKeywords(candidateProfile) {
     return keyword;
   }
   
+  // PROFILS TERTIAIRES
   if (educationLevel.includes('comptab') || educationLevel.includes('gestion') || educationLevel.includes('finance')) {
     console.log('Formation comptabilite detecte -> comptable');
     return 'comptable';
@@ -177,20 +182,25 @@ function buildKeywords(candidateProfile) {
     return 'administratif';
   }
   
+  // Fallback générique
   console.log('Mapping generique applique -> assistant');
   return 'assistant';
 }
 
+// Distance de recherche adaptée à la localisation
 function getSearchDistance(location) {
   if (!location) return '10';
   
   const locationLower = location.toLowerCase();
+  
+  // Grandes métropoles : recherche restreinte
   const majorCities = ['paris', 'lyon', 'marseille', 'toulouse', 'lille', 'bordeaux', 'nantes', 'strasbourg', 'montpellier'];
   if (majorCities.some(city => locationLower.includes(city))) {
     console.log('Grande metropole detectee - distance 10km');
     return '10';
   }
   
+  // Villes moyennes : recherche élargie mais limitée
   const mediumCities = ['annecy', 'seynod', 'chambery', 'grenoble', 'clermont', 'saint-etienne', 'nancy', 'metz', 'dijon', 'besancon'];
   if (mediumCities.some(city => locationLower.includes(city))) {
     console.log('Ville moyenne detectee - distance 50km');
@@ -201,18 +211,21 @@ function getSearchDistance(location) {
   return '25';
 }
 
+// Extraction de localisation étendue
 function extractLocation(location) {
   if (!location) return '75001';
   
   console.log('Localisation a analyser:', location);
   const locationLower = location.toLowerCase().trim();
   
+  // Code INSEE direct
   const inseeMatch = location.match(/\b(\d{5})\b/);
   if (inseeMatch) {
     console.log('Code INSEE detecte:', inseeMatch[1]);
     return inseeMatch[1];
   }
   
+  // Recherche par ville étendue
   for (const [city, inseeCode] of Object.entries(communeMapping)) {
     if (locationLower.includes(city)) {
       console.log(`Ville "${city}" trouvee, code INSEE: ${inseeCode}`);
@@ -224,16 +237,25 @@ function extractLocation(location) {
   return '75001';
 }
 
+// Filtrage géographique par régions avec restrictions strictes pour villes moyennes
 function filterJobsByLocation(jobs, candidateLocation) {
   if (!candidateLocation) return jobs;
   
   const locationLower = candidateLocation.toLowerCase();
   
+  // Définition des bassins d'emploi locaux pour villes moyennes
   const localBasins = {
-    'annecy-chambery': ['73', '74', '01'],
-    'seynod-annecy': ['73', '74', '01'],
-    'grenoble': ['38', '73', '26', '05'],
-    'lyon': ['69', '01', '42', '71'],
+    // Haute-Savoie/Savoie (Annecy, Chambéry) - Bassin alpin
+    'annecy-chambery': ['73', '74', '01'], // Savoie, Haute-Savoie, Ain proche
+    'seynod-annecy': ['73', '74', '01'],   // Même bassin qu'Annecy
+    
+    // Isère (Grenoble) - Bassin grenoblois  
+    'grenoble': ['38', '73', '26', '05'],  // Isère + départements limitrophes montagnards
+    
+    // Rhône (Lyon) - Métropole lyonnaise
+    'lyon': ['69', '01', '42', '71'],      // Rhône + départements limitrophes
+    
+    // Autres bassins régionaux
     'clermont-ferrand': ['63', '03', '15', '43'],
     'saint-etienne': ['42', '69', '43', '07'],
     'nancy': ['54', '55', '57', '88'],
@@ -242,6 +264,7 @@ function filterJobsByLocation(jobs, candidateLocation) {
     'besancon': ['25', '70', '39', '90']
   };
   
+  // Régions métropolitaines (périmètre élargi autorisé)
   const metropolitanRegions = {
     'ile-de-france': ['75', '77', '78', '91', '92', '93', '94', '95'],
     'provence-alpes-cote-azur': ['04', '05', '06', '13', '83', '84'],
@@ -256,11 +279,15 @@ function filterJobsByLocation(jobs, candidateLocation) {
     'normandie': ['14', '27', '50', '61', '76']
   };
   
+  // Exclusions strictes (DOM-TOM, Corse pour certains cas)
   const excludedDepartments = ['20', '2A', '2B', '971', '972', '973', '974', '976', '975', '984', '986', '987', '988'];
   
   let allowedDepartments = [];
   let isStrictLocal = false;
   
+  // DÉTECTION TYPE DE LOCALISATION
+  
+  // 1. Villes moyennes avec bassin local strict
   for (const [basin, departments] of Object.entries(localBasins)) {
     const basinCities = basin.split('-');
     if (basinCities.some(city => locationLower.includes(city))) {
@@ -271,6 +298,7 @@ function filterJobsByLocation(jobs, candidateLocation) {
     }
   }
   
+  // 2. Grandes métropoles avec région élargie
   if (!isStrictLocal) {
     const cityToRegion = {
       'paris': 'ile-de-france', 'pantin': 'ile-de-france', 'montreuil': 'ile-de-france',
@@ -289,14 +317,17 @@ function filterJobsByLocation(jobs, candidateLocation) {
     }
   }
   
+  // 3. Si aucune détection : pas de filtrage géographique
   if (allowedDepartments.length === 0) {
     console.log('Localisation non reconnue - pas de filtrage geographique');
     return jobs;
   }
   
+  // FILTRAGE DES OFFRES
   const filteredJobs = jobs.filter(job => {
     const jobLocation = job.lieuTravail?.libelle || '';
     
+    // Exclusions strictes universelles
     if (excludedDepartments.some(dept => jobLocation.includes(dept)) || 
         jobLocation.toLowerCase().includes('corse') ||
         jobLocation.includes('Guadeloupe') || jobLocation.includes('Martinique') ||
@@ -305,6 +336,7 @@ function filterJobsByLocation(jobs, candidateLocation) {
       return false;
     }
     
+    // Pour les bassins locaux stricts : filtrage très restrictif
     if (isStrictLocal) {
       const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
       if (departmentMatch) {
@@ -317,10 +349,12 @@ function filterJobsByLocation(jobs, candidateLocation) {
         return isAllowed;
       }
       
+      // Si lieu bizarre sans département détecté, on filtre aussi pour les bassins stricts
       console.log(`Offre filtree (format lieu incorrect): ${jobLocation}`);
       return false;
     }
     
+    // Pour les métropoles : filtrage régional plus souple
     const departmentMatch = jobLocation.match(/^(\d{2})\s*-/);
     if (departmentMatch) {
       const jobDepartment = departmentMatch[1];
@@ -375,13 +409,16 @@ function calculateMatchScore(job, candidateProfile) {
   const educationLevel = candidateProfile.education_level?.toLowerCase() || '';
   const currentPosition = candidateProfile.current_position?.toLowerCase() || '';
   
+  // Bonus formations techniques
   if (educationLevel.includes('electrotechnique') && (jobText.includes('electr') || jobText.includes('technicien'))) score += 25;
   if (currentPosition.includes('technicien') && jobText.includes('technicien')) score += 20;
   if (currentPosition.includes('maintenance') && jobText.includes('maintenance')) score += 25;
   
+  // Bonus formations tertiaires
   if (educationLevel.includes('service social') && (jobText.includes('social') || jobText.includes('education'))) score += 25;
   if (educationLevel.includes('comptab') && jobText.includes('comptab')) score += 20;
   
+  // Correspondance d'expérience
   if (job.experienceExige === 'D') score += 15;
   else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) score += 15;
   else if (job.experienceExige === 'E' && candidateProfile.total_experience_years >= 5) score += 15;
@@ -406,12 +443,13 @@ function generateMatchJustification(job, candidateProfile, score) {
   return reasons.join(' • ');
 }
 
+// Fonctions utilitaires
 function formatLocation(lieuTravail) { return lieuTravail?.libelle || 'Lieu non specifie'; }
 function formatContractType(typeContrat) { const c = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission interim' }; return c[typeContrat] || typeContrat || 'Type non specifie'; }
 function formatExperience(experienceExige) { const e = { D: 'Debutant accepte', S: 'Experience souhaitee', E: 'Experience exigee' }; return e[experienceExige] || 'Non specifie'; }
 function cleanDescription(description) { return description ? description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : '') : 'Description non disponible'; }
 function extractSalaryMin(salaireText) { if (!salaireText) return null; const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); return match ? parseInt(match[1].replace(/\s/g, '')) : null; }
-function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMax(salaireText); }
+function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMin(salaireText); }
 function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['maintenance','electricite','technicien','installation','depannage','social','education','comptabilite']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
 
 function mockJobs(candidateProfile) {
