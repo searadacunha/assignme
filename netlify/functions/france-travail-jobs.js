@@ -1,5 +1,78 @@
 // netlify/functions/france-travail-jobs.js
-// Fonction Netlify pour récupérer les vraies offres d'emploi France Travail
+// Fonction corrigée avec codes INSEE et logs détaillés
+
+// Mapping des villes vers codes INSEE (intégré directement)
+const communeMapping = {
+  "paris": "75056",
+  "paris 1": "75101",
+  "paris 2": "75102",
+  "paris 3": "75103",
+  "paris 4": "75104",
+  "paris 5": "75105",
+  "paris 6": "75106",
+  "paris 7": "75107",
+  "paris 8": "75108",
+  "paris 9": "75109",
+  "paris 10": "75110",
+  "paris 11": "75111",
+  "paris 12": "75112",
+  "paris 13": "75113",
+  "paris 14": "75114",
+  "paris 15": "75115",
+  "paris 16": "75116",
+  "paris 17": "75117",
+  "paris 18": "75118",
+  "paris 19": "75119",
+  "paris 20": "75120",
+  "lyon": "69381",
+  "marseille": "13055",
+  "toulouse": "31555",
+  "lille": "59350",
+  "bordeaux": "33063",
+  "nantes": "44109",
+  "strasbourg": "67482",
+  "montpellier": "34172",
+  "rennes": "35238",
+  "nice": "06088",
+  "toulon": "83137",
+  "grenoble": "38185",
+  "dijon": "21231",
+  "angers": "49007",
+  "le havre": "76351",
+  "reims": "51454",
+  "clermont-ferrand": "63113",
+  "saint-etienne": "42218",
+  "metz": "57463",
+  "rouen": "76540",
+  "perpignan": "66136",
+  "amiens": "80021",
+  "caen": "14118",
+  "nancy": "54395",
+  "orleans": "45234",
+  "avignon": "84007",
+  "pau": "64445",
+  "tourcoing": "59599",
+  "villeurbanne": "69266",
+  "versailles": "78646",
+  "cannes": "06029",
+  "antibes": "06004",
+  "colmar": "68066",
+  "mulhouse": "68224",
+  "poitiers": "86194",
+  "limoges": "87085",
+  "troyes": "10387",
+  "chartres": "28085",
+  "blois": "41018",
+  "saint-denis": "93066",
+  "argenteuil": "95018",
+  "courbevoie": "92026",
+  "nanterre": "92050",
+  "boulogne-billancourt": "92012",
+  "montreuil": "93048",
+  "asnieres-sur-seine": "92004",
+  "colombes": "92025",
+  "aix-en-provence": "13001"
+};
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -21,6 +94,11 @@ exports.handler = async (event, context) => {
     const CLIENT_ID = 'PAR_assignme_706e20eb9f90ae0ed2dfd8e9feec3048f8612e02f616083c21c028a9f8a769f8';
     const CLIENT_SECRET = process.env.FRANCE_TRAVAIL_SECRET;
 
+    console.log('=== DEBUT FRANCE TRAVAIL ===');
+    console.log('CLIENT_ID:', CLIENT_ID);
+    console.log('CLIENT_SECRET present:', !!CLIENT_SECRET);
+    console.log('CLIENT_SECRET length:', CLIENT_SECRET ? CLIENT_SECRET.length : 0);
+
     if (!CLIENT_SECRET) {
       console.error('FRANCE_TRAVAIL_SECRET manquant');
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Secret API manquant', fallback: true }) };
@@ -31,15 +109,31 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Profil candidat requis' }) };
     }
 
-    // Étape 1: Auth
+    console.log('Profil candidat recu:', JSON.stringify(candidateProfile, null, 2));
+
+    // Étape 1: Authentification
+    console.log('--- ETAPE 1: AUTHENTIFICATION ---');
     const tokenResponse = await getAccessToken(CLIENT_ID, CLIENT_SECRET);
+    
     if (!tokenResponse.success) {
-      console.error('Erreur token:', tokenResponse.error);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur authentification France Travail', details: tokenResponse.error, fallback: true }) };
+      console.error('Erreur authentification:', tokenResponse.error);
+      return { 
+        statusCode: 500, 
+        headers, 
+        body: JSON.stringify({ 
+          error: 'Erreur authentification France Travail', 
+          details: tokenResponse.error, 
+          fallback: true 
+        }) 
+      };
     }
 
-    // Étape 2: Recherche
+    console.log('Authentification reussie!');
+
+    // Étape 2: Recherche des offres
+    console.log('--- ETAPE 2: RECHERCHE OFFRES ---');
     const searchResults = await searchJobs(tokenResponse.token, candidateProfile);
+    
     if (!searchResults.success) {
       console.error('Erreur recherche:', searchResults.error);
       return {
@@ -55,8 +149,12 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Étape 3: Transformation
+    console.log(`${searchResults.jobs.length} offres trouvees!`);
+
+    // Étape 3: Transformation des résultats
+    console.log('--- ETAPE 3: TRANSFORMATION ---');
     const transformedJobs = transformJobsForAssignme(searchResults.jobs, candidateProfile);
+    console.log('Jobs transformes:', transformedJobs.length);
 
     return {
       statusCode: 200,
@@ -75,195 +173,433 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Erreur fonction France Travail:', error);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur interne', details: error.message, fallback: true, jobs: mockJobs({}) }) };
+    return { 
+      statusCode: 500, 
+      headers, 
+      body: JSON.stringify({ 
+        error: 'Erreur interne', 
+        details: error.message, 
+        fallback: true, 
+        jobs: mockJobs({}) 
+      }) 
+    };
   }
 };
 
-// ---- Authentification ----
+// Fonction d'authentification
 async function getAccessToken(clientId, clientSecret) {
   try {
     const params = new URLSearchParams({
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'api_offresdemploiv2 o2dsoffre' // ✅ scope corrigé
+      scope: 'api_offresdemploiv2 o2dsoffre'
     });
+
+    console.log('Parametres auth:', params.toString());
+    console.log('URL auth: https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire');
 
     const response = await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
       body: params.toString()
     });
 
+    console.log('Statut reponse auth:', response.status);
+    console.log('Headers reponse auth:', JSON.stringify([...response.headers.entries()]));
+
+    const responseText = await response.text();
+    console.log('Reponse auth brute:', responseText);
+
     if (!response.ok) {
-      const errorData = await response.text();
-      return { success: false, error: `Authentification échouée: ${response.status} - ${errorData}` };
+      return { 
+        success: false, 
+        error: `Authentification echouee: ${response.status} - ${responseText}` 
+      };
     }
 
-    const data = await response.json();
-    if (!data.access_token) return { success: false, error: "Token d'accès non reçu" };
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      return { 
+        success: false, 
+        error: `Reponse auth non JSON: ${parseError.message} - ${responseText}` 
+      };
+    }
 
-    console.info("✅ Token récupéré (début):", data.access_token.substring(0, 10));
-    return { success: true, token: data.access_token };
+    if (!data.access_token) {
+      return { 
+        success: false, 
+        error: `Token absent dans reponse: ${JSON.stringify(data)}` 
+      };
+    }
+
+    console.log('Token recu (debut):', data.access_token.substring(0, 20) + '...');
+    console.log('Token type:', data.token_type);
+    console.log('Expires in:', data.expires_in);
+
+    return { 
+      success: true, 
+      token: data.access_token 
+    };
 
   } catch (error) {
-    return { success: false, error: `Erreur réseau authentification: ${error.message}` };
+    console.error('Exception auth:', error);
+    return { 
+      success: false, 
+      error: `Erreur reseau authentification: ${error.message}` 
+    };
   }
 }
 
-// ---- Recherche ----
+// Fonction de recherche d'offres
 async function searchJobs(token, candidateProfile) {
   try {
+    const keywords = buildKeywords(candidateProfile);
+    const location = extractLocation(candidateProfile.location);
+    
+    console.log('Mots-cles construits:', keywords);
+    console.log('Localisation extraite:', location);
+
     const searchParams = new URLSearchParams({
-      motsCles: buildKeywords(candidateProfile) || "developpeur",
-      codePostal: extractLocation(candidateProfile.location) || '75001', // ✅ codePostal au lieu de commune
+      motsCles: keywords || "developpeur",
+      commune: location || '75056', // Code INSEE Paris
       distance: '50',
       sort: '0',
       range: '0-19'
     });
 
+    // Filtre d'expérience
     if (candidateProfile.total_experience_years >= 5) {
-      searchParams.append('experience', '2');
+      searchParams.append('experience', '2'); // Expérimenté
+      console.log('Filtre experience: Experimente (2)');
     } else if (candidateProfile.total_experience_years >= 2) {
-      searchParams.append('experience', '1');
+      searchParams.append('experience', '1'); // Débutant accepté
+      console.log('Filtre experience: Debutant accepte (1)');
+    } else {
+      console.log('Pas de filtre experience (tous niveaux)');
     }
 
     const url = `https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?${searchParams}`;
-    console.info("🌐 URL appelée:", url);
+    console.log('URL complete API:', url);
 
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'User-Agent': 'ASSIGNME/1.0'
+      }
     });
 
-    const rawText = await response.text(); // ✅ réponse brute
-    console.info("📥 Réponse brute:", rawText);
+    console.log('Statut reponse recherche:', response.status);
+    console.log('Headers reponse recherche:', JSON.stringify([...response.headers.entries()]));
+
+    const responseText = await response.text();
+    console.log('Reponse recherche brute (premiers 500 chars):', responseText.substring(0, 500));
 
     if (!response.ok) {
-      return { success: false, error: `Recherche échouée: ${response.status} - ${rawText}`, raw: rawText };
+      return { 
+        success: false, 
+        error: `Recherche echouee: ${response.status} - ${responseText}`, 
+        raw: responseText 
+      };
     }
 
     let data;
     try {
-      data = JSON.parse(rawText); // ✅ parse manuel
-    } catch (parseErr) {
-      return { success: false, error: `Réponse non JSON: ${parseErr.message}`, raw: rawText };
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      return { 
+        success: false, 
+        error: `Reponse recherche non JSON: ${parseError.message}`, 
+        raw: responseText 
+      };
     }
 
-    return { success: true, jobs: data.resultats || [], total: data.resultats?.length || 0, query: searchParams.toString() };
+    console.log('Structure reponse:', Object.keys(data));
+    console.log('Nombre resultats:', data.resultats ? data.resultats.length : 0);
+
+    if (data.resultats && data.resultats.length > 0) {
+      console.log('Premier resultat:', JSON.stringify(data.resultats[0], null, 2));
+    }
+
+    return { 
+      success: true, 
+      jobs: data.resultats || [], 
+      total: data.resultats?.length || 0, 
+      query: searchParams.toString() 
+    };
 
   } catch (error) {
-    return { success: false, error: `Erreur réseau recherche: ${error.message}` };
+    console.error('Exception recherche:', error);
+    return { 
+      success: false, 
+      error: `Erreur reseau recherche: ${error.message}` 
+    };
   }
 }
 
-// ---- Helpers ----
+// Construction des mots-clés
 function buildKeywords(candidateProfile) {
   const keywords = [];
-  if (candidateProfile.technical_skills?.length) keywords.push(...candidateProfile.technical_skills.slice(0, 3));
-  if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') keywords.push(candidateProfile.current_position);
-  if (candidateProfile.career_aspirations) keywords.push(candidateProfile.career_aspirations);
-  if (candidateProfile.key_sectors?.length) keywords.push(...candidateProfile.key_sectors.slice(0, 2));
-  return keywords.slice(0, 5).join(' ');
+  
+  if (candidateProfile.technical_skills?.length) {
+    keywords.push(...candidateProfile.technical_skills.slice(0, 3));
+  }
+  
+  if (candidateProfile.current_position && candidateProfile.current_position !== 'Sans emploi') {
+    keywords.push(candidateProfile.current_position);
+  }
+  
+  if (candidateProfile.career_aspirations) {
+    keywords.push(candidateProfile.career_aspirations);
+  }
+  
+  if (candidateProfile.key_sectors?.length) {
+    keywords.push(...candidateProfile.key_sectors.slice(0, 2));
+  }
+  
+  const result = keywords.slice(0, 5).join(' ');
+  console.log('Mots-cles generes:', result);
+  return result;
 }
 
+// Extraction de localisation avec codes INSEE
 function extractLocation(location) {
-  if (!location) return null;
-  const cityToPostal = { paris: '75001', lyon: '69001', marseille: '13001', toulouse: '31000', lille: '59000', bordeaux: '33000', nantes: '44000', strasbourg: '67000', montpellier: '34000', rennes: '35000' };
-  const locationLower = location.toLowerCase();
-  const postalMatch = location.match(/\b(\d{5})\b/);
-  if (postalMatch) return postalMatch[1];
-  for (const [city, postal] of Object.entries(cityToPostal)) if (locationLower.includes(city)) return postal;
-  return '75001';
+  if (!location) {
+    console.log('Pas de localisation fournie, utilisation Paris par defaut');
+    return '75056';
+  }
+  
+  console.log('Localisation a analyser:', location);
+  
+  const locationLower = location.toLowerCase().trim();
+  
+  // Recherche directe du code INSEE (5 chiffres)
+  const inseeMatch = location.match(/\b(\d{5})\b/);
+  if (inseeMatch) {
+    console.log('Code INSEE detecte:', inseeMatch[1]);
+    return inseeMatch[1];
+  }
+  
+  // Recherche par nom de ville
+  for (const [city, inseeCode] of Object.entries(communeMapping)) {
+    if (locationLower.includes(city)) {
+      console.log(`Ville "${city}" trouvee, code INSEE: ${inseeCode}`);
+      return inseeCode;
+    }
+  }
+  
+  console.log('Aucune correspondance trouvee, utilisation Paris par defaut');
+  return '75056'; // Paris par défaut
 }
 
+// Transformation des offres pour ASSIGNME
 function transformJobsForAssignme(jobs, candidateProfile) {
   return jobs.map(job => {
     const matchScore = calculateMatchScore(job, candidateProfile);
+    
     return {
       id: job.id,
       source: 'France Travail',
       is_real_offer: true,
-      job_title: job.intitule || 'Poste non spécifié',
-      company: job.entreprise?.nom || 'Entreprise non communiquée',
+      job_title: job.intitule || 'Poste non specifie',
+      company: job.entreprise?.nom || 'Entreprise non communiquee',
       location: formatLocation(job.lieuTravail),
       description: cleanDescription(job.description),
       contract_type: formatContractType(job.typeContrat),
-      sector: job.secteurActivite || 'Secteur non spécifié',
-      salary_display: job.salaire?.libelle || 'Salaire non communiqué',
+      sector: job.secteurActivite || 'Secteur non specifie',
+      salary_display: job.salaire?.libelle || 'Salaire non communique',
       salary_min: extractSalaryMin(job.salaire?.libelle),
       salary_max: extractSalaryMax(job.salaire?.libelle),
       experience_required: formatExperience(job.experienceExige),
-      qualification_required: job.qualificationLibelle || 'Non spécifié',
+      qualification_required: job.qualificationLibelle || 'Non specifie',
       date_creation: job.dateCreation,
       date_actualisation: job.dateActualisation,
       match_score: matchScore,
       match_justification: generateMatchJustification(job, candidateProfile, matchScore),
       france_travail_url: `https://candidat.pole-emploi.fr/offres/recherche/detail/${job.id}`,
       required_skills: extractSkillsFromJob(job),
-      company_types: [job.entreprise?.adaptee ? 'Entreprise adaptée' : 'Standard'],
-      evolution_potential: "À définir avec l'employeur"
+      company_types: [job.entreprise?.adaptee ? 'Entreprise adaptee' : 'Standard'],
+      evolution_potential: 'A definir avec employeur'
     };
   });
 }
 
-// ---- Matching ----
+// Calcul du score de correspondance
 function calculateMatchScore(job, candidateProfile) {
-  let score = 40;
+  let score = 40; // Score de base
+  
   const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
+  
+  // Correspondance des compétences techniques
   if (candidateProfile.technical_skills) {
-    const matchingSkills = candidateProfile.technical_skills.filter(skill => jobText.includes(skill.toLowerCase()));
-    score += Math.min(matchingSkills.length * 8, 32);
+    const matchingSkills = candidateProfile.technical_skills.filter(skill =>
+      jobText.includes(skill.toLowerCase())
+    );
+    score += Math.min(matchingSkills.length * 8, 32); // Max 32 points
   }
-  if (job.experienceExige === 'D' && candidateProfile.total_experience_years >= 0) score += 15;
-  else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) score += 15;
-  else if (job.experienceExige === 'E' && candidateProfile.total_experience_years >= 5) score += 15;
+  
+  // Correspondance d'expérience
+  if (job.experienceExige === 'D' && candidateProfile.total_experience_years >= 0) {
+    score += 15;
+  } else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) {
+    score += 15;
+  } else if (job.experienceExige === 'E' && candidateProfile.total_experience_years >= 5) {
+    score += 15;
+  }
+  
+  // Correspondance de secteur
   if (candidateProfile.key_sectors) {
-    const hasMatchingSector = candidateProfile.key_sectors.some(sector => job.secteurActivite?.toLowerCase().includes(sector.toLowerCase()));
-    if (hasMatchingSector) score += 10;
+    const hasMatchingSector = candidateProfile.key_sectors.some(sector =>
+      job.secteurActivite?.toLowerCase().includes(sector.toLowerCase())
+    );
+    if (hasMatchingSector) {
+      score += 10;
+    }
   }
+  
+  // Correspondance géographique
   if (candidateProfile.location && job.lieuTravail?.libelle) {
     const candidateLocation = candidateProfile.location.toLowerCase();
     const jobLocation = job.lieuTravail.libelle.toLowerCase();
-    if (jobLocation.includes(candidateLocation) || candidateLocation.includes(jobLocation)) score += 8;
+    
+    if (jobLocation.includes(candidateLocation) || candidateLocation.includes(jobLocation)) {
+      score += 8;
+    }
   }
+  
   return Math.min(Math.max(score, 25), 95);
 }
 
+// Génération de justification du match
 function generateMatchJustification(job, candidateProfile, score) {
   const reasons = [];
-  if (score >= 80) reasons.push('Excellente correspondance avec votre profil');
-  else if (score >= 60) reasons.push('Bonne correspondance avec vos compétences');
-  else if (score >= 40) reasons.push('Correspondance acceptable');
+  
+  if (score >= 80) {
+    reasons.push('Excellente correspondance avec votre profil');
+  } else if (score >= 60) {
+    reasons.push('Bonne correspondance avec vos competences');
+  } else if (score >= 40) {
+    reasons.push('Correspondance acceptable');
+  }
+  
   const jobText = `${job.intitule} ${job.description || ''}`.toLowerCase();
   if (candidateProfile.technical_skills) {
-    const matchingSkills = candidateProfile.technical_skills.filter(skill => jobText.includes(skill.toLowerCase()));
-    if (matchingSkills.length > 0) reasons.push(`Compétences en commun: ${matchingSkills.slice(0, 3).join(', ')}`);
+    const matchingSkills = candidateProfile.technical_skills.filter(skill =>
+      jobText.includes(skill.toLowerCase())
+    );
+    
+    if (matchingSkills.length > 0) {
+      reasons.push(`Competences en commun: ${matchingSkills.slice(0, 3).join(', ')}`);
+    }
   }
-  if (job.experienceExige === 'D') reasons.push('Ouvert aux débutants');
-  else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) reasons.push('Expérience compatible');
-  return reasons.length > 0 ? reasons.join(' • ') : 'Offre à étudier selon vos critères';
+  
+  if (job.experienceExige === 'D') {
+    reasons.push('Ouvert aux debutants');
+  } else if (job.experienceExige === 'S' && candidateProfile.total_experience_years >= 2) {
+    reasons.push('Experience compatible');
+  }
+  
+  return reasons.length > 0 ? reasons.join(' • ') : 'Offre a etudier selon vos criteres';
 }
 
-// ---- Formatage ----
-function formatLocation(lieuTravail) { return lieuTravail?.libelle || 'Lieu non spécifié'; }
-function formatContractType(typeContrat) { const c = { CDI: 'CDI', CDD: 'CDD', MIS: 'Mission intérim', SAI: 'Saisonnier', IND: 'Indépendant' }; return c[typeContrat] || typeContrat || 'Type non spécifié'; }
-function formatExperience(experienceExige) { const e = { D: 'Débutant accepté', S: 'Expérience souhaitée', E: 'Expérience exigée' }; return e[experienceExige] || 'Non spécifié'; }
-function cleanDescription(description) { if (!description) return 'Description non disponible'; return description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500) + (description.length > 500 ? '...' : ''); }
-function extractSalaryMin(salaireText) { if (!salaireText) return null; const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/); return match ? parseInt(match[1].replace(/\s/g, '')) : null; }
-function extractSalaryMax(salaireText) { if (!salaireText) return null; const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/); return matches && matches.length >= 3 ? parseInt(matches[2].replace(/\s/g, '')) : extractSalaryMin(salaireText); }
-function extractSkillsFromJob(job) { const skills = []; const text = `${job.intitule} ${job.description || ''}`.toLowerCase(); const common = ['excel','word','powerpoint','office','javascript','python','java','php','sql','marketing','communication','vente','commerce','gestion','comptabilité','finance','anglais','allemand','espagnol']; common.forEach(s => { if (text.includes(s)) skills.push(s.charAt(0).toUpperCase() + s.slice(1)); }); return skills.slice(0, 5); }
+// Fonctions de formatage
+function formatLocation(lieuTravail) {
+  if (!lieuTravail) return 'Lieu non specifie';
+  return lieuTravail.libelle || 'Lieu non specifie';
+}
 
-// ---- Fallback ----
+function formatContractType(typeContrat) {
+  const contractTypes = {
+    'CDI': 'CDI',
+    'CDD': 'CDD',
+    'MIS': 'Mission interim',
+    'SAI': 'Saisonnier',
+    'IND': 'Independant'
+  };
+  
+  return contractTypes[typeContrat] || typeContrat || 'Type non specifie';
+}
+
+function formatExperience(experienceExige) {
+  const experienceLabels = {
+    'D': 'Debutant accepte',
+    'S': 'Experience souhaitee',
+    'E': 'Experience exigee'
+  };
+  
+  return experienceLabels[experienceExige] || 'Non specifie';
+}
+
+function cleanDescription(description) {
+  if (!description) return 'Description non disponible';
+  
+  return description
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 500) + (description.length > 500 ? '...' : '');
+}
+
+function extractSalaryMin(salaireText) {
+  if (!salaireText) return null;
+  
+  const match = salaireText.match(/(\d+(?:\s?\d+)*)\s*€/);
+  if (match) {
+    return parseInt(match[1].replace(/\s/g, ''));
+  }
+  
+  return null;
+}
+
+function extractSalaryMax(salaireText) {
+  if (!salaireText) return null;
+  
+  const matches = salaireText.match(/(\d+(?:\s?\d+)*)\s*€.*?(\d+(?:\s?\d+)*)\s*€/);
+  if (matches && matches.length >= 3) {
+    return parseInt(matches[2].replace(/\s/g, ''));
+  }
+  
+  return extractSalaryMin(salaireText);
+}
+
+function extractSkillsFromJob(job) {
+  const skills = [];
+  const text = `${job.intitule} ${job.description || ''}`.toLowerCase();
+  
+  const commonSkills = [
+    'excel', 'word', 'powerpoint', 'office',
+    'javascript', 'python', 'java', 'php', 'sql',
+    'marketing', 'communication', 'vente', 'commerce',
+    'gestion', 'comptabilite', 'finance',
+    'anglais', 'allemand', 'espagnol'
+  ];
+  
+  commonSkills.forEach(skill => {
+    if (text.includes(skill)) {
+      skills.push(skill.charAt(0).toUpperCase() + skill.slice(1));
+    }
+  });
+  
+  return skills.slice(0, 5);
+}
+
+// Jobs de fallback en cas d'échec
 function mockJobs(candidateProfile) {
   return [
     {
-      id: "fake-1",
+      id: "fallback-1",
       source: "Mock",
       is_real_offer: false,
-      job_title: "Développeur Fullstack (exemple)",
+      job_title: "Developpeur Fullstack (exemple)",
       company: "Startup Innovante",
       location: "Paris (75001)",
-      description: "Exemple d'offre utilisée en fallback quand France Travail est indisponible.",
+      description: "Exemple d'offre utilisee en fallback quand France Travail est indisponible. Développement d'applications web modernes avec React et Node.js.",
       contract_type: "CDI",
       sector: "Informatique",
       salary_display: "40k-50k €",
@@ -274,11 +610,35 @@ function mockJobs(candidateProfile) {
       date_creation: new Date().toISOString(),
       date_actualisation: new Date().toISOString(),
       match_score: 70,
-      match_justification: "Fallback automatique",
+      match_justification: "Fallback automatique - France Travail indisponible",
       france_travail_url: "#",
       required_skills: ["JavaScript", "Node.js", "React"],
       company_types: ["Standard"],
-      evolution_potential: "Rapide évolution possible"
+      evolution_potential: "Rapide evolution possible"
+    },
+    {
+      id: "fallback-2",
+      source: "Mock",
+      is_real_offer: false,
+      job_title: "Assistant Commercial (exemple)",
+      company: "PME Dynamique",
+      location: candidateProfile.location || "Lyon (69001)",
+      description: "Poste polyvalent en entreprise. Gestion clientèle, prospection, suivi commercial. Formation interne possible.",
+      contract_type: "CDI",
+      sector: "Commerce",
+      salary_display: "28k-35k €",
+      salary_min: 28000,
+      salary_max: 35000,
+      experience_required: "Debutant accepte",
+      qualification_required: "Bac minimum",
+      date_creation: new Date().toISOString(),
+      date_actualisation: new Date().toISOString(),
+      match_score: 60,
+      match_justification: "Fallback automatique - Poste accessible tous profils",
+      france_travail_url: "#",
+      required_skills: ["Communication", "Vente", "Office"],
+      company_types: ["Standard"],
+      evolution_potential: "Evolution vers responsable commercial"
     }
   ];
 }
