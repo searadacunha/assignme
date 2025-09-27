@@ -68,7 +68,7 @@ exports.handler = async (event, context) => {
 async function getAccessToken(clientId, clientSecret) {
   try {
     const params = new URLSearchParams({
-      grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret, scope: 'api_offresdemploiv2 o2dsoffre'
+      grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret,     scope: 'api_offresdemploiv2 api_rome-metiersv1 o2dsoffre'
     });
 
     const response = await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire', {
@@ -245,7 +245,7 @@ function extractLocation(location) {
   return '75001';
 }
 
-function transformJobsForAssignme(jobs, candidateProfile) {
+async function transformJobsForAssignme(jobs, candidateProfile) {
   // Filtrage géographique simple pour Paris
   let filteredJobs = jobs;
   if (candidateProfile.location?.toLowerCase().includes('paris')) {
@@ -273,8 +273,32 @@ function transformJobsForAssignme(jobs, candidateProfile) {
   // Afficher toutes les offres filtrées
   const finalJobs = uniqueJobs;
   
-  return finalJobs.map(job => {
+  // Enrichissement avec données ROME en parallèle
+  const enrichedJobs = await Promise.all(finalJobs.map(async (job) => {
     const matchScore = calculateMatchScore(job, candidateProfile);
+    
+    // Enrichissement ROME
+    let romeData = null;
+    try {
+      const romeResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/rome-metiers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          jobTitle: job.intitule, 
+          candidateProfile: candidateProfile 
+        })
+      });
+      
+      if (romeResponse.ok) {
+        const romeResult = await romeResponse.json();
+        if (romeResult.success) {
+          romeData = romeResult.metier;
+          console.log(`Enrichissement ROME réussi pour: ${job.intitule}`);
+        }
+      }
+    } catch (error) {
+      console.log(`Erreur enrichissement ROME pour ${job.intitule}:`, error.message);
+    }
     
     return {
       id: job.id, source: 'France Travail', is_real_offer: true,
@@ -295,9 +319,13 @@ function transformJobsForAssignme(jobs, candidateProfile) {
       france_travail_url: `https://candidat.pole-emploi.fr/offres/recherche/detail/${job.id}`,
       required_skills: extractSkillsFromJob(job),
       company_types: [job.entreprise?.adaptee ? 'Entreprise adaptee' : 'Standard'],
-      evolution_potential: 'A definir avec employeur'
+      evolution_potential: 'A definir avec employeur',
+      // Données ROME enrichies si disponibles
+      rome_enrichment: romeData
     };
-  });
+  }));
+  
+  return enrichedJobs;
 }
 
 function calculateMatchScore(job, candidateProfile) {
