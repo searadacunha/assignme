@@ -226,7 +226,7 @@ function transformFormationsForAssignme(formations, candidateProfile) {
       relevance: generateRelevance(formation, candidateProfile),
       funding: 'CPF, Pôle Emploi, Région selon éligibilité',
       immediate_employment: determineImmediateEmployment(formation),
-      url: formation.urlFormation || '#',
+      url: formation.urlFormation || formation.lienFormation || `https://www.francetravail.fr/candidat/formations/rechercher?motscles=${encodeURIComponent(formation.intituleFormation || 'formation')}`,
       organisme: formation.organismeFormateur?.denomination || 'Organisme de formation',
       lieu: formation.lieu?.libelle || candidateProfile.location || 'Lieu à définir',
       certification: formation.certification || 'Attestation de formation'
