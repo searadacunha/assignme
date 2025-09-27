@@ -226,7 +226,7 @@ function transformFormationsForAssignme(formations, candidateProfile) {
       relevance: generateRelevance(formation, candidateProfile),
       funding: 'CPF, Pôle Emploi, Région selon éligibilité',
       immediate_employment: determineImmediateEmployment(formation),
-      url: formation.urlFormation || formation.lienFormation || `https://www.francetravail.fr/candidat/formations/rechercher?motscles=${encodeURIComponent(formation.intituleFormation || 'formation')}`,
+      url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
       organisme: formation.organismeFormateur?.denomination || 'Organisme de formation',
       lieu: formation.lieu?.libelle || candidateProfile.location || 'Lieu à définir',
       certification: formation.certification || 'Attestation de formation'
@@ -297,7 +297,7 @@ function fallbackFormations(candidateProfile) {
         relevance: 'Adaptée au profil car elle ne nécessite pas de qualifications préalables et offre des débouchés rapides.',
         funding: 'CPF, Pôle Emploi, financement possible',
         immediate_employment: 'true',
-        url: '#',
+        url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
         organisme: 'Organisme de formation',
         lieu: candidateProfile.location || 'France',
         certification: 'CQP reconnu'
@@ -309,7 +309,7 @@ function fallbackFormations(candidateProfile) {
         relevance: 'Formation courte et pratique, avec une forte demande sur le marché du travail.',
         funding: 'CPF, Pôle Emploi selon éligibilité',
         immediate_employment: 'true',
-        url: '#',
+        url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
         organisme: 'Centre de formation agréé',
         lieu: candidateProfile.location || 'France',
         certification: 'CACES R489'
@@ -321,7 +321,7 @@ function fallbackFormations(candidateProfile) {
         relevance: 'Permet d\'accéder à des postes dans la sécurité, secteur en constante demande.',
         funding: 'CPF, Région, Pôle Emploi',
         immediate_employment: 'true',
-        url: '#',
+        url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
         organisme: 'Organisme de formation sécurité',
         lieu: candidateProfile.location || 'France',
         certification: 'SSIAP 1'
@@ -339,7 +339,7 @@ function fallbackFormations(candidateProfile) {
         relevance: 'Permet d\'acquérir des compétences supplémentaires et d\'augmenter l\'employabilité dans le secteur.',
         funding: 'CPF, OPCO, entreprise',
         immediate_employment: 'false',
-        url: '#',
+        url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
         organisme: 'Centre de formation technique',
         lieu: candidateProfile.location || 'France',
         certification: 'CQP Maintenance'
@@ -351,7 +351,7 @@ function fallbackFormations(candidateProfile) {
         relevance: 'Complète les compétences en électrotechnique et ouvre des opportunités dans des secteurs en pleine croissance.',
         funding: 'CPF, Région, OPCO',
         immediate_employment: 'false',
-        url: '#',
+        url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
         organisme: 'Institut technique',
         lieu: candidateProfile.location || 'France',
         certification: 'Titre professionnel'
@@ -368,7 +368,7 @@ function fallbackFormations(candidateProfile) {
       relevance: 'Adaptée à votre expérience et améliore vos perspectives d\'évolution.',
       funding: 'CPF, employeur selon statut',
       immediate_employment: 'false',
-      url: '#',
+      url: 'https://www.francetravail.fr/candidat/en-formation/mes-aides-financieres-en-formation.html',
       organisme: 'Organisme de formation',
       lieu: candidateProfile.location || 'France',
       certification: 'Certification gestion de projet'
