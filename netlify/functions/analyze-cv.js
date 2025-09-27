@@ -286,13 +286,34 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
       console.log('Candidat à l\'étranger - Pas de recherche d\'offres d\'emploi en France');
     }
 
+    // Récupération des formations via l'API France Travail
+    let realTrainings = [];
+    try {
+      console.log('Recherche formations France Travail...');
+      const trainingsResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/france-travail-formations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateProfile })
+      });
+      
+      if (trainingsResponse.ok) {
+        const trainingsData = await trainingsResponse.json();
+        if (trainingsData.success && trainingsData.formations) {
+          realTrainings = trainingsData.formations;
+          console.log(`${realTrainings.length} formations réelles trouvées`);
+        }
+      }
+    } catch (error) {
+      console.log('Pas de formations API trouvées, utilisation fallback');
+    }
+
     // Construction de la réponse finale
     const finalResult = {
       candidate_analysis: {
         ...candidateProfile
       },
       recommendations: realJobs.slice(0, 8), // Offres réelles ou liste vide
-      training_suggestions: analysisResult.training_suggestions || [],
+      training_suggestions: realTrainings.length > 0 ? realTrainings : analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
         provider: 'ASSIGNME IA + France Travail',
