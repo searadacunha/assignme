@@ -1,5 +1,5 @@
 // netlify/functions/france-travail-jobs.js
-// Version simplifiée - juste correction mot-clé Mohammed
+// Version simplifiée - affichage de toutes les offres adaptées
 
 const communeMapping = {
   // Région parisienne
@@ -95,8 +95,11 @@ async function searchJobs(token, candidateProfile) {
     console.log('Localisation extraite:', location);
 
     const searchParams = new URLSearchParams({
-      motsCles: keywords || "emploi", codePostal: location || '75001', distance: getSearchDistance(candidateProfile.location),
-      sort: '0', range: '0-19'
+      motsCles: keywords || "emploi", 
+      codePostal: location || '75001', 
+      distance: getSearchDistance(candidateProfile.location),
+      sort: '0', 
+      range: '0-49'
     });
 
     if (candidateProfile.total_experience_years >= 5) searchParams.append('experience', '2');
@@ -267,8 +270,8 @@ function transformJobsForAssignme(jobs, candidateProfile) {
     )
   );
   
-  // Limiter à 8 offres
-  const finalJobs = uniqueJobs.slice(0, 8);
+  // Afficher toutes les offres filtrées
+  const finalJobs = uniqueJobs;
   
   return finalJobs.map(job => {
     const matchScore = calculateMatchScore(job, candidateProfile);
