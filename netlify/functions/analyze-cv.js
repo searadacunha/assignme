@@ -1,4 +1,4 @@
-// netlify/functions/analyze-cv.js - Version avec analyse psychologique et gestion géographique
+// netlify/functions/analyze-cv.js - Version avec analyse psychologique, gestion géographique et enrichissement ROMEO
 exports.handler = async (event, context) => {
   // Configuration CORS
   const headers = {
@@ -222,12 +222,36 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
     // Parse du JSON
     const analysisResult = JSON.parse(aiResponse);
 
+    // Enrichissement avec ROMEO (nouvelle fonctionnalité)
+    let enrichedProfile = analysisResult.candidate_analysis;
+    try {
+      console.log('Tentative enrichissement ROMEO...');
+      const romeoResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/romeo-analysis`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          cvText: cvText,
+          candidateProfile: analysisResult.candidate_analysis 
+        })
+      });
+      
+      if (romeoResponse.ok) {
+        const romeoData = await romeoResponse.json();
+        if (romeoData.success && romeoData.enriched_profile) {
+          enrichedProfile = romeoData.enriched_profile;
+          console.log('Profil enrichi avec ROMEO:', romeoData.romeo_analysis?.detected_metiers?.length || 0, 'métiers détectés');
+        }
+      }
+    } catch (error) {
+      console.log('Enrichissement ROMEO non disponible, utilisation profil de base');
+    }
+
     // Vérification géographique pour les offres d'emploi
     let realJobs = [];
     let franceTravailError = null;
     
     // Détection automatique si candidat à l'étranger
-    const candidateProfile = analysisResult.candidate_analysis;
+    const candidateProfile = enrichedProfile;
     
     // Logique simplifiée : si Paris ou France mentionné = disponible en France
     const location = candidateProfile.location?.toLowerCase() || "";
@@ -258,7 +282,9 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
               // Ajout des informations psychologiques pour améliorer le matching
               psychological_profile: candidateProfile.psychological_profile,
               supervision_needs: candidateProfile.supervision_needs,
-              recommended_work_environment: candidateProfile.recommended_work_environment
+              recommended_work_environment: candidateProfile.recommended_work_environment,
+              // Données ROMEO si disponibles pour améliorer la recherche
+              romeo_analysis: candidateProfile.romeo_analysis || null
             }
           })
         });
@@ -286,34 +312,13 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
       console.log('Candidat à l\'étranger - Pas de recherche d\'offres d\'emploi en France');
     }
 
-    // Récupération des formations via l'API France Travail
-    let realTrainings = [];
-    try {
-      console.log('Recherche formations France Travail...');
-      const trainingsResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/france-travail-formations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidateProfile })
-      });
-      
-      if (trainingsResponse.ok) {
-        const trainingsData = await trainingsResponse.json();
-        if (trainingsData.success && trainingsData.formations) {
-          realTrainings = trainingsData.formations;
-          console.log(`${realTrainings.length} formations réelles trouvées`);
-        }
-      }
-    } catch (error) {
-      console.log('Pas de formations API trouvées, utilisation fallback');
-    }
-
     // Construction de la réponse finale
     const finalResult = {
       candidate_analysis: {
         ...candidateProfile
       },
       recommendations: realJobs.slice(0, 8), // Offres réelles ou liste vide
-      training_suggestions: realTrainings.length > 0 ? realTrainings : analysisResult.training_suggestions || [],
+      training_suggestions: analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
         provider: 'ASSIGNME IA + France Travail',
@@ -325,7 +330,8 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
         france_travail_error: franceTravailError,
         psychological_analysis: true,
         geographic_filtering: true,
-        candidate_abroad: isAbroad
+        candidate_abroad: isAbroad,
+        romeo_enrichment: candidateProfile.romeo_analysis ? true : false
       }
     };
 
