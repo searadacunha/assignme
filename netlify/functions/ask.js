@@ -1,7 +1,7 @@
 // netlify/functions/ask.js
-// Q&A via GPT basÃ© sur assignme.pdf (RAG avec TF-IDF)
-// NÃ©cessite: OPENAI_API_KEY dans les variables d'environnement
-// Place assignme.pdf Ã  la racine du site (Ã  cÃ´tÃ© d'index.html)
+// Q&A via GPT basé sur assignme.pdf (RAG avec TF-IDF)
+// Nécessite: OPENAI_API_KEY dans les variables d'environnement
+// Place assignme.pdf à la racine du site (à côté d'index.html)
 
 const pdfParse = require('pdf-parse');
 
@@ -52,7 +52,7 @@ function uniq(arr){ return [...new Set(arr)] }
 async function fetchPdfBuffer(baseUrl){
   const pdfUrl = `${baseUrl}/assignme.pdf`;
   const resp = await fetch(pdfUrl);
-  if (!resp.ok) throw new Error(`Impossible de rÃ©cupÃ©rer le PDF ASSIGNME: ${resp.status}`);
+  if (!resp.ok) throw new Error(`Impossible de récupérer le PDF ASSIGNME: ${resp.status}`);
   const arrayBuffer = await resp.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
@@ -92,21 +92,21 @@ async function callOpenAI(context, question){
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY manquant dans la configuration');
 
-  const system = `Tu es l'assistant IA officiel d'ASSIGNME, une startup franÃ§aise DeepTech spÃ©cialisÃ©e dans le recrutement par intelligence artificielle.
+  const system = `Tu es l'assistant IA officiel d'ASSIGNME, une startup française DeepTech spécialisée dans le recrutement par intelligence artificielle.
 
 INSTRUCTIONS IMPORTANTES :
-1. RÃ©ponds UNIQUEMENT Ã  partir du CONTEXTE fourni ci-dessous
-2. Si l'information n'est pas dans le contexte, rÃ©ponds exactement: "Ce point n'est pas prÃ©cisÃ© dans le dossier ASSIGNME."
-3. Sois prÃ©cis, professionnel et enthousiaste sur le projet ASSIGNME
+1. Réponds UNIQUEMENT à partir du CONTEXTE fourni ci-dessous
+2. Si l'information n'est pas dans le contexte, réponds exactement: "Ce point n'est pas précisé dans le dossier ASSIGNME."
+3. Sois précis, professionnel et enthousiaste sur le projet ASSIGNME
 4. Utilise un ton accessible mais expert
-5. RÃ©ponds en franÃ§ais
+5. Réponds en français
 
-CONTEXTE SPÃ‰CIFIQUE :
+CONTEXTE SPÉCIFIQUE :
 - Benjamin Da Cunha est le CEO et fondateur d'ASSIGNME
-- ASSIGNME est une innovation DeepTech franÃ§aise
-- La plateforme rÃ©volutionne le recrutement par l'IA
-- Recherche active de financement pour levÃ©e de fonds
-- MVP en dÃ©veloppement avec dÃ©monstrateur en ligne`;
+- ASSIGNME est une innovation DeepTech française
+- La plateforme révolutionne le recrutement par l'IA
+- Recherche active de financement pour levée de fonds
+- MVP en développement avec démonstrateur en ligne`;
 
   const user = `CONTEXTE ASSIGNME:
 """
@@ -116,7 +116,7 @@ ${context}
 QUESTION:
 ${question}
 
-RÃ©ponds de maniÃ¨re claire et engageante en te basant uniquement sur le contexte fourni.`;
+Réponds de manière claire et engageante en te basant uniquement sur le contexte fourni.`;
 
   const body = {
     model: 'gpt-4o-mini',
@@ -140,17 +140,17 @@ RÃ©ponds de maniÃ¨re claire et engageante en te basant uniquement sur le con
   if (!resp.ok){
     const errorText = await resp.text();
     if (resp.status === 429) {
-      throw new Error('Limite de requÃªtes OpenAI atteinte. RÃ©essayez dans quelques minutes.');
+      throw new Error('Limite de requêtes OpenAI atteinte. Réessayez dans quelques minutes.');
     }
     if (resp.status === 401) {
-      throw new Error('ClÃ© API OpenAI invalide');
+      throw new Error('Clé API OpenAI invalide');
     }
     throw new Error(`Erreur OpenAI ${resp.status}: ${errorText.slice(0,200)}`);
   }
   
   const data = await resp.json();
   const answer = (data?.choices?.[0]?.message?.content || '').trim();
-  return answer || "Ce point n'est pas prÃ©cisÃ© dans le dossier ASSIGNME.";
+  return answer || "Ce point n'est pas précisé dans le dossier ASSIGNME.";
 }
 
 function corsHeaders(){
@@ -177,7 +177,7 @@ exports.handler = async (event, context) => {
       return { 
         statusCode: 405, 
         headers: corsHeaders(), 
-        body: JSON.stringify({ error: 'MÃ©thode non autorisÃ©e' })
+        body: JSON.stringify({ error: 'Méthode non autorisée' })
       };
     }
 
@@ -193,10 +193,10 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // DÃ©tection de l'URL de base
+    // Détection de l'URL de base
     const base = process.env.URL || process.env.DEPLOY_PRIME_URL || `https://${event.headers.host}`;
 
-    // Construction/rÃ©cupÃ©ration de l'index du PDF
+    // Construction/récupération de l'index du PDF
     const { blocks, idf } = await ensureIndex(base);
 
     // Recherche TF-IDF des blocs pertinents
@@ -209,8 +209,8 @@ exports.handler = async (event, context) => {
       text: b.text
     })).sort((a,b) => b.s - a.s);
 
-    // SÃ©lection des meilleurs blocs
-    const K = 8; // Plus de contexte pour de meilleures rÃ©ponses
+    // Sélection des meilleurs blocs
+    const K = 8; // Plus de contexte pour de meilleures réponses
     const hits = scored.filter(x => x.s > 0).slice(0, K);
     
     if (hits.length === 0){
@@ -218,7 +218,7 @@ exports.handler = async (event, context) => {
         statusCode: 200, 
         headers: corsHeaders(), 
         body: JSON.stringify({ 
-          answer: "Ce point n'est pas prÃ©cisÃ© dans le dossier ASSIGNME." 
+          answer: "Ce point n'est pas précisé dans le dossier ASSIGNME." 
         })
       };
     }
@@ -232,15 +232,15 @@ exports.handler = async (event, context) => {
       ctx += (ctx ? '\n\n' : '') + chunk;
     }
 
-    // GÃ©nÃ©ration de la rÃ©ponse avec GPT
+    // Génération de la réponse avec GPT
     const answer = await callOpenAI(ctx, question);
 
-    // VÃ©rification de pertinence (anti-hallucination basique)
+    // Vérification de pertinence (anti-hallucination basique)
     const hasOverlap = qTokens.some(t => ctx.toLowerCase().includes(t));
     const isLongAnswer = answer.split(/\s+/).length > 50;
     
     const finalAnswer = (!hasOverlap && isLongAnswer)
-      ? "Ce point n'est pas prÃ©cisÃ© dans le dossier ASSIGNME."
+      ? "Ce point n'est pas précisé dans le dossier ASSIGNME."
       : answer;
 
     return {
