@@ -1,4 +1,4 @@
-// netlify/functions/analyze-cv.js - Version avec analyse psychologique, gestion géographique et enrichissement ROMEO
+// netlify/functions/analyze-cv.js - Version Mistral AI avec analyse France Travail
 exports.handler = async (event, context) => {
   // Configuration CORS
   const headers = {
@@ -26,14 +26,14 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Récupération de l'API key depuis les variables d'environnement
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Récupération de l'API key Mistral depuis les variables d'environnement
+    const apiKey = process.env.MISTRAL_API_KEY;
     
     if (!apiKey) {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'API key not configured' })
+        body: JSON.stringify({ error: 'Mistral API key not configured' })
       };
     }
 
@@ -60,34 +60,34 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
 - RESPECT STRICT DU FORMAT JSON VALIDE ci-dessous.
 - NE JAMAIS INVENTER de compétences, diplômes ou expériences non mentionnés.
 
-────────────────────────────
+────────────────────────────────
 1. ANALYSE PSYCHOLOGIQUE OBLIGATOIRE
-────────────────────────────
+────────────────────────────────
 - Détecter la motivation réelle (au-delà des formules polies).
 - Évaluer les capacités relationnelles et communicationnelles.
 - Identifier autonomie / besoin d'encadrement.
 - Déterminer résistance au stress, persévérance et stabilité.
 - Repérer traits de personnalité compatibles ou incompatibles avec certains métiers.
 
-────────────────────────────
+────────────────────────────────
 2. CONTRÔLES DE COHÉRENCE MÉTIER
-────────────────────────────
+────────────────────────────────
 - Interdiction : jamais orienter vers métiers d'accueil/enfants/clients si profil non adapté.
 - Si motivation = purement financière → éviter métiers de vocation (social, éducation).
 - Si niveau scolaire bas → formations courtes, pratiques, débouchant rapidement.
 - Si expériences instables → privilégier missions courtes ou encadrées.
 
-────────────────────────────
+────────────────────────────────
 3. PRISE EN COMPTE DES CONTRAINTES GÉOGRAPHIQUES
-────────────────────────────
+────────────────────────────────
 - Si localisation = Canada, USA, Australie ou autre pays → NE PAS proposer d'emplois en France
 - Dans ce cas, expliquer pourquoi dans "location_message"
 - Proposer UNIQUEMENT des formations pour préparer un éventuel retour ou développement de compétences
 - Si en France → proposer emplois ET formations selon le niveau
 
-────────────────────────────
+────────────────────────────────
 4. FORMATIONS À PROPOSER
-────────────────────────────
+────────────────────────────────
 - Toujours 3 à 5 formations adaptées au niveau réel.
 - Pour profils faibles : CQP cuisine, permis cariste, sécurité, nettoyage industriel, etc.
 - Pour profils diplômés : formations complémentaires réalistes (BTS, BUT, titres RNCP).
@@ -95,17 +95,17 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
 - Lier les formations aux volontés exprimées par le candidat.
 - Indiquer durée, débouchés, financement possible, et si emploi immédiat envisageable.
 
-────────────────────────────
+────────────────────────────────
 5. RECONVERSION & PROJECTION
-────────────────────────────
+────────────────────────────────
 - Proposer au moins 1 à 2 pistes de reconversion possibles.
 - Indiquer faisabilité (facile/modérée/difficile).
 - Détailler étapes concrètes et timeline réaliste.
 - Justifier compatibilité psychologique.
 
-────────────────────────────
+────────────────────────────────
 6. FORMAT DE SORTIE JSON STRICT
-────────────────────────────
+────────────────────────────────
 {
   "candidate_analysis": {
     "name": "nom_complet",
@@ -148,9 +148,9 @@ d'emploi ou de formation adaptées au niveau réel, aux motivations, aux contrai
 }
 `;
 
-    // Préparation de la requête vers OpenAI
+    // Préparation de la requête vers Mistral AI
     const requestData = {
-      model: "gpt-4o-mini",
+      model: "mistral-large-latest",
       messages: [
         {
           role: "system", 
@@ -180,8 +180,8 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
       temperature: 0.2
     };
 
-    // Appel à l'API OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Appel à l'API Mistral AI
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -192,13 +192,13 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('OpenAI API error:', response.status, errorData);
+      console.error('Mistral AI API error:', response.status, errorData);
       
       return {
         statusCode: response.status,
         headers,
         body: JSON.stringify({ 
-          error: `OpenAI API error: ${response.status}`,
+          error: `Mistral AI API error: ${response.status}`,
           details: errorData.error?.message || 'Unknown error'
         })
       };
@@ -206,7 +206,7 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
 
     const data = await response.json();
     
-    // Traitement de la réponse OpenAI
+    // Traitement de la réponse Mistral AI
     let aiResponse = data.choices[0].message.content;
     
     // Nettoyage de la réponse
@@ -321,10 +321,10 @@ RÉPONDS EN JSON FRANÇAIS UNIQUEMENT avec analyse brutalement honnête.`
       training_suggestions: analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
-        provider: 'ASSIGNME IA + France Travail',
-        model: 'gpt-4o-mini',
+        provider: 'ASSIGNME IA (Mistral AI) + France Travail',
+        model: 'mistral-large-latest',
         tokens_used: data.usage?.total_tokens,
-        cost: ((data.usage?.total_tokens || 1500) * 0.0000015).toFixed(4),
+        cost: ((data.usage?.total_tokens || 1500) * 0.000008).toFixed(6),
         confidence: 'Élevée',
         real_jobs_count: realJobs.length,
         france_travail_error: franceTravailError,
