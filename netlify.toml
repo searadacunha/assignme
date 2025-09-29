@@ -12,7 +12,7 @@
   # Bundler optimisé
   node_bundler = "esbuild"
 
-# Configuration du timeout (26 secondes max sur plan gratuit)
+# Timeout 26 secondes pour toutes les functions
 [functions."*"]
   timeout = 26
 
