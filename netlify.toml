@@ -8,6 +8,12 @@
 [functions]
   # Dossier contenant les fonctions serverless
   directory = "netlify/functions"
+  
+  # Timeout augmenté pour Mistral AI (max 26 secondes sur plan gratuit)
+  timeout = 26
+  
+  # Bundler optimisé
+  node_bundler = "esbuild"
 
 [[headers]]
   # Configuration CORS pour les fonctions
