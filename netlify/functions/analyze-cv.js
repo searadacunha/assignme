@@ -1,6 +1,5 @@
-// netlify/functions/analyze-cv.js - Version Mistral AI optimisée (Medium)
+// netlify/functions/analyze-cv.js - Version OpenAI
 exports.handler = async (event, context) => {
-  // Configuration CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -8,47 +7,27 @@ exports.handler = async (event, context) => {
     'Content-Type': 'application/json'
   };
 
-  // Gestion de la requête OPTIONS (preflight)
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+    return { statusCode: 200, headers, body: '' };
   }
 
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method Not Allowed' })
-    };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
   try {
-    // Récupération de l'API key Mistral depuis les variables d'environnement
-    const apiKey = process.env.MISTRAL_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Mistral API key not configured' })
-      };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'OpenAI API key not configured' }) };
     }
 
-    // Parse du body de la requête
     const { cvText } = JSON.parse(event.body);
     
     if (!cvText) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'CV text is required' })
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'CV text is required' }) };
     }
 
-    // Prompt système simplifié pour rapidité
     const systemPrompt = `Tu es un expert en recrutement français. Analyse ce CV et réponds en JSON français strict.
 
 FORMAT JSON OBLIGATOIRE :
@@ -106,27 +85,19 @@ ${cvText}
 
 RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
 
-    // Préparation de la requête vers Mistral AI (version optimisée)
     const requestData = {
-      model: "mistral-medium-latest",  // Plus rapide que large
+      model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system", 
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: userPrompt
-        }
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
       ],
-      max_tokens: 2000,  // Réduit pour rapidité
+      max_tokens: 2000,
       temperature: 0.2
     };
 
-    console.log('Appel Mistral API...');
+    console.log('Appel OpenAI API...');
 
-    // Appel à l'API Mistral AI
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -135,18 +106,18 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
       body: JSON.stringify(requestData)
     });
 
-    console.log(`Réponse Mistral: ${response.status}`);
+    console.log(`Réponse OpenAI: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Mistral AI API error:', response.status, errorData);
+      console.error('OpenAI API error:', response.status, errorData);
       
       return {
         statusCode: response.status,
         headers,
         body: JSON.stringify({ 
-          error: `Mistral AI API error: ${response.status}`,
-          details: errorData.message || 'Unknown error'
+          error: `OpenAI API error: ${response.status}`,
+          details: errorData.error?.message || 'Unknown error'
         })
       };
     }
@@ -154,10 +125,8 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
     const data = await response.json();
     console.log('Tokens utilisés:', data.usage?.total_tokens);
     
-    // Traitement de la réponse Mistral AI
     let aiResponse = data.choices[0].message.content;
     
-    // Nettoyage de la réponse
     aiResponse = aiResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
     
     const firstBrace = aiResponse.indexOf('{');
@@ -167,10 +136,8 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
       aiResponse = aiResponse.substring(firstBrace, lastBrace + 1);
     }
 
-    // Parse du JSON
     const analysisResult = JSON.parse(aiResponse);
 
-    // Enrichissement avec ROMEO (optionnel, rapide)
     let enrichedProfile = analysisResult.candidate_analysis;
     try {
       console.log('Tentative enrichissement ROMEO...');
@@ -180,8 +147,7 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
         body: JSON.stringify({ 
           cvText: cvText,
           candidateProfile: analysisResult.candidate_analysis 
-        }),
-        timeout: 5000  // Timeout court
+        })
       });
       
       if (romeoResponse.ok) {
@@ -195,13 +161,11 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
       console.log('ROMEO skip:', error.message);
     }
 
-    // Vérification géographique pour les offres d'emploi
     let realJobs = [];
     let franceTravailError = null;
     
     const candidateProfile = enrichedProfile;
     
-    // Détection si candidat à l'étranger
     const location = candidateProfile.location?.toLowerCase() || "";
     const isAbroad = !location.includes('paris') && !location.includes('france') && (
       location.includes('canada') || location.includes('usa') || location.includes('australie') || 
@@ -212,16 +176,13 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
     
     console.log(`Localisation: ${location}, À l'étranger: ${isAbroad}`);
 
-    // Recherche offres France Travail (seulement si en France)
     if (!isAbroad) {
       try {
         console.log('Recherche France Travail...');
         
         const jobsResponse = await fetch(`${process.env.URL || 'https://assignme.fr'}/.netlify/functions/france-travail-jobs`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             candidateProfile: {
               ...candidateProfile,
@@ -230,8 +191,7 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
               recommended_work_environment: candidateProfile.recommended_work_environment,
               romeo_analysis: candidateProfile.romeo_analysis || null
             }
-          }),
-          timeout: 8000  // Timeout court
+          })
         });
 
         if (jobsResponse.ok) {
@@ -255,7 +215,6 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
       console.log('Candidat étranger - pas de recherche emploi France');
     }
 
-    // Construction de la réponse finale
     const finalResult = {
       candidate_analysis: {
         ...candidateProfile
@@ -264,10 +223,10 @@ RÉPONDS UNIQUEMENT EN JSON FRANÇAIS VALIDE.`;
       training_suggestions: analysisResult.training_suggestions || [],
       reconversion_paths: analysisResult.reconversion_paths || [],
       ai_metadata: {
-        provider: 'ASSIGNME IA (Mistral AI) + France Travail',
-        model: 'mistral-medium-latest',
+        provider: 'ASSIGNME IA (OpenAI GPT-4) + France Travail',
+        model: 'gpt-4o-mini',
         tokens_used: data.usage?.total_tokens,
-        cost: ((data.usage?.total_tokens || 1000) * 0.000003).toFixed(6),
+        cost: ((data.usage?.total_tokens || 1000) * 0.00000015).toFixed(6),
         confidence: 'Élevée',
         real_jobs_count: realJobs.length,
         france_travail_error: franceTravailError,
