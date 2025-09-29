@@ -1,7 +1,6 @@
 // netlify/functions/ask.js
-// Q&A via GPT basé sur assignme.pdf (RAG avec TF-IDF)
-// Nécessite: OPENAI_API_KEY dans les variables d'environnement
-// Place assignme.pdf à la racine du site (à côté d'index.html)
+// Q&A via Mistral basé sur assignme.pdf (RAG avec TF-IDF)
+// Nécessite: MISTRAL_API_KEY dans les variables d'environnement
 
 const pdfParse = require('pdf-parse');
 
@@ -88,9 +87,9 @@ async function ensureIndex(baseUrl){
   return buildIndexFrom(baseUrl);
 }
 
-async function callOpenAI(context, question){
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY manquant dans la configuration');
+async function callMistral(context, question){
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) throw new Error('MISTRAL_API_KEY manquant dans la configuration');
 
   const system = `Tu es l'assistant IA officiel d'ASSIGNME, une startup française DeepTech spécialisée dans le recrutement par intelligence artificielle.
 
@@ -104,7 +103,7 @@ INSTRUCTIONS IMPORTANTES :
 CONTEXTE SPÉCIFIQUE :
 - Benjamin Da Cunha est le CEO et fondateur d'ASSIGNME
 - ASSIGNME est une innovation DeepTech française
-- La plateforme révolutionne le recrutement par l'IA
+- La plateforme révolutionne le recrutement par l'IA (Mistral AI)
 - Recherche active de financement pour levée de fonds
 - MVP en développement avec démonstrateur en ligne`;
 
@@ -119,7 +118,7 @@ ${question}
 Réponds de manière claire et engageante en te basant uniquement sur le contexte fourni.`;
 
   const body = {
-    model: 'gpt-4o-mini',
+    model: 'mistral-large-latest',
     messages: [
       { role: 'system', content: system },
       { role: 'user', content: user }
@@ -128,7 +127,7 @@ Réponds de manière claire et engageante en te basant uniquement sur le context
     max_tokens: 400
   };
 
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+  const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -140,12 +139,12 @@ Réponds de manière claire et engageante en te basant uniquement sur le context
   if (!resp.ok){
     const errorText = await resp.text();
     if (resp.status === 429) {
-      throw new Error('Limite de requêtes OpenAI atteinte. Réessayez dans quelques minutes.');
+      throw new Error('Limite de requêtes Mistral atteinte. Réessayez dans quelques minutes.');
     }
     if (resp.status === 401) {
-      throw new Error('Clé API OpenAI invalide');
+      throw new Error('Clé API Mistral invalide');
     }
-    throw new Error(`Erreur OpenAI ${resp.status}: ${errorText.slice(0,200)}`);
+    throw new Error(`Erreur Mistral ${resp.status}: ${errorText.slice(0,200)}`);
   }
   
   const data = await resp.json();
@@ -232,8 +231,8 @@ exports.handler = async (event, context) => {
       ctx += (ctx ? '\n\n' : '') + chunk;
     }
 
-    // Génération de la réponse avec GPT
-    const answer = await callOpenAI(ctx, question);
+    // Génération de la réponse avec Mistral
+    const answer = await callMistral(ctx, question);
 
     // Vérification de pertinence (anti-hallucination basique)
     const hasOverlap = qTokens.some(t => ctx.toLowerCase().includes(t));
