@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASSIGNME - Équipe</title>
+  <title>ASSIGNME - À propos du projet</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="favicon.png" rel="icon" type="image/png">
@@ -46,7 +46,7 @@
           <a href="index.html" class="hover:text-ink">Accueil</a>
           <a href="index.html#solution" class="hover:text-ink">Solution</a>
           <a href="demo.html" class="hover:text-ink">Démo</a>
-          <a href="info.html" class="hover:text-ink text-neon font-semibold">Équipe</a>
+          <a href="info.html" class="hover:text-ink text-neon font-semibold">À propos</a>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -55,48 +55,86 @@
     </nav>
   </header>
 
-  <!-- Hero -->
-  <section class="relative pt-36 pb-24 hero-gradient min-h-screen flex items-center">
-    <div class="mx-auto w-[min(1100px,92%)]">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-8">
-          Une équipe <span class="text-neon">DeepTech</span> déterminée
-        </h1>
+  <!-- Content -->
+  <section class="relative pt-36 pb-24 hero-gradient min-h-screen">
+    <div class="mx-auto w-[min(1100px,92%)] max-w-4xl">
+      
+      <h1 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-12 text-center">
+        Le projet <span class="text-neon">ASSIGNME</span>
+      </h1>
+
+      <div class="space-y-8">
         
-        <div class="glass rounded-3xl p-12 mb-12">
-          <p class="text-lg text-muted leading-relaxed mb-6">
-            ASSIGNME est fondée par une équipe ayant vécu les dysfonctionnements du marché de l'emploi et déterminée à les résoudre par la technologie.
-          </p>
-          
-          <p class="text-lg text-muted leading-relaxed">
-            Expertise combinée en développement IA, finance SaaS et structuration d'entreprise. 
-            Engagement total pour transformer le recrutement en France.
+        <div class="glass rounded-2xl p-8">
+          <h2 class="text-2xl font-bold text-neon mb-4">Qu'est-ce qu'ASSIGNME ?</h2>
+          <p class="text-muted leading-relaxed">
+            ASSIGNME est une plateforme SaaS DeepTech qui automatise le matching entre candidats et opportunités d'emploi grâce à l'intelligence artificielle. 
+            En quelques minutes, elle analyse un profil, identifie les opportunités pertinentes et peut générer automatiquement les candidatures.
           </p>
         </div>
 
-        <div class="space-y-6">
-          <div class="glass rounded-2xl p-8">
-            <h3 class="text-xl font-bold text-ink mb-2">Benjamin Da Cunha</h3>
-            <div class="text-neon font-semibold mb-4">CEO & Fondateur</div>
-            <p class="text-muted">Architecte technique et vision produit</p>
-          </div>
+        <div class="glass rounded-2xl p-8">
+          <h2 class="text-2xl font-bold text-neon mb-4">Le problème résolu</h2>
+          <p class="text-muted leading-relaxed mb-4">
+            Le marché français de l'emploi souffre d'une inefficacité structurelle : 2,2 millions de demandeurs d'emploi coexistent avec des pénuries massives dans certains secteurs. 
+            Les délais moyens de recrutement atteignent 36 jours pour un coût de 5 à 8k€.
+          </p>
+          <p class="text-muted leading-relaxed">
+            Les plateformes actuelles (LinkedIn, Indeed, France Travail) excellent dans la diffusion mais échouent sur le matching intelligent. 
+            ASSIGNME comble ce vide technologique.
+          </p>
+        </div>
 
-          <div class="glass rounded-2xl p-8">
-            <h3 class="text-xl font-bold text-ink mb-2">Lina Slimane</h3>
-            <div class="text-neon font-semibold mb-4">CFO</div>
-            <p class="text-muted">Structuration financière et opérationnelle</p>
+        <div class="glass rounded-2xl p-8">
+          <h2 class="text-2xl font-bold text-neon mb-4">La technologie</h2>
+          <div class="space-y-3 text-muted">
+            <p><strong class="text-ink">Moteur NLP sémantique :</strong> Basé sur CamemBERT et FAISS, il analyse compétences explicites, soft skills et potentiel de reconversion au-delà des simples mots-clés.</p>
+            <p><strong class="text-ink">Automatisation totale :</strong> Génération de CV adaptés, remplissage de formulaires, réponses aux préqualifications. Le candidat reçoit les opportunités, l'IA candidate.</p>
+            <p><strong class="text-ink">Intégration universelle :</strong> Compatible France Travail, job boards privés (LinkedIn, Indeed) et ATS d'entreprise (Workday, Talentsoft).</p>
           </div>
         </div>
 
-        <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="mailto:contact@assignme.fr" class="inline-flex px-6 py-3 rounded-xl bg-neon text-black font-semibold shadow-glow hover:brightness-110">
-            Nous contacter
+        <div class="glass rounded-2xl p-8">
+          <h2 class="text-2xl font-bold text-neon mb-4">Cas d'usage</h2>
+          <div class="space-y-3 text-muted">
+            <p><strong class="text-ink">Candidats :</strong> Recommandations personnalisées et candidatures automatiques en un clic.</p>
+            <p><strong class="text-ink">Recruteurs :</strong> Présélection qualifiée instantanée, réduction des délais de 30%.</p>
+            <p><strong class="text-ink">Secteur public :</strong> Valorisation des CVthèques existantes, matching pour les bénéficiaires France Travail.</p>
+            <p><strong class="text-ink">Hôpitaux & santé :</strong> Comblement rapide des 60 000+ postes vacants.</p>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-8">
+          <h2 class="text-2xl font-bold text-neon mb-4">Où en sommes-nous ?</h2>
+          <p class="text-muted leading-relaxed mb-4">
+            MVP en cours de développement avec démonstrateur fonctionnel en ligne. Programme pilote sur 12 mois pour atteindre TRL 6.
+          </p>
+          <p class="text-muted leading-relaxed">
+            Levée de fonds en cours : 90 000€ sollicités via la Bourse French Tech Émergence (Bpifrance) pour financer le développement du prototype industriel.
+          </p>
+        </div>
+
+        <div class="glass rounded-2xl p-8">
+          <h2 class="text-2xl font-bold text-neon mb-4">Ambition</h2>
+          <p class="text-muted leading-relaxed">
+            Devenir le standard européen du matching emploi-compétences basé sur l'IA, au service des citoyens, des entreprises et des politiques publiques. 
+            À terme, ASSIGNME pourrait être intégré comme infrastructure d'orientation professionnelle à l'échelle nationale.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="mt-12 text-center">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="demo.html" class="inline-flex px-6 py-3 rounded-xl bg-neon text-black font-semibold shadow-glow hover:brightness-110">
+            Tester la démo
           </a>
           <a href="index.html#investisseurs" class="inline-flex px-6 py-3 rounded-xl border border-ink/30 text-ink hover:bg-ink/10 font-semibold">
             Dossier investisseurs
           </a>
         </div>
       </div>
+
     </div>
   </section>
 
