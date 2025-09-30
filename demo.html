@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASSIGNME - Démonstrateur</title>
+  <title>ASSIGNME - Démo connectée France Travail</title>
   
   <!-- React et Babel -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -16,165 +16,37 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="favicon.png" rel="icon" type="image/png">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            base: '#0a0b10',
+            ink: '#eaf2ff',
+            muted: '#a9b9d6',
+            neon: '#95D2E6'
+          },
+          boxShadow: { glow: '0 0 80px rgba(149, 210, 230, 0.35)' }
+        }
+      }
+    }
+  </script>
+  
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-      background: #0a0b10;
-      color: #e8f4ff;
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
-
+    html, body { background:#0a0b10; color:#eaf2ff; }
     .glass { backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); }
-    .text-muted { color: #a9b9d6; }
-    .text-ink { color: #eaf2ff; }
-    .hover\:text-ink:hover { color: #eaf2ff; }
-    .bg-ink { background-color: #eaf2ff; }
-    .shadow-glow { box-shadow: 0 0 80px rgba(149, 210, 230, 0.35); }
-    .hover\:brightness-110:hover { filter: brightness(1.1); }
+    .hero-gradient { background-image: radial-gradient(1200px 600px at 60% -10%, rgba(149,210,230,.18), rgba(149,210,230,.10) 35%, rgba(10,11,16,1) 65%); }
     .nav-brand { color:#ffffff !important; }
     .footer-brand { color:#ffffff !important; }
-
-    .gradient-bg {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
-    }
-    
-    .neon-glow {
-      box-shadow: 0 0 20px rgba(149, 210, 230, 0.3), 0 0 40px rgba(149, 210, 230, 0.1);
-      border: 1px solid rgba(149, 210, 230, 0.3);
-    }
-    
-    .retro-card {
-      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
-      border: 1px solid rgba(149, 210, 230, 0.2);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-    
-    .cyber-border {
-      border: 2px solid transparent;
-      background: linear-gradient(145deg, #1a1a1a, #0a0a0a) padding-box,
-                  linear-gradient(45deg, #95D2E6, #87ceeb) border-box;
-    }
-    
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes pulse-neon {
-      0%, 100% { 
-        box-shadow: 0 0 20px rgba(149, 210, 230, 0.3), 0 0 40px rgba(149, 210, 230, 0.1);
-      }
-      50% { 
-        box-shadow: 0 0 30px rgba(149, 210, 230, 0.5), 0 0 60px rgba(149, 210, 230, 0.2);
-      }
-    }
-    
-    .fade-in-up {
-      animation: fadeInUp 0.8s ease-out;
-    }
-    
-    .pulse-cyber {
-      animation: pulse-neon 2s ease-in-out infinite;
-    }
-    
-    .glass-effect {
-      background: rgba(26, 26, 26, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(149, 210, 230, 0.1);
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(149, 210, 230, 0.2);
-      border-radius: 2px;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #95D2E6, #87ceeb);
-      border-radius: 2px;
-      transition: width 0.3s ease;
-    }
-
-    .score-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .score-excellent {
-      background: linear-gradient(45deg, #10b981, #059669);
-      color: white;
-    }
-
-    .score-good {
-      background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-      color: white;
-    }
-
-    .score-average {
-      background: linear-gradient(45deg, #f59e0b, #d97706);
-      color: white;
-    }
-
-    .action-btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(45deg, #95D2E6, #87ceeb);
-      color: #0f0f23;
-    }
-
-    .btn-secondary {
-      background: rgba(149, 210, 230, 0.1);
-      border: 1px solid rgba(149, 210, 230, 0.3);
-      color: #87ceeb;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(149, 210, 230, 0.4);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(149, 210, 230, 0.2);
-    }
-
-    .main-content {
-      padding-top: 120px;
-    }
+    .chip { background: linear-gradient(135deg, rgba(149,210,230,.18), rgba(207,230,228,.10)); border: 1px solid rgba(149,210,230,.25); }
   </style>
-  <link href="favicon.png" rel="icon" type="image/png">
 </head>
-<body class="gradient-bg">
+<body class="font-sans antialiased selection:bg-accent/30">
+  
   <!-- Header -->
   <header class="fixed top-0 inset-x-0 z-50">
     <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -191,14 +63,14 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <a href="mailto:contact@assignme.fr" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Contact commercial</a>
+        <a href="mailto:contact@assignme.fr" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Contact</a>
       </div>
     </nav>
   </header>
 
   <div id="root"></div>
 
-  <footer id="contact" class="pt-12 pb-16">
+  <footer class="pt-12 pb-16">
     <div class="mx-auto w-[min(1100px,92%)] flex items-center justify-center">
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
@@ -246,7 +118,6 @@
           updateProgress(`PDF ouvert: ${pdf.numPages} page(s) détectée(s)`, 30);
           
           let fullText = '';
-          
           for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
             updateProgress(`Extraction page ${pageNum}/${pdf.numPages}...`, 30 + (pageNum / pdf.numPages) * 30);
             const page = await pdf.getPage(pageNum);
@@ -255,13 +126,9 @@
             fullText += pageText + '\n\n';
           }
           
-          if (fullText.trim().length === 0) {
-            throw new Error('PDF vide ou texte non extractible');
-          }
-          
+          if (fullText.trim().length === 0) throw new Error('PDF vide ou texte non extractible');
           updateProgress(`Extraction terminée: ${fullText.length} caractères extraits`, 60);
           return fullText;
-          
         } catch (error) {
           throw new Error(`Impossible de lire le PDF: ${error.message}`);
         }
@@ -269,14 +136,9 @@
 
       const extractTextFromFile = async (file) => {
         const fileType = file.type;
-        const fileName = file.name.toLowerCase();
-        
         updateProgress(`Analyse du fichier: ${file.name}`, 5);
         
-        if (fileType === 'application/pdf') {
-          return await extractTextFromPDF(file);
-        }
-        
+        if (fileType === 'application/pdf') return await extractTextFromPDF(file);
         if (fileType === 'text/plain') {
           updateProgress("Lecture du fichier texte...", 30);
           const text = await file.text();
@@ -284,11 +146,11 @@
           return text;
         }
         
-        throw new Error(`Format non pris en charge: ${fileType}. Utilisez un fichier PDF ou TXT.`);
+        throw new Error(`Format non pris en charge: ${fileType}. Utilisez PDF ou TXT.`);
       };
 
       const analyzeWithNetlifyFunction = async (cvText) => {
-        updateProgress("Analyse IA ASSIGNME en cours...", 70);
+        updateProgress("Connexion à France Travail...", 70);
         
         try {
           const response = await fetch('/.netlify/functions/analyze-cv', {
@@ -297,7 +159,7 @@
             body: JSON.stringify({ cvText })
           });
           
-          updateProgress(`Réponse du serveur: ${response.status}`, 80);
+          updateProgress(`Analyse terminée`, 80);
           
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -305,20 +167,11 @@
           }
           
           const result = await response.json();
-          updateProgress("Analyse terminée avec succès", 100);
+          updateProgress("Matching terminé", 100);
           return result;
-          
         } catch (error) {
           throw error;
         }
-      };
-
-      const calculateMatchScore = (recommendation) => {
-        let score = Math.floor(Math.random() * 30) + 70;
-        if (recommendation.salary_min > 50000) score += 5;
-        if (recommendation.contract_type === 'CDI') score += 5;
-        if (recommendation.required_skills?.length <= 4) score += 5;
-        return Math.min(100, score);
       };
 
       const handleFileSelect = useCallback(async (file) => {
@@ -346,10 +199,7 @@
           setProgress(0);
 
           const cvText = await extractTextFromFile(file);
-          
-          if (cvText.length < 100) {
-            throw new Error('Le contenu du CV semble trop court ou vide');
-          }
+          if (cvText.length < 100) throw new Error('Le contenu du CV semble trop court ou vide');
           
           const analysis = await analyzeWithNetlifyFunction(cvText);
           
@@ -358,12 +208,7 @@
             ai_metadata: analysis.ai_metadata
           });
           
-          const recommendationsWithScores = (analysis.recommendations || []).map(rec => ({
-            ...rec,
-            match_score: rec.match_score || calculateMatchScore(rec)
-          }));
-          
-          setRecommendations(recommendationsWithScores);
+          setRecommendations(analysis.recommendations || []);
           setAnalysisComplete(true);
           
         } catch (error) {
@@ -394,81 +239,72 @@
         input.click();
       };
 
-      const getScoreClass = (score) => {
-        if (score >= 90) return 'score-excellent';
-        if (score >= 75) return 'score-good';
-        return 'score-average';
-      };
-
       return (
-        <div className="min-h-screen main-content">
-          <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="min-h-screen pt-36 pb-24 hero-gradient">
+          <div className="max-w-6xl mx-auto px-6">
             {!analysisComplete ? (
               <div>
-                <div className="text-center mb-16 fade-in-up">
-                  <h2 className="text-4xl md:text-5xl font-bold text-ink mb-6">
-                    Testez le moteur IA ASSIGNME
-                  </h2>
-                  <p className="text-lg text-muted max-w-3xl mx-auto leading-relaxed mb-4">
-                    Déposez un CV et découvrez instantanément comment notre IA analyse les profils et identifie les opportunités pertinentes.
-                  </p>
-                  <p className="text-sm text-muted max-w-2xl mx-auto">
-                    <strong className="text-neon">Démonstrateur technique</strong> : Cette version utilise OpenAI GPT-4 pour simuler l'expérience. 
-                    La version production intègre un moteur IA propriétaire français (CamemBERT + FAISS).
+                <div className="text-center mb-12">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full chip text-xs font-medium mb-6">
+                    <span className="w-2 h-2 bg-neon rounded-full animate-pulse"></span>
+                    Connecté à France Travail
+                  </div>
+                  
+                  <h1 className="text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
+                    Testez le <span className="text-neon">matching intelligent</span>
+                  </h1>
+                  
+                  <p className="text-lg text-muted max-w-2xl mx-auto mb-8">
+                    Déposez un CV et découvrez instantanément les opportunités adaptées issues de France Travail.
                   </p>
                 </div>
 
                 {error && (
-                  <div className="mb-8 retro-card border-red-500/50 text-red-400 px-6 py-4 rounded-xl max-w-2xl mx-auto">
-                    <strong>ERREUR:</strong> {error}
+                  <div className="mb-8 glass rounded-xl p-6 max-w-2xl mx-auto border-red-500/50">
+                    <strong className="text-red-400">Erreur :</strong> <span className="text-red-300">{error}</span>
                   </div>
                 )}
 
                 {isAnalyzing && (
-                  <div className="mb-8 retro-card p-6 rounded-xl max-w-4xl mx-auto">
-                    <h3 className="text-cyan-400 font-bold mb-4 text-lg">Analyse en cours</h3>
+                  <div className="mb-8 glass rounded-xl p-6 max-w-4xl mx-auto">
                     <div className="mb-4">
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{width: `${progress}%`}}></div>
+                      <div className="w-full h-2 bg-muted/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-neon rounded-full transition-all duration-300" style={{width: `${progress}%`}}></div>
                       </div>
-                      <p className="text-sm text-cyan-300 mt-2">{currentStep}</p>
+                      <p className="text-sm text-neon mt-2">{currentStep}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="max-w-4xl mx-auto mb-16">
                   <div
-                    className={`cyber-border rounded-3xl p-16 text-center cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                      isAnalyzing || !pdfReady ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl neon-glow'
-                    } ${isAnalyzing ? 'pulse-cyber' : ''}`}
+                    className={`glass rounded-3xl p-16 text-center cursor-pointer transition-all duration-300 ${
+                      isAnalyzing || !pdfReady ? 'opacity-50 cursor-not-allowed' : 'hover:border-neon/50'
+                    }`}
                     onClick={triggerFileInput}
                   >
                     {isAnalyzing ? (
-                      <div className="space-y-8">
-                        <div className="relative">
-                          <div className="animate-spin rounded-full h-20 w-20 border-4 border-cyan-400/20 border-t-cyan-400 mx-auto"></div>
-                        </div>
+                      <div className="space-y-6">
+                        <div className="animate-spin rounded-full h-16 w-16 border-4 border-neon/20 border-t-neon mx-auto"></div>
                         <div>
-                          <p className="text-white font-bold text-3xl mb-2">
-                            Analyse IA en cours...
-                          </p>
-                          <p className="text-gray-400 text-lg">{currentStep}</p>
-                          {fileName && <p className="text-cyan-400 text-sm mt-2">Fichier: {fileName}</p>}
-                          <div className="mt-4"><div className="text-cyan-300 text-sm">{progress}% terminé</div></div>
+                          <p className="text-white font-bold text-2xl mb-2">Analyse en cours...</p>
+                          <p className="text-muted">{currentStep}</p>
+                          {fileName && <p className="text-neon text-sm mt-2">{fileName}</p>}
+                          <div className="mt-4 text-neon text-sm">{progress}%</div>
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-8">
-                        <div className="text-9xl mb-6">📄</div>
+                      <div className="space-y-6">
+                        <div className="text-7xl">📄</div>
                         <div>
-                          <p className="text-white text-3xl font-bold mb-4">
+                          <p className="text-white text-2xl font-semibold mb-4">
                             Déposez votre CV ici
                           </p>
-                          <p className="text-gray-400 text-lg mb-8">
-                            Formats acceptés: PDF, TXT (max 10MB)
+                          <p className="text-muted mb-6">
+                            PDF ou TXT • Max 10MB
                           </p>
-                          <div className="inline-block bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-cyan-400 hover:to-cyan-300 transition duration-300 transform hover:scale-105 neon-glow">
-                            Parcourir les fichiers
+                          <div className="inline-block bg-neon text-black px-6 py-3 rounded-xl font-semibold hover:brightness-110 transition">
+                            Parcourir
                           </div>
                         </div>
                       </div>
@@ -476,57 +312,47 @@
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                  <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-neon mb-3">Analyse sémantique</h3>
-                    <p className="text-gray-400">Extraction intelligente des compétences et expériences</p>
+                <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                  <div className="glass rounded-xl p-6 text-center">
+                    <h3 className="text-neon font-semibold mb-2">1. Analyse</h3>
+                    <p className="text-sm text-muted">Extraction des compétences par IA</p>
                   </div>
-                  
-                  <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-neon mb-3">Matching IA</h3>
-                    <p className="text-gray-400">Correspondance avec les opportunités du marché</p>
+                  <div className="glass rounded-xl p-6 text-center">
+                    <h3 className="text-neon font-semibold mb-2">2. Matching</h3>
+                    <p className="text-sm text-muted">Recherche sur France Travail</p>
                   </div>
-                  
-                  <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-neon mb-3">Recommandations</h3>
-                    <p className="text-gray-400">Postes adaptés avec score de compatibilité</p>
+                  <div className="glass rounded-xl p-6 text-center">
+                    <h3 className="text-neon font-semibold mb-2">3. Résultats</h3>
+                    <p className="text-sm text-muted">Offres adaptées avec score</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="fade-in-up">
-                <div className="retro-card p-8 rounded-2xl mb-8">
+              <div>
+                <div className="glass rounded-2xl p-8 mb-8">
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex-1">
-                      <h2 className="text-3xl font-bold text-white mb-4">
-                        Analyse terminée : {candidateProfile.name || 'Candidat'}
+                      <h2 className="text-2xl font-bold text-ink mb-4">
+                        Profil analysé : {candidateProfile.name || 'Candidat'}
                       </h2>
                       
-                      <div className="grid md:grid-cols-2 gap-6 mb-6">
-                        <div className="glass-effect p-4 rounded-lg">
-                          <h4 className="text-cyan-400 font-semibold mb-3">Profil</h4>
-                          <div className="space-y-2 text-sm text-gray-300">
-                            <p><strong>Localisation:</strong> {candidateProfile.location || 'Non spécifiée'}</p>
-                            <p><strong>Expérience:</strong> {candidateProfile.total_experience_years || 0} ans</p>
-                            <p><strong>Poste actuel:</strong> {candidateProfile.current_position || 'Non spécifié'}</p>
-                          </div>
+                      <div className="grid md:grid-cols-2 gap-4 mb-6">
+                        <div className="glass rounded-lg p-4">
+                          <p className="text-sm text-muted mb-1">Localisation</p>
+                          <p className="text-ink font-semibold">{candidateProfile.location || 'Non spécifiée'}</p>
                         </div>
-                        
-                        <div className="glass-effect p-4 rounded-lg">
-                          <h4 className="text-cyan-400 font-semibold mb-3">Formation</h4>
-                          <div className="space-y-2 text-sm text-gray-300">
-                            <p><strong>Niveau:</strong> {candidateProfile.education_level || 'Non spécifié'}</p>
-                            <p><strong>Détails:</strong> {candidateProfile.education_details || 'Non spécifié'}</p>
-                          </div>
+                        <div className="glass rounded-lg p-4">
+                          <p className="text-sm text-muted mb-1">Expérience</p>
+                          <p className="text-ink font-semibold">{candidateProfile.total_experience_years || 0} ans</p>
                         </div>
                       </div>
 
                       {candidateProfile.technical_skills?.length > 0 && (
-                        <div className="mb-6">
-                          <h4 className="text-cyan-400 font-semibold mb-3">Compétences détectées</h4>
+                        <div>
+                          <p className="text-sm text-muted mb-2">Compétences identifiées</p>
                           <div className="flex flex-wrap gap-2">
                             {candidateProfile.technical_skills.map((skill, i) => (
-                              <span key={i} className="px-3 py-1 bg-cyan-500/20 text-cyan-400 text-sm rounded border border-cyan-500/30">
+                              <span key={i} className="px-3 py-1 bg-neon/20 text-neon text-sm rounded-full border border-neon/30">
                                 {skill}
                               </span>
                             ))}
@@ -535,70 +361,56 @@
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-3">
-                      <button onClick={resetAnalysis} className="action-btn btn-secondary">
-                        Nouveau test
-                      </button>
-                    </div>
+                    <button onClick={resetAnalysis} className="px-4 py-2 glass rounded-xl text-muted hover:text-ink hover:border-neon/50 transition">
+                      Nouveau test
+                    </button>
                   </div>
                 </div>
 
-                <div className="mb-8">
-                  <h3 className="text-3xl font-bold text-white mb-8">
-                    Opportunités identifiées ({recommendations.length})
-                  </h3>
+                <h3 className="text-2xl font-bold text-ink mb-6">
+                  {recommendations.length} opportunité(s) France Travail
+                </h3>
 
-                  <div className="space-y-6">
-                    {recommendations.map((job, index) => (
-                      <div key={index} className="retro-card p-8 rounded-2xl">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold">
-                            {index + 1}
+                <div className="space-y-4">
+                  {recommendations.map((job, index) => (
+                    <div key={index} className="glass rounded-xl p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h4 className="text-xl font-bold text-ink mb-2">{job.job_title}</h4>
+                          <div className="flex items-center gap-3 text-sm text-muted mb-3">
+                            <span>{job.company}</span>
+                            <span>•</span>
+                            <span>{job.location}</span>
+                            <span>•</span>
+                            <span>{job.contract_type}</span>
                           </div>
-                          <h4 className="text-2xl font-bold text-white flex-1">{job.job_title}</h4>
-                          {job.match_score && (
-                            <div className={`score-badge ${getScoreClass(job.match_score)}`}>
-                              {job.match_score}%
-                            </div>
-                          )}
                         </div>
-                        
-                        <div className="flex items-center gap-4 mb-4 text-sm text-gray-400">
-                          <span>{job.company}</span>
-                          <span>•</span>
-                          <span>{job.location}</span>
-                          <span>•</span>
-                          <span>{job.contract_type}</span>
-                          {job.is_real_offer && (
-                            <>
-                              <span>•</span>
-                              <span className="text-green-400">Offre réelle France Travail</span>
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="glass-effect border border-cyan-500/30 p-6 rounded-lg mb-4">
-                          <h5 className="text-cyan-400 font-semibold mb-3 text-lg">Compatibilité :</h5>
-                          <p className="text-cyan-300">{job.match_justification}</p>
-                        </div>
-                        
-                        {job.is_real_offer && job.france_travail_url && (
-                          <a href={job.france_travail_url} target="_blank" rel="noopener noreferrer" className="action-btn btn-primary">
-                            Voir l'offre sur France Travail
-                          </a>
+                        {job.match_score && (
+                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-neon text-black font-bold">
+                            {job.match_score}%
+                          </div>
                         )}
                       </div>
-                    ))}
-                  </div>
+                      
+                      <div className="glass rounded-lg p-4 mb-4 border border-neon/20">
+                        <p className="text-sm text-muted">{job.match_justification}</p>
+                      </div>
+                      
+                      {job.is_real_offer && job.france_travail_url && (
+                        <a href={job.france_travail_url} target="_blank" rel="noopener noreferrer" className="inline-flex px-4 py-2 rounded-xl bg-neon text-black font-semibold hover:brightness-110 transition">
+                          Voir sur France Travail
+                        </a>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                <div className="cyber-border p-8 rounded-2xl text-center neon-glow">
-                  <h4 className="text-2xl font-bold text-white mb-4">Démonstrateur technique</h4>
-                  <p className="text-gray-300 mb-6 text-lg">
-                    Cette démo illustre les capacités d'analyse d'ASSIGNME. La version production intègre un moteur IA propriétaire optimisé pour le marché français.
+                <div className="mt-12 glass rounded-2xl p-8 text-center">
+                  <p className="text-muted mb-6">
+                    Cette démonstration illustre le moteur de matching ASSIGNME connecté à l'API France Travail.
                   </p>
-                  <a href="mailto:contact@assignme.fr?subject=Demande démo privée ASSIGNME" className="inline-flex px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 text-white font-bold text-lg hover:from-cyan-400 hover:to-cyan-300 transition duration-300 transform hover:scale-105">
-                    Planifier une démo privée
+                  <a href="mailto:contact@assignme.fr?subject=Demande démo ASSIGNME" className="inline-flex px-6 py-3 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">
+                    Planifier une démo
                   </a>
                 </div>
               </div>
