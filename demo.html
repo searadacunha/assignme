@@ -42,7 +42,6 @@
     .hero-gradient { background-image: radial-gradient(1200px 600px at 60% -10%, rgba(149,210,230,.18), rgba(149,210,230,.10) 35%, rgba(10,11,16,1) 65%); }
     .nav-brand { color:#ffffff !important; }
     .footer-brand { color:#ffffff !important; }
-    .chip { background: linear-gradient(135deg, rgba(149,210,230,.18), rgba(207,230,228,.10)); border: 1px solid rgba(149,210,230,.25); }
   </style>
 </head>
 <body class="font-sans antialiased selection:bg-accent/30">
@@ -108,12 +107,12 @@
 
       const extractTextFromPDF = async (file) => {
         if (!pdfReady) throw new Error('PDF.js non initialisé');
-        updateProgress("Lecture du PDF en cours...", 20);
+        updateProgress("Lecture du PDF...", 20);
         
         try {
           const arrayBuffer = await file.arrayBuffer();
           const pdf = await window.pdfjsLib.getDocument(arrayBuffer).promise;
-          updateProgress(`Extraction du texte (${pdf.numPages} pages)...`, 40);
+          updateProgress(`Extraction (${pdf.numPages} pages)...`, 40);
           
           let fullText = '';
           for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -123,27 +122,27 @@
             fullText += pageText + '\n\n';
           }
           
-          if (fullText.trim().length === 0) throw new Error('PDF vide ou texte non extractible');
-          updateProgress("Texte extrait avec succès", 60);
+          if (fullText.trim().length === 0) throw new Error('PDF vide');
+          updateProgress("Texte extrait", 60);
           return fullText;
         } catch (error) {
-          throw new Error(`Erreur lecture PDF: ${error.message}`);
+          throw new Error(`Erreur PDF: ${error.message}`);
         }
       };
 
       const extractTextFromFile = async (file) => {
         const fileType = file.type;
-        updateProgress(`Analyse du fichier...`, 10);
+        updateProgress(`Lecture du fichier...`, 10);
         
         if (fileType === 'application/pdf') return await extractTextFromPDF(file);
         if (fileType === 'text/plain') {
-          updateProgress("Lecture du fichier texte...", 40);
+          updateProgress("Lecture texte...", 40);
           const text = await file.text();
-          updateProgress("Texte lu avec succès", 60);
+          updateProgress("Lecture terminée", 60);
           return text;
         }
         
-        throw new Error(`Format non supporté. Utilisez PDF ou TXT.`);
+        throw new Error(`Format non supporté`);
       };
 
       const analyzeWithNetlifyFunction = async (cvText) => {
@@ -163,7 +162,7 @@
           
           updateProgress("Recherche des opportunités...", 85);
           const result = await response.json();
-          updateProgress("Matching terminé", 100);
+          updateProgress("Analyse terminée", 100);
           return result;
         } catch (error) {
           throw error;
@@ -182,7 +181,7 @@
         }
         
         if (!allowedTypes.includes(file.type)) {
-          setError('Format non supporté. Utilisez PDF ou TXT');
+          setError('Format non supporté');
           return;
         }
 
@@ -195,7 +194,7 @@
           setProgress(0);
 
           const cvText = await extractTextFromFile(file);
-          if (cvText.length < 100) throw new Error('Contenu du CV trop court');
+          if (cvText.length < 100) throw new Error('Contenu trop court');
           
           const analysis = await analyzeWithNetlifyFunction(cvText);
           
@@ -235,6 +234,8 @@
         input.click();
       };
 
+      const realOffersCount = recommendations.filter(job => job.is_real_offer).length;
+
       return (
         <div className="min-h-screen pt-36 pb-24 hero-gradient">
           <div className="max-w-6xl mx-auto px-6">
@@ -246,13 +247,8 @@
                   </h1>
                   
                   <p className="text-lg text-muted max-w-3xl mx-auto leading-relaxed mb-8">
-                    Déposez un CV et découvrez comment notre intelligence artificielle analyse les profils, extrait les compétences clés 
-                    et identifie automatiquement les opportunités les plus pertinentes sur le marché français de l'emploi.
-                  </p>
-
-                  <p className="text-muted max-w-2xl mx-auto leading-relaxed">
-                    Notre moteur de recommandation s'appuie sur une analyse sémantique avancée (NLP) pour aller au-delà des simples mots-clés. 
-                    Il détecte les compétences transférables, évalue la compatibilité culturelle et propose des correspondances que les systèmes traditionnels manqueraient.
+                    Déposez un CV et découvrez comment ASSIGNME analyse automatiquement les profils 
+                    pour identifier les opportunités les plus pertinentes du marché français.
                   </p>
                 </div>
 
@@ -269,7 +265,7 @@
                         <div className="h-full bg-neon rounded-full transition-all duration-300" style={{width: `${progress}%`}}></div>
                       </div>
                       <p className="text-neon mt-3 text-center font-semibold">{currentStep}</p>
-                      <p className="text-muted text-sm text-center mt-2">{progress}% complété</p>
+                      <p className="text-muted text-sm text-center mt-2">{progress}%</p>
                     </div>
                   </div>
                 )}
@@ -298,7 +294,7 @@
                             Déposez un CV pour commencer
                           </p>
                           <p className="text-muted text-lg mb-8">
-                            Formats acceptés : PDF, TXT • Maximum 10MB
+                            PDF ou TXT • Maximum 10MB
                           </p>
                           <div className="inline-block bg-neon text-black px-8 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition shadow-glow">
                             Sélectionner un fichier
@@ -309,37 +305,27 @@
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                   <div className="glass rounded-xl p-8">
-                    <h3 className="text-xl font-bold text-neon mb-3">Analyse sémantique</h3>
+                    <h3 className="text-xl font-bold text-neon mb-3">Analyse automatique</h3>
                     <p className="text-muted leading-relaxed">
-                      Notre IA extrait intelligemment les compétences techniques, soft skills et expériences significatives. 
-                      Elle comprend le contexte au-delà des mots-clés standards.
+                      Extraction intelligente des compétences, expériences et qualifications en quelques secondes.
                     </p>
                   </div>
                   
                   <div className="glass rounded-xl p-8">
-                    <h3 className="text-xl font-bold text-neon mb-3">Matching avancé</h3>
+                    <h3 className="text-xl font-bold text-neon mb-3">Connecté France Travail</h3>
                     <p className="text-muted leading-relaxed">
-                      Recherche vectorielle haute performance qui compare le profil à des milliers d'opportunités 
-                      pour identifier les correspondances les plus pertinentes.
+                      Accès direct aux offres réelles publiées sur la plateforme officielle française de l'emploi.
                     </p>
                   </div>
                   
                   <div className="glass rounded-xl p-8">
-                    <h3 className="text-xl font-bold text-neon mb-3">Recommandations précises</h3>
+                    <h3 className="text-xl font-bold text-neon mb-3">Score de compatibilité</h3>
                     <p className="text-muted leading-relaxed">
-                      Chaque opportunité est accompagnée d'un score de compatibilité et d'une justification 
-                      expliquant pourquoi ce poste correspond au profil.
+                      Chaque opportunité est évaluée avec un pourcentage de correspondance basé sur le profil.
                     </p>
                   </div>
-                </div>
-
-                <div className="glass rounded-xl p-6 max-w-3xl mx-auto text-center">
-                  <p className="text-muted">
-                    <strong className="text-ink">Architecture technique :</strong> Cette démonstration utilise une combinaison de NLP (traitement du langage naturel), 
-                    embeddings vectoriels et recherche sémantique pour simuler l'expérience complète du moteur ASSIGNME.
-                  </p>
                 </div>
               </div>
             ) : (
@@ -347,14 +333,12 @@
                 <div className="glass rounded-2xl p-8 mb-8">
                   <div className="flex justify-between items-start mb-8">
                     <div className="flex-1">
-                      <h2 className="text-3xl font-bold text-ink mb-2">
-                        Analyse terminée
-                      </h2>
-                      <p className="text-muted">Profil : {candidateProfile.name || 'Candidat'}</p>
+                      <h2 className="text-3xl font-bold text-ink mb-2">Profil analysé</h2>
+                      <p className="text-muted">{candidateProfile.name || 'Candidat'}</p>
                     </div>
                     
                     <button onClick={resetAnalysis} className="px-6 py-3 glass rounded-xl text-muted hover:text-ink hover:border-neon/50 transition font-semibold">
-                      Analyser un autre CV
+                      Nouveau test
                     </button>
                   </div>
 
@@ -364,8 +348,8 @@
                       <p className="text-ink font-bold text-lg">{candidateProfile.location || 'Non spécifiée'}</p>
                     </div>
                     <div className="glass rounded-lg p-6">
-                      <p className="text-sm text-muted mb-2">Expérience totale</p>
-                      <p className="text-ink font-bold text-lg">{candidateProfile.total_experience_years || 0} années</p>
+                      <p className="text-sm text-muted mb-2">Expérience</p>
+                      <p className="text-ink font-bold text-lg">{candidateProfile.total_experience_years || 0} ans</p>
                     </div>
                     <div className="glass rounded-lg p-6">
                       <p className="text-sm text-muted mb-2">Formation</p>
@@ -375,7 +359,7 @@
 
                   {candidateProfile.technical_skills?.length > 0 && (
                     <div className="mb-6">
-                      <p className="text-muted mb-3 font-semibold">Compétences techniques identifiées</p>
+                      <p className="text-muted mb-3 font-semibold">Compétences identifiées</p>
                       <div className="flex flex-wrap gap-2">
                         {candidateProfile.technical_skills.map((skill, i) => (
                           <span key={i} className="px-4 py-2 bg-neon/20 text-neon rounded-full border border-neon/30 font-medium">
@@ -388,7 +372,7 @@
 
                   {candidateProfile.soft_skills?.length > 0 && (
                     <div>
-                      <p className="text-muted mb-3 font-semibold">Qualités professionnelles détectées</p>
+                      <p className="text-muted mb-3 font-semibold">Qualités professionnelles</p>
                       <div className="flex flex-wrap gap-2">
                         {candidateProfile.soft_skills.map((skill, i) => (
                           <span key={i} className="px-4 py-2 glass rounded-full text-ink font-medium">
@@ -401,7 +385,7 @@
                 </div>
 
                 <h3 className="text-3xl font-bold text-ink mb-6">
-                  {recommendations.length} opportunité{recommendations.length > 1 ? 's' : ''} identifiée{recommendations.length > 1 ? 's' : ''}
+                  {recommendations.length} opportunité{recommendations.length > 1 ? 's' : ''} trouvée{recommendations.length > 1 ? 's' : ''}
                 </h3>
 
                 <div className="space-y-6">
@@ -436,26 +420,26 @@
                             <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-neon to-blue-400 text-black font-bold text-xl mb-2">
                               {job.match_score}%
                             </div>
-                            <span className="text-xs text-muted">compatibilité</span>
+                            <span className="text-xs text-muted">match</span>
                           </div>
                         )}
                       </div>
                       
                       <div className="glass rounded-lg p-6 mb-6 border border-neon/20">
-                        <p className="text-sm text-muted mb-2 font-semibold">Pourquoi ce poste ?</p>
+                        <p className="text-sm text-muted mb-2 font-semibold">Compatibilité</p>
                         <p className="text-ink leading-relaxed">{job.match_justification}</p>
                       </div>
 
                       {job.description && (
                         <div className="mb-6">
-                          <p className="text-sm text-muted mb-2 font-semibold">Description du poste</p>
+                          <p className="text-sm text-muted mb-2 font-semibold">Description</p>
                           <p className="text-muted text-sm leading-relaxed">{job.description.substring(0, 300)}...</p>
                         </div>
                       )}
 
                       {job.required_skills?.length > 0 && (
                         <div className="mb-6">
-                          <p className="text-sm text-muted mb-2 font-semibold">Compétences recherchées</p>
+                          <p className="text-sm text-muted mb-2 font-semibold">Compétences requises</p>
                           <div className="flex flex-wrap gap-2">
                             {job.required_skills.map((skill, i) => (
                               <span key={i} className="px-3 py-1 bg-muted/10 text-muted text-xs rounded-full border border-muted/30">
@@ -466,22 +450,19 @@
                         </div>
                       )}
                       
-                      <div className="flex gap-3">
-                        {job.is_real_offer && job.france_travail_url && (
-                          <a href={job.france_travail_url} target="_blank" rel="noopener noreferrer" className="inline-flex px-6 py-3 rounded-xl bg-neon text-black font-bold hover:brightness-110 transition shadow-glow">
-                            Voir sur France Travail
-                          </a>
-                        )}
-                      </div>
+                      {job.is_real_offer && job.france_travail_url && (
+                        <a href={job.france_travail_url} target="_blank" rel="noopener noreferrer" className="inline-flex px-6 py-3 rounded-xl bg-neon text-black font-bold hover:brightness-110 transition shadow-glow">
+                          Voir sur France Travail
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-12 glass rounded-2xl p-8 text-center">
-                  <h4 className="text-2xl font-bold text-ink mb-4">Intéressé par la plateforme ?</h4>
+                  <h4 className="text-2xl font-bold text-ink mb-4">Déployer ASSIGNME dans votre entreprise</h4>
                   <p className="text-muted mb-6 max-w-2xl mx-auto leading-relaxed">
-                    Cette démonstration illustre les capacités de matching d'ASSIGNME. La version production intègre 
-                    des fonctionnalités avancées d'automatisation des candidatures et une connexion directe aux systèmes RH.
+                    Intégration en moins de 2 semaines. Compatible avec vos ATS et CVthèques existantes.
                   </p>
                   <a href="mailto:contact@assignme.fr?subject=Demande démo ASSIGNME" className="inline-flex px-8 py-4 rounded-xl bg-ink text-black font-bold shadow-glow hover:brightness-110 transition">
                     Planifier une démonstration
@@ -492,14 +473,14 @@
           </div>
 
           {/* Vignette France Travail en bas à droite */}
-          {analysisComplete && recommendations.some(job => job.is_real_offer) && (
-            <div className="fixed bottom-8 right-8 glass rounded-xl p-4 shadow-glow max-w-xs">
+          {analysisComplete && realOffersCount > 0 && (
+            <div className="fixed bottom-8 right-8 glass rounded-xl p-4 shadow-glow max-w-xs z-50">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
                 <div>
-                  <p className="text-sm font-bold text-ink">Connecté à France Travail</p>
+                  <p className="text-sm font-bold text-ink">Connecté France Travail</p>
                   <p className="text-xs text-muted">
-                    {recommendations.filter(job => job.is_real_offer).length} offre(s) réelle(s) trouvée(s)
+                    {realOffersCount} offre{realOffersCount > 1 ? 's' : ''} réelle{realOffersCount > 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
