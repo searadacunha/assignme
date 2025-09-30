@@ -3,378 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASSIGNME - FAQ + Question en bas</title>
+  <title>ASSIGNME - Équipe & Vision</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-
+  <link href="favicon.png" rel="icon" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            base: '#0a0b10',
+            ink: '#eaf2ff',
+            muted: '#a9b9d6',
+            neon: '#95D2E6'
+          },
+          boxShadow: { glow: '0 0 80px rgba(149, 210, 230, 0.35)' }
+        }
+      }
+    }
+  </script>
   <style>
-    :root{
-      --bg:#000;
-      --text:#e8f4ff;
-      --muted:#a9bbd6;
-      --neon:#5ca0ff;
-      --btn:#5f95ff;
-      --btnHover:#7ecbff;
-      --faq:#cfe0ff;
-      --faqHover:#dff0ff;
-      --faqActive:#6c8cff;
-    }
-
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      overflow-x:hidden;
-    }
-
-    .hero{
-      min-height:100vh;
-      padding-top:120px;
-      position:relative;
-      background:#000 url('design.png') no-repeat left center / contain;
-    }
-
-    /* Vignette panel with neon outline */
-    .panel{
-      position:absolute; right:220px; top:56%; transform:translateY(-50%);
-      width:260px; max-height:72vh;
-      display:flex; flex-direction:column;
-      border-radius:14px; background:#000;
-      border:1.5px solid rgba(92,160,255,.9);
-      box-shadow:0 0 14px rgba(92,160,255,.75), 0 0 36px rgba(92,160,255,.28);
-      overflow:hidden; isolation:isolate;
-    }
-    .panel::before{
-      content:''; position:absolute; inset:-7px; border-radius:inherit; pointer-events:none;
-      border:2px solid rgba(92,160,255,.85);
-      filter:blur(7px); animation:neonPulse 3s ease-in-out infinite;
-      z-index:-1;
-    }
-    @keyframes neonPulse{
-      0%,100%{opacity:.85; filter:blur(6px)}
-      50%{opacity:1; filter:blur(9px)}
-    }
-
-    /* Scrollable content (Answer + FAQ + Question input at the end) */
-    .scroll{
-      flex:1 1 auto; overflow:auto;
-      padding:10px;
-    }
-
-    /* Answer box */
-    .answer-box{
-      margin-bottom:10px; padding:10px;
-      border:1px solid rgba(92,160,255,.35); border-radius:10px;
-      background:rgba(255,255,255,.04); font-size:.8rem; line-height:1.5;
-      display:none; /* hidden until we have an answer */
-    }
-    .answer-box strong{color:#fff}
-
-    /* FAQ list */
-    .faq-list{list-style:none;display:flex;flex-direction:column;gap:8px}
-    .faq-item{border-radius:10px;overflow:hidden}
-    .faq-btn{
-      width:100%; display:flex; align-items:center; justify-content:space-between;
-      gap:10px; cursor:pointer; border:none; outline:none;
-      padding:10px 12px; color:#001; font-weight:800; font-size:.82rem;
-      background:var(--faq); border-radius:10px;
-      box-shadow:0 2px 9px rgba(92,160,255,.22);
-      text-align:left; transition:.18s ease;
-    }
-    .faq-btn:hover{background:var(--faqHover)}
-    .faq-btn[aria-expanded="true"]{background:var(--faqActive); color:#001}
-    .chev{width:10px;height:10px;flex:0 0 auto;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg); transition:.18s ease}
-    .faq-btn[aria-expanded="true"] .chev{transform:rotate(-135deg)}
-    .answer{max-height:0; overflow:hidden; transition:max-height .22s ease}
-    .answer-inner{padding:10px 12px 12px; font-size:.78rem; line-height:1.55; background:rgba(255,255,255,.07); border-radius:10px; margin-top:4px}
-
-    /* Question input placed RIGHT AFTER the FAQ list (not sticky) */
-    .input-wrap{
-      margin-top:12px;
-      display:flex; gap:6px;
-      border-top:1px dashed rgba(92,160,255,.35);
-      padding-top:8px;
-    }
-    .in{
-      flex:1; min-width:0; padding:10px 12px; border-radius:10px;
-      border:1px solid rgba(92,160,255,.5); background:#0b0f17; color:var(--text); font-size:.82rem;
-      outline:none; transition:border-color .15s ease, box-shadow .15s ease;
-    }
-    .in:focus{ border-color:var(--neon); box-shadow:0 0 0 3px rgba(92,160,255,.25) }
-    .send{
-      padding:10px 12px; border:none; border-radius:10px;
-      background:var(--faq); color:#001; font-weight:800; font-size:.8rem;
-      cursor:pointer; box-shadow:0 2px 10px rgba(92,160,255,.25);
-    }
-    .send:hover{ background:var(--faqHover) }
-    .send:active{ transform:translateY(1px) }
-
-    @media (max-width: 1200px){
-      .panel{right:140px; width:260px; top:56%}
-    }
-    @media (max-width: 900px){
-      .hero{padding-top:60px; background-position:left center; background-size:cover}
-      .panel{position:fixed; right:12px; left:auto; top:auto; bottom:18px; transform:none; width:82vw; max-height:55vh}
-    }
-    @media (max-width: 480px){
-      .answer-inner{font-size:.72rem}
-    }
-
-    /* Styles pour header et footer */
     html, body { background:#0a0b10; color:#eaf2ff; }
     .glass { backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); }
-    .text-muted { color: #a9b9d6; }
-    .text-ink { color: #eaf2ff; }
-    .hover\:text-ink:hover { color: #eaf2ff; }
-    .bg-ink { background-color: #eaf2ff; }
-    .shadow-glow { box-shadow: 0 0 80px rgba(149, 210, 230, 0.35); }
-    .hover\:brightness-110:hover { filter: brightness(1.1); }
+    .hero-gradient { background-image: radial-gradient(1200px 600px at 60% -10%, rgba(149,210,230,.18), rgba(149,210,230,.10) 35%, rgba(10,11,16,1) 65%); }
     .nav-brand { color:#ffffff !important; }
     .footer-brand { color:#ffffff !important; }
-
-    @media (max-width: 768px) {
-      .nav-brand { font-size: 16px; }
-      .nav-brand img { height: 40px !important; margin-right: 8px !important; }
-    }
   </style>
 </head>
-<body>
+<body class="font-sans antialiased selection:bg-accent/30">
+  
   <!-- Header -->
-  <header class="fixed top-0 inset-x-0 z-50" style="position: fixed; top: 0; left: 0; right: 0; z-index: 50;">
-    <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between" style="backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); margin: 16px auto 0; max-width: min(1100px, 92%); border-radius: 16px; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;">
-      <div class="flex items-center gap-8" style="display: flex; align-items: center; gap: 32px;">
-        <a href="index.html" class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
-          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl" style="height: 32px; width: auto; border-radius: 12px;"/>
-          <span class="text-base font-semibold tracking-tight uppercase nav-brand" style="font-size: 16px; font-weight: 600; letter-spacing: -0.025em; text-transform: uppercase; color: #ffffff !important;">ASSIGNME</span>
+  <header class="fixed top-0 inset-x-0 z-50">
+    <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <a href="index.html" class="flex items-center gap-2">
+          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
+          <span class="text-base font-semibold tracking-tight uppercase nav-brand">ASSIGNME</span>
         </a>
-        <div class="hidden md:flex items-center gap-6 text-sm text-muted" style="display: none; align-items: center; gap: 24px; font-size: 14px; color: #a9b9d6;">
-          <a href="index.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Accueil</a>
-          <a href="index.html#about" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Présentation</a>
-          <a href="demo.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Démo</a>
-          <a href="info.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">À propos</a>
+        <div class="hidden md:flex items-center gap-6 text-sm text-muted">
+          <a href="index.html" class="hover:text-ink">Accueil</a>
+          <a href="index.html#solution" class="hover:text-ink">Solution</a>
+          <a href="demo.html" class="hover:text-ink">Démo</a>
+          <a href="info.html" class="hover:text-ink text-neon font-semibold">Équipe</a>
         </div>
       </div>
-      <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110" style="display: inline-flex; padding: 8px 16px; border-radius: 12px; background-color: #eaf2ff; color: #000000; font-weight: 600; text-decoration: none; transition: filter 0.3s ease;">Nous contacter</a>
+      <div class="flex items-center gap-2">
+        <a href="mailto:contact@assignme.fr" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Contact</a>
       </div>
     </nav>
   </header>
 
-  <main class="hero" role="main" aria-label="Hero">
-    <aside class="panel" aria-label="FAQ et question libre">
-      <div class="scroll">
-        <!-- Answer area (shows GPT+dossier response) -->
-        <div id="qa-answer" class="answer-box"></div>
+  <!-- Hero -->
+  <section class="relative pt-36 pb-24 hero-gradient">
+    <div class="mx-auto w-[min(1100px,92%)]">
+      <h1 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6 text-center">
+        Une équipe <span class="text-neon">DeepTech</span> déterminée
+      </h1>
+      <p class="text-lg text-muted text-center max-w-2xl mx-auto mb-16">
+        ASSIGNME est fondée par des entrepreneurs ayant vécu les impasses du marché de l'emploi et déterminés à les résoudre par la technologie.
+      </p>
+    </div>
+  </section>
 
-        <!-- FAQ list -->
-        <ul class="faq-list" role="list">
-          <li class="faq-item">
-            <button id="q1" class="faq-btn" aria-expanded="false" aria-controls="a1">
-              <span>Qu'est-ce qu'ASSIGNME ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a1" class="answer" role="region" aria-labelledby="q1">
-              <div class="answer-inner">
-                ASSIGNME est une plateforme SaaS DeepTech qui automatise le matching candidats → opportunités via IA, en quelques minutes.
+  <!-- Fondateurs -->
+  <section class="py-20">
+    <div class="mx-auto w-[min(1100px,92%)]">
+      <div class="grid md:grid-cols-2 gap-12">
+        
+        <!-- Benjamin -->
+        <div class="glass rounded-2xl p-8">
+          <div class="mb-6">
+            <h3 class="text-2xl font-bold text-ink mb-2">Benjamin Da Cunha</h3>
+            <div class="text-neon font-semibold">CEO & Fondateur</div>
+          </div>
+          
+          <div class="space-y-4 text-muted">
+            <p>Ancien athlète professionnel (boxe, 2016-2022), Benjamin a vécu les impasses d'un système d'emploi inadapté aux profils atypiques.</p>
+            
+            <p>Autodidacte en Python et IA, il a développé des algorithmes de détection de patterns sur la blockchain Solana, générant une indépendance financière en moins de 3 ans.</p>
+            
+            <p>Cette expertise technique lui a permis de concevoir l'architecture IA d'ASSIGNME : NLP sémantique, matching vectoriel et automatisation des candidatures.</p>
+            
+            <div class="pt-4 border-t border-muted/20">
+              <div class="text-sm">
+                <div class="font-semibold text-ink mb-2">Formation</div>
+                <div>• DAEU A - Sorbonne Université</div>
+                <div>• BEP Électrotechnique</div>
               </div>
             </div>
-          </li>
+          </div>
+        </div>
 
-          <li class="faq-item">
-            <button id="q2" class="faq-btn" aria-expanded="false" aria-controls="a2">
-              <span>Quel problème résolvez‑vous ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a2" class="answer" role="region" aria-labelledby="q2">
-              <div class="answer-inner">
-                Nous réduisons drastiquement délais et coûts de recrutement tout en simplifiant le parcours candidat.
+        <!-- Lina -->
+        <div class="glass rounded-2xl p-8">
+          <div class="mb-6">
+            <h3 class="text-2xl font-bold text-ink mb-2">Lina Slimane</h3>
+            <div class="text-neon font-semibold">CFO & Directrice Finance</div>
+          </div>
+          
+          <div class="space-y-4 text-muted">
+            <p>Spécialiste finance et opérations SaaS B2B, Lina structure l'ensemble du volet financier, juridique et administratif d'ASSIGNME.</p>
+            
+            <p>Ancienne responsable ADV chez 360Learning (EdTech internationale, +100M€ ARR), elle a géré un portefeuille de revenus récurrents et piloté le recouvrement de +11M€ de créances.</p>
+            
+            <p>Chez ASSIGNME, elle assure la modélisation financière, la conformité RGPD, la structuration contractuelle et le pilotage des KPIs pour garantir la scalabilité du modèle.</p>
+            
+            <div class="pt-4 border-t border-muted/20">
+              <div class="text-sm">
+                <div class="font-semibold text-ink mb-2">Formation</div>
+                <div>• Licence Droit - Paris 1 Panthéon-Sorbonne</div>
               </div>
             </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q3" class="faq-btn" aria-expanded="false" aria-controls="a3">
-              <span>Qui peut utiliser ASSIGNME ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a3" class="answer" role="region" aria-labelledby="q3">
-              <div class="answer-inner">
-                Candidats, recruteurs privés (PME, hôpitaux, cabinets RH) et acteurs publics (ex. France Travail).
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q4" class="faq-btn" aria-expanded="false" aria-controls="a4">
-              <span>Comment ça fonctionne ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a4" class="answer" role="region" aria-labelledby="q4">
-              <div class="answer-inner">
-                IA de compréhension sémantique (profils &amp; offres), détection des correspondances implicites et génération automatique de candidatures.
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q5" class="faq-btn" aria-expanded="false" aria-controls="a5">
-              <span>En quoi êtes‑vous différents des job boards ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a5" class="answer" role="region" aria-labelledby="q5">
-              <div class="answer-inner">
-                Pas de recherche par mots‑clés : le matching est contextuel et proactif, l'IA pousse les opportunités pertinentes.
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q6" class="faq-btn" aria-expanded="false" aria-controls="a6">
-              <span>Où en êtes‑vous aujourd'hui ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a6" class="answer" role="region" aria-labelledby="q6">
-              <div class="answer-inner">
-                MVP en cours, démonstrateur en ligne et programme pilotes sur 12&nbsp;mois.
-              </div>
-            </div>
-          </li>
-
-          <li class="faq-item">
-            <button id="q7" class="faq-btn" aria-expanded="false" aria-controls="a7">
-              <span>Quelle est votre ambition ?</span><span class="chev" aria-hidden="true"></span>
-            </button>
-            <div id="a7" class="answer" role="region" aria-labelledby="q7">
-              <div class="answer-inner">
-                Devenir le standard européen du matching emploi‑compétences basé IA, privé et public.
-              </div>
-            </div>
-          </li>
-        </ul>
-
-        <!-- Question input placed directly below the FAQ list -->
-        <div class="input-wrap">
-          <input id="qa-input" class="in" type="text" placeholder="Pose ta question" aria-label="Votre question">
-          <button id="qa-send" class="send" type="button">Envoyer</button>
+          </div>
         </div>
       </div>
-    </aside>
-  </main>
+    </div>
+  </section>
 
-  <script>
-    (function(){
-      /* FAQ accordion */
-      const btns=[...document.querySelectorAll('.faq-btn')];
-      function closeAll(except){
-        btns.forEach(b=>{
-          if(b!==except){
-            b.setAttribute('aria-expanded','false');
-            const id=b.getAttribute('aria-controls');
-            const el=document.getElementById(id);
-            if(el) el.style.maxHeight='0px';
-          }
-        });
-      }
-      function toggle(btn){
-        const open=btn.getAttribute('aria-expanded')==='true';
-        const id=btn.getAttribute('aria-controls');
-        const el=document.getElementById(id);
-        if(!el) return;
-        if(open){ btn.setAttribute('aria-expanded','false'); el.style.maxHeight='0px'; }
-        else{ closeAll(btn); btn.setAttribute('aria-expanded','true'); el.style.maxHeight=el.scrollHeight+'px'; }
-      }
-      btns.forEach(btn=>{
-        btn.addEventListener('click',()=>toggle(btn));
-        btn.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(btn);} });
-      });
-      let t; window.addEventListener('resize',()=>{
-        clearTimeout(t); t=setTimeout(()=>{
-          btns.forEach(btn=>{
-            if(btn.getAttribute('aria-expanded')==='true'){
-              const id=btn.getAttribute('aria-controls');
-              const el=document.getElementById(id);
-              if(el) el.style.maxHeight=el.scrollHeight+'px';
-            }
-          });
-        },120);
-      });
+  <!-- Vision -->
+  <section class="py-20 bg-[linear-gradient(180deg,rgba(149,210,230,.05),transparent)]">
+    <div class="mx-auto w-[min(1100px,92%)]">
+      <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-12 text-center">
+        Notre <span class="text-neon">mission</span>
+      </h2>
+      
+      <div class="glass rounded-3xl p-12 max-w-3xl mx-auto">
+        <p class="text-lg text-muted leading-relaxed mb-6">
+          ASSIGNME vise à révolutionner l'accès à l'emploi en mettant l'intelligence artificielle au service de ceux qui ont du potentiel mais peinent à le canaliser.
+        </p>
+        
+        <p class="text-lg text-muted leading-relaxed mb-6">
+          Nous voulons qu'un chercheur d'emploi puisse accéder à des opportunités réellement adaptées à ses compétences, sa personnalité et ses aspirations, même s'il ne les a pas encore formalisées.
+        </p>
+        
+        <p class="text-lg text-ink font-semibold leading-relaxed">
+          Notre ambition : devenir l'infrastructure d'orientation professionnelle de référence en France, au service des citoyens, des entreprises et des politiques publiques.
+        </p>
+      </div>
+    </div>
+  </section>
 
-      /* Bottom Q&A using GPT + dossier (backend at /.netlify/functions/ask) */
-      const input = document.getElementById('qa-input');
-      const send  = document.getElementById('qa-send');
-      const box   = document.getElementById('qa-answer');
-      const API_URL = '/.netlify/functions/ask';
-
-      function ensureAnswerBox(){
-        if(!box) return;
-        box.style.display = 'block';
-        if(!box.parentNode) {
-          // safety: should exist
-        }
-      }
-      function showAnswer(text){
-        if(!box) return;
-        box.style.display = 'block';
-        box.innerHTML = `<div style="color: #e8f4ff; line-height: 1.6;">${text}</div>`;
-        box.scrollIntoView({ behavior:'smooth', block:'nearest' });
-      }
-
-      async function ask(question){
-        showAnswer('<div style="color: #87ceeb; font-style: italic;">Analyse de la question en cours...</div>');
-        try{
-          const res = await fetch(API_URL, {
-            method:'POST',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({ question })
-          });
-          if(!res.ok){
-            const errorData = await res.json().catch(() => ({}));
-            if (res.status === 429) {
-              throw new Error('Limite de requêtes atteinte. Veuillez réessayer dans quelques minutes.');
-            }
-            throw new Error(errorData.error || `Erreur ${res.status}`);
-          }
-          const data = await res.json();
-          const answer = (data.answer || '').trim() || "Cette information n'est pas disponible dans le dossier ASSIGNME.";
-          showAnswer(answer);
-        }catch(err){
-          showAnswer(`<div style="color: #ff6b6b;">Erreur : ${err.message}</div>`);
-        }
-      }
-
-      function submit(){
-        const q = (input.value || '').trim();
-        if(!q) return;
-        ask(q);
-        input.value='';
-        input.focus();
-      }
-      send.addEventListener('click', submit);
-      input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
-
-      // Show menu on mobile
-      const mediaQuery = window.matchMedia('(min-width: 768px)');
-      function handleMediaChange(e) {
-        const mobileMenu = document.querySelector('.hidden.md\\:flex');
-        if (mobileMenu) {
-          if (e.matches) {
-            mobileMenu.style.display = 'flex';
-          } else {
-            mobileMenu.style.display = 'none';
-          }
-        }
-      }
-      mediaQuery.addListener(handleMediaChange);
-      handleMediaChange(mediaQuery);
-    })();
-  </script>
+  <!-- Contact -->
+  <section class="py-20">
+    <div class="mx-auto w-[min(1100px,92%)]">
+      <div class="glass rounded-3xl p-12 text-center">
+        <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
+          Rejoignez l'aventure
+        </h2>
+        
+        <p class="text-lg text-muted max-w-2xl mx-auto mb-8">
+          Investisseurs, partenaires stratégiques ou talents : si vous partagez notre vision d'un marché de l'emploi plus efficace et inclusif, contactez-nous.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="mailto:contact@assignme.fr" class="inline-flex px-6 py-3 rounded-xl bg-neon text-black font-semibold shadow-glow hover:brightness-110">
+            contact@assignme.fr
+          </a>
+          <a href="index.html#investisseurs" class="inline-flex px-6 py-3 rounded-xl border border-ink/30 text-ink hover:bg-ink/10 font-semibold">
+            Dossier investisseurs
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Footer -->
-  <footer id="contact" class="pt-12 pb-16" style="padding-top: 48px; padding-bottom: 64px;">
-    <div class="mx-auto w-[min(1100px,92%)] flex items-center justify-center" style="margin: 0 auto; max-width: min(1100px, 92%); display: flex; align-items: center; justify-content: center;">
-      <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-        <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl" style="height: 32px; width: auto; border-radius: 12px;"/>
-        <span class="text-base font-semibold footer-brand" style="font-size: 16px; font-weight: 600; color: #ffffff !important;">ASSIGNME</span>
-        <span class="text-muted mx-2" style="color: #a9b9d6; margin: 0 8px;">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
+  <footer class="pt-12 pb-16">
+    <div class="mx-auto w-[min(1100px,92%)] flex items-center justify-center">
+      <div class="flex items-center gap-2">
+        <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
+        <span class="text-base font-semibold footer-brand">ASSIGNME</span>
+        <span class="text-muted mx-2">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
       </div>
     </div>
   </footer>
+
 </body>
 </html>
