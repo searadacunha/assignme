@@ -17,6 +17,10 @@
       box-sizing: border-box;
     }
 
+    html, body {
+      height: 100%;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0b10;
@@ -40,15 +44,64 @@
       font-weight: 600;
     }
 
-    .status-draft { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
-    .status-sent { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-    .status-viewed { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
-    .status-interview { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-    .status-offer { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-    .status-rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .status-draft {
+      background: rgba(156, 163, 175, 0.2);
+      color: #9ca3af;
+    }
 
-    .nav-brand { color: #ffffff !important; }
-    .footer-brand { color: #ffffff !important; }
+    .status-sent {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+    }
+
+    .status-viewed {
+      background: rgba(139, 92, 246, 0.2);
+      color: #8b5cf6;
+    }
+
+    .status-interview {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+
+    .status-offer {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+
+    .status-rejected {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .nav-brand {
+      color: #ffffff !important;
+    }
+
+    .footer-brand {
+      color: #ffffff !important;
+    }
+
+    .filter-btn.active {
+      background: rgba(149, 210, 230, 0.3) !important;
+      color: #95D2E6 !important;
+      border: 1px solid rgba(149, 210, 230, 0.5);
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateX(400px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fade-in 0.3s ease;
+    }
   </style>
   
   <link href="favicon.png" rel="icon" type="image/png">
@@ -62,15 +115,16 @@
           <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
           <span class="text-base font-semibold tracking-tight uppercase nav-brand">ASSIGNME</span>
         </a>
-        <div class="hidden md:flex items-center gap-6 text-sm" style="color: #a9b9d6;">
-          <a href="index.html" class="hover:text-white">Accueil</a>
-          <a href="demo.html" class="hover:text-white">Démo</a>
-          <a href="tracker.html" class="hover:text-white font-semibold" style="color: #95D2E6;">Mes candidatures</a>
-          <a href="info.html" class="hover:text-white">À propos</a>
+        <div class="flex items-center gap-6 text-sm" style="color: #a9b9d6;">
+          <a href="index.html" class="hover:text-white" style="text-decoration: none;">Accueil</a>
+          <a href="index.html#about" class="hover:text-white" style="text-decoration: none;">Présentation</a>
+          <a href="demo.html" class="hover:text-white" style="text-decoration: none;">Démo</a>
+          <a href="tracker.html" class="hover:text-white font-semibold" style="color: #95D2E6; text-decoration: none;">Mes candidatures</a>
+          <a href="info.html" class="hover:text-white" style="text-decoration: none;">À propos</a>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-white text-black font-semibold hover:brightness-110" style="box-shadow: 0 0 80px rgba(149, 210, 230, 0.35);">Contact</a>
+        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-white text-black font-semibold hover:brightness-110" style="box-shadow: 0 0 80px rgba(149, 210, 230, 0.35); text-decoration: none;">Nous contacter</a>
       </div>
     </nav>
   </header>
@@ -81,7 +135,7 @@
       
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">📊 Mes Candidatures</h1>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Mes Candidatures</h1>
         <p class="text-lg" style="color: #a9b9d6;">Suivez l'évolution de toutes vos candidatures générées par ASSIGNME</p>
       </div>
 
@@ -134,10 +188,10 @@
 
       <!-- Empty State -->
       <div id="empty-state" class="glass rounded-xl p-12 text-center" style="display: none;">
-        <div class="text-6xl mb-4">📭</div>
+        <div class="text-6xl mb-4">Aucune candidature</div>
         <h3 class="text-2xl font-bold mb-3">Aucune candidature pour le moment</h3>
-        <p class="mb-6" style="color: #a9b9d6;">Analysez votre CV et générez vos premières candidatures automatiques !</p>
-        <a href="demo.html" class="inline-flex px-6 py-3 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">
+        <p class="mb-6" style="color: #a9b9d6;">Analysez votre CV et générez vos premières candidatures automatiques</p>
+        <a href="demo.html" class="inline-flex px-6 py-3 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition" style="text-decoration: none;">
           Analyser mon CV
         </a>
       </div>
@@ -151,17 +205,15 @@
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
         <span class="text-base font-semibold footer-brand">ASSIGNME</span>
-        <span class="mx-2" style="color: #a9b9d6;">© 2025 ASSIGNME. Tous droits réservés</span>
+        <span class="mx-2" style="color: #a9b9d6;">2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
       </div>
     </div>
   </footer>
 
   <script>
-    // Récupérer les candidatures depuis localStorage
     let applications = JSON.parse(localStorage.getItem('assignme_applications') || '[]');
     let currentFilter = 'all';
 
-    // Initialisation
     document.addEventListener('DOMContentLoaded', () => {
       renderApplications();
       updateStats();
@@ -171,7 +223,6 @@
       const container = document.getElementById('applications-list');
       const emptyState = document.getElementById('empty-state');
       
-      // Filtrer
       const filtered = currentFilter === 'all' 
         ? applications 
         : applications.filter(app => app.status === currentFilter);
@@ -191,7 +242,7 @@
             <div class="flex-1">
               <h3 class="text-xl font-bold mb-2">${app.position}</h3>
               <p style="color: #a9b9d6;" class="mb-1">${app.company}</p>
-              <p style="color: #a9b9d6;" class="text-sm mb-3">📍 ${app.location || 'Non spécifié'}</p>
+              <p style="color: #a9b9d6;" class="text-sm mb-3">${app.location || 'Non spécifié'}</p>
               <div class="flex items-center gap-3 text-sm" style="color: #a9b9d6;">
                 <span>Générée le ${new Date(app.generated_at).toLocaleDateString('fr-FR')}</span>
                 ${app.sent_at ? `<span>• Envoyée le ${new Date(app.sent_at).toLocaleDateString('fr-FR')}</span>` : ''}
@@ -205,12 +256,12 @@
                 style="background: rgba(16,18,27,.8); border: 1px solid rgba(149,210,230,.18); color: #eaf2ff;"
                 onchange="updateStatus('${app.job_id}', this.value)"
               >
-                <option value="draft" ${app.status === 'draft' ? 'selected' : ''}>📝 Brouillon</option>
-                <option value="sent" ${app.status === 'sent' ? 'selected' : ''}>📤 Envoyée</option>
-                <option value="viewed" ${app.status === 'viewed' ? 'selected' : ''}>👀 Vue</option>
-                <option value="interview" ${app.status === 'interview' ? 'selected' : ''}>📞 Entretien</option>
-                <option value="offer" ${app.status === 'offer' ? 'selected' : ''}>🎉 Offre</option>
-                <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>❌ Refusée</option>
+                <option value="draft" ${app.status === 'draft' ? 'selected' : ''}>Brouillon</option>
+                <option value="sent" ${app.status === 'sent' ? 'selected' : ''}>Envoyée</option>
+                <option value="viewed" ${app.status === 'viewed' ? 'selected' : ''}>Vue</option>
+                <option value="interview" ${app.status === 'interview' ? 'selected' : ''}>Entretien</option>
+                <option value="offer" ${app.status === 'offer' ? 'selected' : ''}>Offre</option>
+                <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Refusée</option>
               </select>
             </div>
           </div>
@@ -218,7 +269,7 @@
           <!-- Cover Letter Preview -->
           <details class="mb-4">
             <summary class="cursor-pointer font-semibold py-2 px-4 rounded-lg hover:bg-white/5 transition" style="color: #95D2E6;">
-              📄 Lettre de motivation générée
+              Lettre de motivation générée
             </summary>
             <div class="mt-3 p-4 rounded-lg" style="background: rgba(16,18,27,.6); border: 1px solid rgba(149,210,230,.18);">
               <p class="whitespace-pre-line text-sm leading-relaxed" style="color: #e8f4ff;">
@@ -231,7 +282,7 @@ ${app.cover_letter || 'Lettre non disponible'}
           <div class="flex gap-3 flex-wrap">
             ${app.application_url && app.application_url !== '#' ? `
               <a href="${app.application_url}" target="_blank" 
-                 class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition text-sm">
+                 class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition text-sm" style="text-decoration: none;">
                 Voir l'offre
               </a>
             ` : ''}
@@ -260,12 +311,12 @@ ${app.cover_letter || 'Lettre non disponible'}
 
     function getStatusBadge(status) {
       const badges = {
-        'draft': '<span class="status-badge status-draft">📝 Brouillon</span>',
-        'sent': '<span class="status-badge status-sent">📤 Envoyée</span>',
-        'viewed': '<span class="status-badge status-viewed">👀 Vue</span>',
-        'interview': '<span class="status-badge status-interview">📞 Entretien</span>',
-        'offer': '<span class="status-badge status-offer">🎉 Offre reçue</span>',
-        'rejected': '<span class="status-badge status-rejected">❌ Refusée</span>'
+        'draft': '<span class="status-badge status-draft">Brouillon</span>',
+        'sent': '<span class="status-badge status-sent">Envoyée</span>',
+        'viewed': '<span class="status-badge status-viewed">Vue</span>',
+        'interview': '<span class="status-badge status-interview">Entretien</span>',
+        'offer': '<span class="status-badge status-offer">Offre reçue</span>',
+        'rejected': '<span class="status-badge status-rejected">Refusée</span>'
       };
       return badges[status] || badges['draft'];
     }
@@ -285,7 +336,6 @@ ${app.cover_letter || 'Lettre non disponible'}
     function filterByStatus(status) {
       currentFilter = status;
       
-      // Update active button
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.status === status) {
@@ -308,7 +358,6 @@ ${app.cover_letter || 'Lettre non disponible'}
         
         localStorage.setItem('assignme_applications', JSON.stringify(applications));
         
-        // Envoyer feedback à l'API
         sendFeedback(jobId, newStatus, app);
         
         renderApplications();
@@ -355,7 +404,7 @@ ${app.cover_letter || 'Lettre non disponible'}
       const app = applications.find(a => a.job_id === jobId);
       if (app && app.cover_letter) {
         navigator.clipboard.writeText(app.cover_letter).then(() => {
-          showNotification('✅ Lettre copiée dans le presse-papiers !');
+          showNotification('Lettre copiée dans le presse-papiers');
         });
       }
     }
@@ -389,7 +438,7 @@ ${JSON.stringify(app.adapted_cv, null, 2)}
       a.click();
       URL.revokeObjectURL(url);
       
-      showNotification('📥 Candidature téléchargée !');
+      showNotification('Candidature téléchargée');
     }
 
     function deleteApplication(jobId) {
@@ -403,7 +452,7 @@ ${JSON.stringify(app.adapted_cv, null, 2)}
       renderApplications();
       updateStats();
       
-      showNotification('🗑️ Candidature supprimée');
+      showNotification('Candidature supprimée');
     }
 
     function showNotification(message) {
@@ -412,7 +461,7 @@ ${JSON.stringify(app.adapted_cv, null, 2)}
       notif.style.minWidth = '300px';
       notif.innerHTML = `
         <div class="flex items-center gap-3">
-          <div class="text-lg">ℹ️</div>
+          <div class="text-lg">INFO</div>
           <div class="flex-1 font-semibold">${message}</div>
         </div>
       `;
@@ -427,28 +476,5 @@ ${JSON.stringify(app.adapted_cv, null, 2)}
       }, 3000);
     }
   </script>
-
-  <style>
-    .filter-btn.active {
-      background: rgba(149, 210, 230, 0.3) !important;
-      color: #95D2E6 !important;
-      border: 1px solid rgba(149, 210, 230, 0.5);
-    }
-
-    @keyframes fade-in {
-      from {
-        opacity: 0;
-        transform: translateX(400px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    .animate-fade-in {
-      animation: fade-in 0.3s ease;
-    }
-  </style>
 </body>
 </html>
