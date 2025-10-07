@@ -1,6 +1,4 @@
 // netlify/functions/auto-apply.js
-// Génération automatique de candidatures personnalisées
-
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -44,17 +42,11 @@ exports.handler = async (event, context) => {
 
     console.log(`Génération de ${selectedJobs.length} candidatures...`);
 
-    // Générer les candidatures pour chaque job
     const applications = await Promise.all(
       selectedJobs.map(async (job) => {
         try {
-          // 1. Générer lettre de motivation personnalisée
           const coverLetter = await generateCoverLetter(apiKey, candidateProfile, job);
-          
-          // 2. Générer réponses aux questions de screening
           const screeningAnswers = await generateScreeningAnswers(apiKey, candidateProfile, job);
-          
-          // 3. Créer CV adapté (highlight compétences pertinentes)
           const adaptedCV = adaptCV(candidateProfile, job);
           
           return {
@@ -115,9 +107,8 @@ exports.handler = async (event, context) => {
   }
 };
 
-// Fonction pour générer une lettre de motivation
 async function generateCoverLetter(apiKey, candidate, job) {
-  const prompt = `Tu es un expert en lettres de motivation. Tu dois créer une lettre PERSONNALISÉE et CONVAINCANTE.
+  const prompt = `Tu es un expert en lettres de motivation professionnelles. Tu dois créer une lettre STRUCTURÉE, CONVAINCANTE et PERSONNALISÉE.
 
 PROFIL CANDIDAT :
 - Nom: ${candidate.name}
@@ -136,24 +127,59 @@ POSTE VISÉ :
 - Description: ${job.description?.substring(0, 400) || 'Non disponible'}
 - Compétences requises: ${job.required_skills?.join(', ') || 'Non spécifié'}
 
+STRUCTURE OBLIGATOIRE :
+
+1. EN-TÊTE :
+   ${candidate.name}
+   ${candidate.location}
+   [Email/Téléphone si disponible]
+   
+   ${job.company}
+   À l'attention du Service Recrutement
+   ${job.location}
+   
+   Objet : Candidature au poste de ${job.job_title}
+
+2. FORMULE D'APPEL :
+   "Madame, Monsieur,"
+
+3. CORPS DE LA LETTRE (250-300 mots) :
+   
+   Premier paragraphe - Accroche (2-3 phrases) :
+   - Mentionner le poste exact
+   - Expliquer pourquoi cette opportunité vous intéresse
+   - Faire le lien avec votre profil
+   
+   Deuxième paragraphe - Expérience et compétences (3-4 phrases) :
+   - Mettre en avant 2-3 expériences/compétences CONCRÈTES qui matchent le poste
+   - Utiliser des exemples précis de votre parcours
+   - Démontrer la valeur ajoutée que vous apportez
+   
+   Troisième paragraphe - Motivation et connaissance de l'entreprise (2-3 phrases) :
+   - Expliquer pourquoi cette entreprise en particulier
+   - Mentionner ce qui vous attire dans leur activité/valeurs/projets
+   - Faire le lien avec vos aspirations professionnelles
+   
+   Paragraphe de clôture (1-2 phrases) :
+   - Exprimer votre disponibilité pour un entretien
+   - Remercier pour l'attention portée à votre candidature
+
+4. FORMULE DE POLITESSE :
+   "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées."
+
+5. SIGNATURE :
+   ${candidate.name}
+
 RÈGLES STRICTES :
-✅ 200-250 mots maximum
-✅ Ton professionnel mais humain
-✅ Mentionner 2-3 compétences CONCRÈTES du candidat qui matchent le poste
-✅ Expliquer POURQUOI cette entreprise/ce poste (pas juste "je suis motivé")
-✅ Montrer que tu as compris les enjeux du poste
-✅ Terminer par call-to-action concret
-❌ PAS de clichés ("dynamique", "motivé", "polyvalent" sans contexte)
-❌ PAS de phrases vides
-❌ PAS de fautes d'orthographe
+- Ton professionnel mais humain, pas robotique
+- Pas de clichés vides ("dynamique", "motivé" sans contexte)
+- Utiliser le "je" de manière équilibrée
+- Être spécifique et concret dans les exemples
+- Adapter le vocabulaire au secteur d'activité
+- Vérifier la cohérence entre profil et poste
+- TOUJOURS inclure formule d'appel et formule de politesse
 
-Structure :
-1. Accroche percutante (1 phrase qui marque)
-2. Pourquoi moi ? (compétences + expérience concrètes)
-3. Pourquoi vous ? (ce qui t'attire dans l'entreprise/poste)
-4. Call-to-action
-
-Génère UNIQUEMENT la lettre, sans formules d'introduction.`;
+Génère la lettre complète maintenant.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -166,14 +192,14 @@ Génère UNIQUEMENT la lettre, sans formules d'introduction.`;
       messages: [
         {
           role: "system",
-          content: "Tu es un expert en lettres de motivation qui génère des candidatures qui se démarquent vraiment."
+          content: "Tu es un expert en recrutement français qui rédige des lettres de motivation professionnelles, structurées et convaincantes. Tu respectes toujours les codes de la correspondance professionnelle française."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 600,
+      max_tokens: 800,
       temperature: 0.7
     })
   });
@@ -186,9 +212,7 @@ Génère UNIQUEMENT la lettre, sans formules d'introduction.`;
   return data.choices[0].message.content.trim();
 }
 
-// Fonction pour générer réponses questions de screening
 async function generateScreeningAnswers(apiKey, candidate, job) {
-  // Si pas de questions, retourner tableau vide
   if (!job.screening_questions || job.screening_questions.length === 0) {
     return [];
   }
@@ -240,9 +264,7 @@ Format JSON : [{"question": "...", "answer": "..."}]`;
   }
 }
 
-// Fonction pour adapter le CV
 function adaptCV(candidate, job) {
-  // Identifier les compétences pertinentes
   const relevantSkills = (candidate.technical_skills || []).filter(skill => {
     const skillLower = skill.toLowerCase();
     return (job.required_skills || []).some(req => 
@@ -251,7 +273,6 @@ function adaptCV(candidate, job) {
     );
   });
 
-  // Générer un résumé adapté
   const summary = relevantSkills.length > 0
     ? `${candidate.current_position} avec ${candidate.total_experience_years} ans d'expérience, spécialisé(e) en ${relevantSkills.slice(0, 3).join(', ')}`
     : `${candidate.current_position} avec ${candidate.total_experience_years} ans d'expérience`;
