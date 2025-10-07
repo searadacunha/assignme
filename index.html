@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ASSIGNME – Plateforme IA de recrutement intelligent</title>
-  <meta name="description" content="ASSIGNME automatise le matching emploi par intelligence artificielle. Solution DeepTech pour entreprises, hôpitaux et services publics." />
+  <title>ASSIGNME – IA de matching emploi</title>
+  <meta name="description" content="ASSIGNME – plateforme IA de matching pour l'emploi. Intégrations ATS/Job Boards, démo et API." />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="favicon.png" rel="icon" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -32,211 +32,125 @@
     .chip { background: linear-gradient(135deg, rgba(149,210,230,.18), rgba(207,230,228,.10)); border: 1px solid rgba(149,210,230,.25); }
     .hero-gradient { background-image: radial-gradient(1200px 600px at 60% -10%, rgba(149,210,230,.18), rgba(149,210,230,.10) 35%, rgba(10,11,16,1) 65%), radial-gradient(900px 500px at 10% 0%, rgba(124,58,237,.10), rgba(10,11,16,1) 60%); }
     .mask-fade { -webkit-mask-image: radial-gradient(1200px 600px at 50% 0%, rgba(0,0,0,1), rgba(0,0,0,0.2) 60%, transparent 75%); mask-image: radial-gradient(1200px 600px at 50% 0%, rgba(0,0,0,1), rgba(0,0,0,0.2) 60%, transparent 75%); }
-    .nav-brand { color:#ffffff !important; }
-    .footer-brand { color:#ffffff !important; }
     @media (max-width: 768px){ .desktop-only{ display:none; } }
-    .logo-glow {
-      width: min(520px, 70vw);
-      height: auto;
-      filter: drop-shadow(0 0 20px rgba(149, 210, 230, 0.55)) drop-shadow(0 0 40px rgba(149, 210, 230, 0.35)) drop-shadow(0 0 70px rgba(149, 210, 230, 0.25));
-    }
-    @media (min-width: 768px) {
-      .logo-glow { width: min(640px, 60vw); }
-    }
-    .logo-glow-wrap {
-      position: relative;
-      display: inline-block;
-    }
-    .logo-glow-wrap::before {
-      content: "";
-      position: absolute;
-      inset: -10%;
-      background: radial-gradient(60% 60% at 50% 50%, rgba(149,210,230,0.18) 0%, rgba(149,210,230,0.08) 40%, rgba(0,0,0,0) 70%);
-      filter: blur(24px);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .logo-glow { position: relative; z-index: 1; }
   </style>
+<style>
+/* Neon glow for ASSIGNME logo */
+.logo-glow {
+  width: min(520px, 70vw);
+  height: auto;
+  filter:
+    drop-shadow(0 0 20px rgba(149, 210, 230, 0.55))
+    drop-shadow(0 0 40px rgba(149, 210, 230, 0.35))
+    drop-shadow(0 0 70px rgba(149, 210, 230, 0.25));
+}
+@media (min-width: 768px) {
+  .logo-glow { width: min(640px, 60vw); }
+}
+/* wrapper halo to blend with background */
+.logo-glow-wrap {
+  position: relative;
+  display: inline-block;
+}
+.logo-glow-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(149,210,230,0.18) 0%, rgba(149,210,230,0.08) 40%, rgba(0,0,0,0) 70%);
+  filter: blur(24px);
+  pointer-events: none;
+  z-index: 0;
+}
+.logo-glow { position: relative; z-index: 1; }
+</style>
+<style>
+/* Force brand label to white regardless of parent glass styles */
+.nav-brand { color:#ffffff !important; }
+/* Force footer brand to white */
+.footer-brand { color:#ffffff !important; }
+</style>
 </head>
 <body class="font-sans antialiased selection:bg-accent/30">
-  
   <!-- Header -->
   <header class="fixed top-0 inset-x-0 z-50">
     <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-8">
-        <a href="index.html" class="flex items-center gap-2">
-          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
-          <span class="text-base font-semibold tracking-tight uppercase nav-brand">ASSIGNME</span>
-        </a>
-        <div class="hidden md:flex items-center gap-6 text-sm text-muted">
-          <a href="index.html" class="hover:text-ink">Accueil</a>
-          <a href="#solution" class="hover:text-ink">Solution</a>
-          <a href="demo.html" class="hover:text-ink">Démo</a>
-          <a href="info.html" class="hover:text-ink">Plateforme</a>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <a href="mailto:contact@assignme.fr" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Contact</a>
-      </div>
-    </nav>
+  <div class="flex items-center gap-8">
+    <a href="index.html" class="flex items-center gap-2">
+      <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
+      <span class="text-base font-semibold tracking-tight uppercase text-white text-white nav-brand uppercase text-white">ASSIGNME</span>
+    </a>
+    <div class="hidden md:flex items-center gap-6 text-sm text-muted">
+      <a href="index.html" class="hover:text-ink">Accueil</a>
+      <a href="#about" class="hover:text-ink">Présentation</a>
+      <a href="demo.html" class="hover:text-ink">Démo</a>
+      <a href="tracker.html" class="hover:text-ink">Mes candidatures</a>
+      <a href="info.html" class="hover:text-ink">À propos</a>
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="mailto:contact@assignme.fr" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Nous contacter</a>
+  </div>
+</nav>
   </header>
-
   <!-- Hero -->
   <section class="relative pt-36 pb-24 hero-gradient overflow-hidden">
     <div class="absolute inset-0 pointer-events-none mask-fade"></div>
     <div class="relative mx-auto w-[min(1100px,92%)] grid md:grid-cols-2 gap-10 items-center">
       <div>
-        <h1 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
-          L'IA qui rapproche <span class="text-neon">candidats</span> et <span class="text-neon">opportunités</span> en quelques minutes
-        </h1>
-        
-        <p class="text-lg text-muted max-w-xl mb-8 leading-relaxed">
-          ASSIGNME est une plateforme DeepTech qui automatise le matching emploi par intelligence artificielle. 
-          Connectée à France Travail, compatible ATS et job boards, elle élimine les délais de recrutement.
+
+        <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink">
+  <span class="text-neon">Matching</span> emploi qui comprend vraiment vos <span class="text-neon">profils</span>
+</h2>
+        <p class="mt-5 text-lg text-muted max-w-xl">
+          Optimisez votre recrutement avec une IA qui rapproche automatiquement candidats et offres. Connectez vos ATS et job boards, automatisez les candidatures et mesurez l'impact.
         </p>
-        
-        <div class="flex flex-col sm:flex-row gap-3">
-          <a href="demo.html" class="px-5 py-3 rounded-xl bg-ink text-black font-semibold shadow-glow text-center hover:brightness-110">Tester la démo</a>
-          <a href="#investisseurs" class="px-5 py-3 rounded-xl border border-neon/50 text-neon hover:bg-neon/10 text-center font-semibold">En savoir plus</a>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+          <a href="demo.html" class="px-5 py-3 rounded-xl bg-ink text-black font-semibold shadow-glow text-center">Lancer la démo</a>
+          <a href="#about" class="px-5 py-3 rounded-xl border border-ink/30 text-ink/90 hover:bg-ink/10 text-center">Découvrir ASSIGNME</a>
         </div>
+
       </div>
-      
       <div class="relative desktop-only">
         <div class="relative ml-auto flex items-center justify-center">
-          <div class="logo-glow-wrap">
-            <img src="assignme.png" alt="ASSIGNME" class="logo-glow"/>
-          </div>
+          <div class="logo-glow-wrap"><img src="assignme.png" alt="ASSIGNME logo" class="logo-glow"/></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Chiffres clés -->
-  <section class="py-16 bg-[linear-gradient(180deg,rgba(149,210,230,.05),transparent)]">
-    <div class="mx-auto w-[min(1100px,92%)]">
-      <div class="grid md:grid-cols-3 gap-8 text-center">
-        <div class="glass rounded-2xl p-8">
-          <div class="text-4xl font-bold text-neon mb-2">2,2M</div>
-          <div class="text-sm text-muted">Demandeurs d'emploi en France</div>
+  <!-- Présentation -->
+  <section id="about" class="py-20 bg-[linear-gradient(180deg,rgba(149,210,230,.08),transparent)]">
+    <div class="mx-auto w-[min(1100px,92%)] grid lg:grid-cols-2 gap-10 items-start">
+      <div class="space-y-6">
+        <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink">Présentation du projet</h2>
+        <p class="text-muted"><strong>ASSIGNME</strong> est une plateforme innovante qui rapproche candidats et recruteurs de manière intelligente.
+        Elle simplifie et automatise le processus de recrutement pour offrir des correspondances de qualité.</p>
+        <p class="text-muted">Notre objectif : <strong>accélérer et améliorer les embauches</strong> tout en favorisant la diversité et l'équité dans les sélections.</p>
+        <div class="glass rounded-2xl p-4">
+          <h3 class="font-semibold mb-2">Ce que nous proposons</h3>
+          <ul class="list-disc list-inside text-sm text-muted/90 space-y-1">
+            <li>Matching intelligent entre profils et offres</li>
+            <li>Automatisation des tâches répétitives</li>
+            <li>Suivi et mesure de l'efficacité du recrutement</li>
+            <li>Intégration avec vos outils existants</li>
+          </ul>
         </div>
-        <div class="glass rounded-2xl p-8">
-          <div class="text-4xl font-bold text-neon mb-2">36 jours</div>
-          <div class="text-sm text-muted">Délai moyen de recrutement</div>
-        </div>
-        <div class="glass rounded-2xl p-8">
-          <div class="text-4xl font-bold text-neon mb-2">60k+</div>
-          <div class="text-sm text-muted">Postes vacants secteur santé</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Solution -->
-  <section id="solution" class="py-20">
-    <div class="mx-auto w-[min(1100px,92%)]">
-      <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-12 text-center">
-        Une technologie <span class="text-neon">DeepTech</span> au service du recrutement
-      </h2>
-      
-      <div class="grid md:grid-cols-2 gap-8">
-        <div class="glass rounded-2xl p-8">
-          <h3 class="text-xl font-semibold mb-4 text-neon">Matching intelligent</h3>
-          <p class="text-muted leading-relaxed">
-            Moteur NLP basé sur CamemBERT et FAISS qui analyse compétences explicites, soft skills et potentiel de reconversion. 
-            Précision supérieure aux mots-clés traditionnels.
-          </p>
-        </div>
-        
-        <div class="glass rounded-2xl p-8">
-          <h3 class="text-xl font-semibold mb-4 text-neon">Automatisation totale</h3>
-          <p class="text-muted leading-relaxed">
-            Génération de CV adaptés, remplissage automatique de formulaires, réponses aux préqualifications. 
-            Le candidat reçoit les opportunités, l'IA candidate.
-          </p>
-        </div>
-        
-        <div class="glass rounded-2xl p-8">
-          <h3 class="text-xl font-semibold mb-4 text-neon">Intégration universelle</h3>
-          <p class="text-muted leading-relaxed">
-            Compatible France Travail, LinkedIn, Indeed, ATS (Workday, Talentsoft). 
-            Architecture API-first pour intégration en 48h dans vos systèmes RH.
-          </p>
-        </div>
-        
-        <div class="glass rounded-2xl p-8">
-          <h3 class="text-xl font-semibold mb-4 text-neon">Impact mesurable</h3>
-          <p class="text-muted leading-relaxed">
-            Réduction de 30% des délais, amélioration de 75% de la satisfaction recruteurs, 
-            valorisation des profils atypiques pour plus d'équité.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Marché -->
-  <section id="marche" class="py-20 bg-[linear-gradient(180deg,rgba(149,210,230,.05),transparent)]">
-    <div class="mx-auto w-[min(1100px,92%)] grid lg:grid-cols-2 gap-12 items-center">
-      <div>
-        <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
-          Un marché de <span class="text-neon">8 milliards d'euros</span> en transformation
-        </h2>
-        <div class="space-y-4 text-muted">
-          <p>Le marché français du recrutement est confronté à une crise d'efficacité : 
-          coexistence paradoxale de 2,2 millions de demandeurs d'emploi et de pénuries massives dans des secteurs clés.</p>
-          
-          <p>Les solutions actuelles (LinkedIn, Indeed, France Travail) excellent dans la diffusion mais échouent sur le matching intelligent. 
-          Résultat : 36 jours et 5-8k€ par recrutement.</p>
-          
-          <p><strong class="text-ink">ASSIGNME répond à ce besoin structurel</strong> avec une technologie de rupture alignée sur France 2030.</p>
-        </div>
-      </div>
-      
-      <div class="glass rounded-2xl p-8">
-        <h3 class="text-xl font-semibold mb-6 text-ink">Segments cibles</h3>
-        <div class="space-y-4">
-          <div class="border-l-2 border-neon pl-4">
-            <div class="font-semibold text-ink">PME & ETI</div>
-            <div class="text-sm text-muted">50k entreprises potentielles</div>
-          </div>
-          <div class="border-l-2 border-neon pl-4">
-            <div class="font-semibold text-ink">Hôpitaux & Santé</div>
-            <div class="text-sm text-muted">60k postes vacants • Besoin critique</div>
-          </div>
-          <div class="border-l-2 border-neon pl-4">
-            <div class="font-semibold text-ink">Secteur public</div>
-            <div class="text-sm text-muted">France Travail, missions locales, collectivités</div>
-          </div>
-          <div class="border-l-2 border-neon pl-4">
-            <div class="font-semibold text-ink">Cabinets RH</div>
-            <div class="text-sm text-muted">Licence blanche • Co-branding possible</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Investisseurs -->
-  <section id="investisseurs" class="py-20">
-    <div class="mx-auto w-[min(1100px,92%)]">
-      <div class="glass rounded-3xl p-12 text-center">
-        <h2 class="font-sans text-[29.4px] md:text-[42px] leading-[99%] font-normal text-ink mb-6">
-          Financement en cours
-        </h2>
-        
-        <p class="text-lg text-muted max-w-2xl mx-auto mb-8">
-          ASSIGNME est actuellement en phase de financement via la Bourse French Tech Émergence (Bpifrance) 
-          pour accélérer le développement du prototype industriel et les premiers déploiements commerciaux.
-        </p>
-        
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="mailto:contact@assignme.fr?subject=Demande dossier investisseurs ASSIGNME" class="inline-flex px-6 py-3 rounded-xl bg-neon text-black font-semibold shadow-glow hover:brightness-110">
-            Demander le dossier
+        <div class="mt-6">
+          <a href="info.html" class="inline-flex px-5 py-3 rounded-xl border border-neon/40 text-neon hover:bg-neon/10 hover:border-neon/60 transition-all duration-200 font-medium">
+            En savoir plus
           </a>
-          <a href="mailto:contact@assignme.fr?subject=Partenariat ASSIGNME" class="inline-flex px-6 py-3 rounded-xl border border-ink/30 text-ink hover:bg-ink/10 font-semibold">
-            Nous contacter
-          </a>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="glass rounded-2xl p-6">
+          <h3 class="font-semibold text-lg mb-2">Demander le dossier</h3>
+          <p class="text-sm text-muted">Le dossier détaillé est disponible sur demande. Utilisez le formulaire de contact ci-dessous pour le recevoir.</p>
+          <a href="mailto:contact@assignme.fr" class="mt-4 inline-flex px-5 py-3 rounded-xl bg-ink text-black font-semibold shadow-glow">Demander le dossier</a>
+        </div>
+        <div class="glass rounded-2xl overflow-hidden">
+          <video autoplay loop muted playsinline class="w-full h-auto block">
+            <source src="as.mp4" type="video/mp4" />
+          </video>
         </div>
       </div>
     </div>
