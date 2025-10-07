@@ -5,15 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ASSIGNME - Analyseur CV IA</title>
   
-  <!-- React et Babel -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <!-- PDF.js pour lire les vrais PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
@@ -35,7 +30,6 @@
       min-height: 100vh;
     }
 
-    /* Styles pour header et footer */
     html, body { background:#0a0b10; color:#eaf2ff; }
     .glass { backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); }
     .text-muted { color: #a9b9d6; }
@@ -46,46 +40,6 @@
     .hover\:brightness-110:hover { filter: brightness(1.1); }
     .nav-brand { color:#ffffff !important; }
     .footer-brand { color:#ffffff !important; }
-
-    @media (max-width: 768px) {
-      .nav-brand { font-size: 16px; }
-      .nav-brand img { height: 40px !important; margin-right: 8px !important; }
-    }
-
-    .contact-btn {
-      padding: 12px 24px;
-      background: linear-gradient(45deg, #6495ed, #87ceeb);
-      color: #0f0f23;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(100, 149, 237, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      display: inline-block;
-    }
-
-    .contact-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(100, 149, 237, 0.6);
-      background: linear-gradient(45deg, #87ceeb, #b0e0e6);
-    }
-
-    .footer {
-      background: #000000;
-      padding: 40px 20px;
-      text-align: center;
-      border-top: 1px solid rgba(100, 149, 237, 0.2);
-    }
-
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      color: #b8c8e8;
-    }
 
     .gradient-bg {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
@@ -231,31 +185,28 @@
     .main-content {
       padding-top: 120px;
     }
-
-    .logo-header:visited{ color:white; }
-    .logo-header:hover{ color:white; text-decoration:none; }
   </style>
   <link href="favicon.png" rel="icon" type="image/png">
 </head>
 <body class="gradient-bg">
   <!-- Header -->
-  <header class="fixed top-0 inset-x-0 z-50" style="position: fixed; top: 0; left: 0; right: 0; z-index: 50;">
-    <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between" style="backdrop-filter: blur(10px); background: rgba(16,18,27,.45); border: 1px solid rgba(149,210,230,.18); margin: 16px auto 0; max-width: min(1100px, 92%); border-radius: 16px; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;">
-      <div class="flex items-center gap-8" style="display: flex; align-items: center; gap: 32px;">
-        <a href="index.html" class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
-          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl" style="height: 32px; width: auto; border-radius: 12px;"/>
-          <span class="text-base font-semibold tracking-tight uppercase nav-brand" style="font-size: 16px; font-weight: 600; letter-spacing: -0.025em; text-transform: uppercase; color: #ffffff !important;">ASSIGNME</span>
+  <header class="fixed top-0 inset-x-0 z-50">
+    <nav class="glass mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <a href="index.html" class="flex items-center gap-2">
+          <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
+          <span class="text-base font-semibold tracking-tight uppercase nav-brand">ASSIGNME</span>
         </a>
-        <div class="hidden md:flex items-center gap-6 text-sm text-muted" style="display: none; align-items: center; gap: 24px; font-size: 14px; color: #a9b9d6;">
-          <a href="index.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Accueil</a>
-          <a href="index.html#about" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Présentation</a>
-          <a href="demo.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Démo</a>
-          <a href="tracker.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">Mes candidatures</a>
-          <a href="info.html" class="hover:text-ink" style="color: #a9b9d6; text-decoration: none;">À propos</a>
+        <div class="flex items-center gap-6 text-sm text-muted">
+          <a href="index.html" class="hover:text-ink">Accueil</a>
+          <a href="index.html#about" class="hover:text-ink">Présentation</a>
+          <a href="demo.html" class="hover:text-ink">Démo</a>
+          <a href="tracker.html" class="hover:text-ink">Mes candidatures</a>
+          <a href="info.html" class="hover:text-ink">À propos</a>
         </div>
       </div>
-      <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110" style="display: inline-flex; padding: 8px 16px; border-radius: 12px; background-color: #eaf2ff; color: #000000; font-weight: 600; text-decoration: none; transition: filter 0.3s ease;">Nous contacter</a>
+      <div class="flex items-center gap-2">
+        <a href="index.html#contact" class="inline-flex px-4 py-2 rounded-xl bg-ink text-black font-semibold shadow-glow hover:brightness-110">Nous contacter</a>
       </div>
     </nav>
   </header>
@@ -267,7 +218,7 @@
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="ASSIGNME" class="h-8 w-auto rounded-xl"/>
         <span class="text-base font-semibold footer-brand">ASSIGNME</span>
-        <span class="text-muted mx-2">© 2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
+        <span class="text-muted mx-2">2025 ASSIGNME. Tous droits réservés | Une innovation DeepTech française</span>
       </div>
     </div>
   </footer>
@@ -606,8 +557,6 @@
         return 'score-average';
       };
 
-      // ===== NOUVELLES FONCTIONS POUR CANDIDATURE AUTO =====
-      
       const storeApplications = (apps) => {
         const existing = JSON.parse(localStorage.getItem('assignme_applications') || '[]');
         const merged = [...existing, ...apps];
@@ -640,7 +589,7 @@
           
           if (data.success && data.applications.length > 0) {
             storeApplications(data.applications);
-            showNotification('✅ Candidature générée avec succès !', 'success');
+            showNotification('Candidature générée avec succès', 'success');
             
             setTimeout(() => {
               if (confirm('Voulez-vous voir votre candidature générée ?')) {
@@ -651,7 +600,7 @@
 
         } catch (error) {
           console.error('Erreur:', error);
-          showNotification('❌ Erreur lors de la génération', 'error');
+          showNotification('Erreur lors de la génération', 'error');
         }
       };
 
@@ -685,7 +634,7 @@
           
           if (data.success) {
             storeApplications(data.applications);
-            showNotification(`✅ ${data.summary.generated} candidatures générées !`, 'success');
+            showNotification(`${data.summary.generated} candidatures générées`, 'success');
             
             setTimeout(() => {
               window.location.href = 'tracker.html';
@@ -694,7 +643,7 @@
 
         } catch (error) {
           console.error('Erreur:', error);
-          showNotification('❌ Erreur lors de la génération', 'error');
+          showNotification('Erreur lors de la génération', 'error');
         }
       };
 
@@ -778,7 +727,7 @@
                       </div>
                     ) : (
                       <div className="space-y-8">
-                        <div className="text-9xl mb-6">📄</div>
+                        <div className="text-9xl mb-6">CV</div>
                         <div>
                           <p className="text-white text-3xl font-bold mb-4">
                             Glissez-déposez votre CV ou cliquez ici
@@ -797,18 +746,18 @@
 
                 <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Téléchargez</h3>
-                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Déposez votre CV en quelques secondes</p>
+                    <h3 className="text-xl font-bold text-white mb-3">Téléchargez</h3>
+                    <p className="text-gray-400">Déposez votre CV en quelques secondes</p>
                   </div>
                   
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>IA analyse</h3>
-                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>L'intelligence artificielle extrait intelligemment vos compétences et expériences</p>
+                    <h3 className="text-xl font-bold text-white mb-3">IA analyse</h3>
+                    <p className="text-gray-400">L'intelligence artificielle extrait intelligemment vos compétences et expériences</p>
                   </div>
                   
                   <div className="retro-card p-8 rounded-2xl text-center">
-                    <h3 className="text-xl font-bold text-white mb-3" style={{fontFamily: "'Inter', monospace", fontSize: '1rem', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '1.08px', color: '#b8c8e8'}}>Emplois trouvés</h3>
-                    <p className="text-gray-400" style={{fontFamily: "'Inter', sans-serif", fontSize: '1.125rem', color: '#e8f4ff', lineHeight: 1.6, marginBottom: '15px', letterSpacing: '-0.36px'}}>Accédez aux vraies offres France Travail parfaitement adaptées</p>
+                    <h3 className="text-xl font-bold text-white mb-3">Emplois trouvés</h3>
+                    <p className="text-gray-400">Accédez aux vraies offres France Travail parfaitement adaptées</p>
                   </div>
                 </div>
               </div>
@@ -912,10 +861,9 @@
                   </div>
                 </div>
 
-                {/* NOUVEAU BOUTON GÉNÉRATION AUTOMATIQUE */}
                 <div className="cyber-border p-8 rounded-2xl text-center neon-glow mb-8">
                   <h4 className="text-2xl font-bold text-white mb-4">
-                    🚀 Génération automatique de candidatures
+                    Génération automatique de candidatures
                   </h4>
                   <p className="text-gray-300 mb-6 text-lg">
                     ASSIGNME va générer des lettres de motivation personnalisées pour chaque poste
@@ -929,7 +877,7 @@
                   </button>
                   
                   <div className="mt-4 text-sm text-gray-400">
-                    ⚡ Temps estimé : {Math.ceil(recommendations.length * 0.5)} minutes
+                    Temps estimé : {Math.ceil(recommendations.length * 0.5)} minutes
                   </div>
                 </div>
 
@@ -989,7 +937,7 @@
                                 {job.salary_display ? (
                                   <span className="text-lg">{job.salary_display}</span>
                                 ) : job.salary_min && job.salary_max ? (
-                                  <span className="text-xl font-bold">{job.salary_min?.toLocaleString()}€ - {job.salary_max?.toLocaleString()}€</span>
+                                  <span className="text-xl font-bold">{job.salary_min?.toLocaleString()} - {job.salary_max?.toLocaleString()} EUR</span>
                                 ) : (
                                   <span className="text-lg">Salaire non communiqué</span>
                                 )}
@@ -1057,7 +1005,7 @@
                               onClick={() => generateAutoApplication(job)}
                               className="action-btn btn-secondary"
                             >
-                              🚀 Candidature assistée IA
+                              Candidature assistée IA
                             </button>
                             
                             <button className="action-btn btn-secondary">
@@ -1076,7 +1024,7 @@
                     <div className="glass-effect p-4 rounded-lg">
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <div className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs border border-green-500/30">
-                          ✓ OFFRE RÉELLE
+                          OFFRE RÉELLE
                         </div>
                       </div>
                       <p className="text-green-300">
@@ -1100,7 +1048,7 @@
                 </div>
 
                 {candidateProfile.training_suggestions?.length > 0 && (
-                  <div className="mb-8">
+                  <div className="mb-8 mt-8">
                     <h3 className="text-3xl font-bold text-white mb-8">
                       Formations recommandées
                     </h3>
@@ -1183,7 +1131,7 @@
                 )}
 
                 <div className="cyber-border p-8 rounded-2xl text-center neon-glow">
-                  <h4 className="text-2xl font-bold text-white mb-4">Analyse ASSIGNME terminée !</h4>
+                  <h4 className="text-2xl font-bold text-white mb-4">Analyse ASSIGNME terminée</h4>
                   <p className="text-gray-300 mb-6 text-lg">
                     Votre CV a été analysé par l'IA ASSIGNME avec accès aux vraies offres France Travail.
                   </p>
@@ -1210,7 +1158,7 @@
                   
                   <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
                     <p className="text-cyan-300 text-sm">
-                      <strong>ASSIGNME :</strong> Plateforme connectée à France Travail pour vous proposer de vraies opportunités d'emploi !
+                      <strong>ASSIGNME :</strong> Plateforme connectée à France Travail pour vous proposer de vraies opportunités d'emploi
                     </p>
                   </div>
                 </div>
@@ -1222,23 +1170,6 @@
     };
 
     ReactDOM.render(React.createElement(AssignmeAnalyzer), document.getElementById('root'));
-  </script>
-
-  <script>
-    // Show menu on mobile
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
-    function handleMediaChange(e) {
-      const mobileMenu = document.querySelector('.hidden.md\\:flex');
-      if (mobileMenu) {
-        if (e.matches) {
-          mobileMenu.style.display = 'flex';
-        } else {
-          mobileMenu.style.display = 'none';
-        }
-      }
-    }
-    mediaQuery.addListener(handleMediaChange);
-    handleMediaChange(mediaQuery);
   </script>
 </body>
 </html>
