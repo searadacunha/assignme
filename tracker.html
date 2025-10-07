@@ -102,6 +102,11 @@
     .animate-fade-in {
       animation: fade-in 0.3s ease;
     }
+
+    .demo-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1));
+      border: 2px solid rgba(245, 158, 11, 0.5);
+    }
   </style>
   
   <link href="favicon.png" rel="icon" type="image/png">
@@ -137,6 +142,26 @@
       <div class="mb-8">
         <h1 class="text-4xl md:text-5xl font-bold mb-4">Mes Candidatures</h1>
         <p class="text-lg" style="color: #a9b9d6;">Suivez l'évolution de toutes vos candidatures générées par ASSIGNME</p>
+      </div>
+
+      <!-- Avertissement Démo + Bouton Nettoyage -->
+      <div class="demo-warning rounded-xl p-6 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div class="flex-1">
+            <h3 class="font-bold text-xl mb-2 text-yellow-400">Mode Démonstrateur</h3>
+            <p class="text-sm mb-2" style="color: #e8f4ff;">
+              Les candidatures sont stockées localement dans votre navigateur uniquement.
+            </p>
+            <p class="text-xs" style="color: #a9b9d6;">
+              Aucune donnée n'est envoyée à nos serveurs. Pour une démo propre, utilisez le mode navigation privée du navigateur ou effacez les données après utilisation.
+            </p>
+          </div>
+          <button 
+            onclick="clearAllData()" 
+            class="px-6 py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition whitespace-nowrap shadow-lg">
+            Effacer toutes les données
+          </button>
+        </div>
       </div>
 
       <!-- Stats Cards -->
@@ -266,7 +291,6 @@
             </div>
           </div>
 
-          <!-- Cover Letter Preview -->
           <details class="mb-4">
             <summary class="cursor-pointer font-semibold py-2 px-4 rounded-lg hover:bg-white/5 transition" style="color: #95D2E6;">
               Lettre de motivation générée
@@ -278,7 +302,6 @@ ${app.cover_letter || 'Lettre non disponible'}
             </div>
           </details>
 
-          <!-- Actions -->
           <div class="flex gap-3 flex-wrap">
             ${app.application_url && app.application_url !== '#' ? `
               <a href="${app.application_url}" target="_blank" 
@@ -453,6 +476,39 @@ ${JSON.stringify(app.adapted_cv, null, 2)}
       updateStats();
       
       showNotification('Candidature supprimée');
+    }
+
+    // FONCTION DE NETTOYAGE COMPLET
+    function clearAllData() {
+      const confirmed = confirm(
+        'ATTENTION : Cette action va supprimer TOUTES les candidatures de démonstration.\n\n' +
+        'Cette action est irréversible.\n\n' +
+        'Souhaitez-vous continuer ?'
+      );
+      
+      if (confirmed) {
+        // Effacer toutes les données localStorage
+        localStorage.removeItem('assignme_applications');
+        localStorage.removeItem('candidate_id');
+        localStorage.removeItem('referral_code');
+        localStorage.removeItem('total_shares');
+        localStorage.removeItem('free_credits');
+        
+        // Réinitialiser l'état
+        applications = [];
+        
+        // Rafraîchir l'affichage
+        renderApplications();
+        updateStats();
+        
+        // Notification
+        showNotification('Toutes les données de démonstration ont été effacées');
+        
+        // Message de confirmation
+        setTimeout(() => {
+          alert('Données effacées avec succès.\n\nVous pouvez maintenant faire une nouvelle démonstration avec un profil vierge.');
+        }, 500);
+      }
     }
 
     function showNotification(message) {
